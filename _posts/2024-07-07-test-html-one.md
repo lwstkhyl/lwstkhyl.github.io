@@ -1,12 +1,739 @@
 ---
-layout: blog
-title: html 1
+layout: post
+title: html基础
 category: HTML
 ---
-html---1
+html基础部分
 
 <!-- more -->
+<script src="../../../../../assets/scripts/jquery.min.js" type="text/javascript"></script>
+<script src="../../../../../assets/scripts/toc.js" type="text/javascript"></script>
+<div class="toc"></div>
+<style>
+    .toc i{
+        display: none;
+    }
+    .toc{
+        opacity: 0.2;
+        height: 90%;
+        width: 20%;
+        overflow: scroll;
+        overflow-x: hidden;
+        position: fixed;
+        left: 0px;
+        top: 5%;
+        background-color: lightyellow;
+    }
+    .toc li{
+        border-bottom: none;
+        font-size: 20px;
+        line-height: 22px;
+    }
+    .toc a{
+        background-image: none !important;
+    }
+    .toc ul{
+        padding-top: 0px !important;
+        margin-bottom: 0px !important;
+    }
+    .toc:hover{
+        opacity: 1;
+    }
 
-At standard atmospheric pressure, alcohol boils at 78 °C (172 °F), while water boils at 100 °C (212 °F). During distillation, the vapour contains more alcohol than the liquid. When the vapours are condensed, the resulting liquid contains a higher concentration of alcohol. In the pot still, the alcohol and water vapour combine with esters and flow from the still through the condensing coil. There they condense into the first distillation liquid, the so-called "low wines". The low wines have a strength of about 25–35% alcohol by volume, and flow into a second still. It is then distilled a second time to produce the colourless spirit, collected at about 70% alcohol by volume. Colour is added through maturation in an oak aging barrel, and develops over time.
+</style>
 
-The modern pot still is a descendant of the alembic, an earlier distillation device.
+### 段落与文字
+#### 段落标签
+##### 段落与文字标签
+
+| 标签        | 语义            | 说明             |
+| ----------- | --------------- | ---------------- |
+| `<h1>~<h6>` | header          | 标题             |
+| `<br>`      | break           | 换行             |
+| `<hr>`      | horizontal rule | 水平线           |
+| `<div>`     | division        | 分割（块元素）   |
+| `<span>`    | span            | 区域（行内元素） |
+| `<p>`       | paragraph       | 段落             |
+
+##### 文本格式化标签
+
+| 标签       | 语义                  | 说明 |
+| ---------- | --------------------- | ---- |
+| `<strong>` | strong（加强）        | 加粗 |
+| `<em>`     | emphasized（强调）    | 斜体 |
+| `<cite>`   | cite（引用）          | 斜体 |
+| `<sup>`    | superscripted（上标） | 上标 |
+| `<sub>`    | subscripted（下标）   | 下标 |
+
+#### 网页特殊符号
+特殊符号对应的代码，都是以“&”开头、并且以“;”（英文分号）结尾的
+
+如果想要让每一个段落首行都缩进两个字的距离，不能通过在代码中按下“space键”来实现，而是使用`&nbsp;`来指代空格，如`<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;xxx</p>`
+
+其中，1个汉字约等于3个`&nbsp`;。因此如果想要往p标签内加入2个空格，就需要往p标签内加入6个`&nbsp`;
+
+![特殊符号](https://s11.ax1x.com/2024/02/07/pF1Dyin.png "特殊符号"){:width="600px" height="600px"}
+
+#### 自闭合标签
+一般标签有开始符号和结束符号，自闭合标签只有开始符号没有结束符号。
+
+一般标签可以在开始符号和结束符号之间插入其他标签或文字；自闭合标签由于没有结束符号，不能插入其他标签或文字，只能定义自身的属性，如`<br/>`、`<hr/>`
+#### 块元素和行内元素
+块元素特点：独占一行，排斥其他元素（块元素和行内元素）跟其位于同一行；内部可以容纳其他块元素或行元素；包括`h1~h6、p、hr、div`等
+
+行内元素特点：可以与其他行内元素位于同一行；内部可以容纳其他行内元素，但不可以容纳块元素；包括`strong、em、span`等
+
+### 列表
+包括有序列表ol、无序列表ul和定义列表dl
+#### 有序列表
+```
+<ol type = "列表项符号">
+    <li>有序列表项</li>
+    <li>有序列表项</li>
+    <li>有序列表项</li>
+</ol>
+```
+
+| 有序列表type属性值 | 语义                     |
+| ------------------ | ------------------------ |
+| 1                  | strong（加强）           |
+| a                  | 小写英文字母a、b、c……    |
+| A                  | 大写英文字母A、B、C……    |
+| i                  | 小写罗马数字i、ii、iii…… |
+| I                  | 大写罗马数字I、II、III…… |
+
+#### 无序列表
+```
+<ul type="列表项符号">
+    <li>无序列表项</li>
+    <li>无序列表项</li>
+    <li>无序列表项</li>
+</ul>
+```
+
+| 无序列表type属性值 | 语义              |
+| ------------------ | ----------------- |
+| disc               | 默认值，实心圆“●” |
+| circle             | 空心圆“○”         |
+| square             | 实心正方形“■”     |
+
+#### 定义列表
+```
+<dl>
+    <dt>定义名词</dt>
+    <dd>定义描述</dd>
+</dl>
+```
+`<dt>`即"definition term"，后面添加要解释的名词，而在`<dd>`即"definition description"，后面添加该名词的具体解释
+**注意：列表的样式尽量用CSS样式中`list-style-type`属性定义**
+
+### 表格
+
+| 表格基本标签 | 语义   |
+| ------------ | ------ |
+| table        | 表格   |
+| tr           | 行     |
+| td           | 单元格 |
+
+
+| 表格结构标签 | 语义       |
+| ------------ | ---------- |
+| thead        | 表头       |
+| tbody        | 表脚       |
+| th           | 表头单元格 |
+| caption      | 标题       |
+
+#### 基本结构
+`<table>、<tr>、<td>`是HTML表格最基本的3个标签，其他标签如标题`<caption>`、表头单元格`<th>`可以没有，但是这3者必须要有
+```
+<table>
+    <tr>
+        <td>第一行第一列</td>
+        <td>第一行第二列</td>
+    </tr>
+    <tr>
+        <td>第二行第一列</td>
+        <td>第二行第二列</td>
+    </tr>
+</table>
+```
+`<table>`和`</table>`标记着表格的开始和结束，`<tr>`和`</tr>`标记着行的开始和结束，在表格中包含几组`<tr></tr>`就表示该表格为几行。`<td>`和`</td>`标记着每行中单元格的开始和结束。
+#### 完整结构
+```
+<table>
+    <caption>表格标题</caption>
+    <thead>
+        <tr>
+            <th>表头第一列</th>
+            <th>表头第二列</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>标准单元格1,1</td>
+            <td>标准单元格1,2</td>
+        </tr>
+        <tr>
+            <td>标准单元格2,1</td>
+            <td>标准单元格2,2</td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td>表脚第一列</td>
+            <td>表脚第二列</td>
+        </tr>
+    </tfoot>
+</table>
+```
+![表格完整结构](https://s11.ax1x.com/2024/02/07/pF1DRMT.png "表格完整结构"){:width="200px" height="200px"}
+
+#### 合并行和合并列
+合并行：`<td rowspan="跨度的行数">`
+```
+<body>
+    <table>
+        <tr>
+            <td>标准单元格1,1</td>
+            <td>标准单元格1,2</td>
+        </tr>
+        <tr>
+            <td rowspan="3">标准单元格2,1</td>
+            <!-- rowspan="3"表示往下将3个与它同列不同行的单元格合并 -->
+            <td>标准单元格2,2</td>
+        </tr>
+        <tr>
+            <!-- <td>标准单元格3,1</td> 被合并-->
+            <td>标准单元格3,2</td>
+        </tr>
+        <tr>
+            <!-- <td>标准单元格4,1</td> 被合并 -->
+            <td>标准单元格4,2</td>
+        </tr>
+    </table>
+</body>
+```
+![合并行](https://s11.ax1x.com/2024/02/07/pF1D4Z4.png "合并行"){:width="200px" height="200px"}
+
+
+合并列：`<td colspan="跨度的列数">`
+```
+<table>
+    <tr>
+        <td>标准单元格1,1</td>
+        <td>标准单元格1,2</td>
+        <td>标准单元格1,3</td>
+        <td>标准单元格1,4</td>
+    </tr>
+    <tr>
+        <td colspan="2">标准单元格2,1</td>
+        <!-- colspan="2"表示将向右的2个与它同行不同列的单元格合并 -->
+        <!-- <td>标准单元格2,2</td> 被合并-->
+        <td>标准单元格2,3</td>
+        <td>标准单元格2,4</td>
+    </tr>
+</table>
+```
+![合并列](https://s11.ax1x.com/2024/02/07/pF1D5dJ.png "合并列"){:width="400px" height="400px"}
+
+### 图像
+`<img src="图片地址" alt="图片描述（给搜索引擎看）" title="图片描述（给用户看）">`
+
+| img标签常用属性 | 语义                       |
+| --------------- | -------------------------- |
+| src             | 图像的文件地址             |
+| alt             | 图片显示不出来时的提示文字 |
+| title           | 鼠标移到图片上的提示文字   |
+
+
+文件地址可以是相对路径也可以是绝对路径
+
+图片的格式一般采用png格式
+### 链接
+`<a href="链接地址" target="目标窗口的打开方式">`
+
+| target属性值 | 语义                           |
+| ------------ | ------------------------------ |
+| _self        | 默认方式，即在当前窗口打开链接 |
+| _blank       | 在一个全新的空白窗口中打开链接 |
+| _top         | 在顶层框架中打开链接           |
+| _parent      | 在当前框架的上一层里打开链接   |
+
+
+一般只用到`_self`和`_blank`
+
+链接分为外部链接和内部链接，外部链接指向的是“外部网站的页面”，而内部链接指向的是“自身网站的页面”。
+
+![内部链接](https://s11.ax1x.com/2024/02/07/pF1DTiR.png "内部链接"){:width="200px" height="200px"}
+
+如图，如果在其中page1.html点击超链接跳转到page2.html或者page3.html，就是内部链接，因为3个页面都是位于同一个网站根目录下的
+```
+<a href="page2.html">跳转到页面2</a>
+<a href="test/page3.html">跳转到页面3</a>
+```
+锚点链接是内部链接的一种，点击后会跳到当前页面的某一部分，如
+```
+<body>
+    <div>
+        <a href="#article">推荐文章</a><br />
+    </div>
+    ……<br />
+    <div id="article">
+        <h3>推荐文章</h3>
+        <ul>
+            <li>朱自清-荷塘月色</li>
+            <li>余光中-乡愁</li>
+            <li>鲁迅-阿Q正传</li>
+        </ul>
+    </div>
+</body>
+```
+其中#article对应id="article"的标签，点击后就会跳转到对应id的标签中
+
+### 表单
+表单指的是文本框、按钮、单选框、复选框、下拉列表等的统称
+
+创建一个表单，跟创建一个表格一样，必须要把所有表单标签放在`<form>`标签内部，即
+```
+<form>
+    //各种表单标签
+</form>
+```
+
+| form标签常用属性 | 语义     |
+| ---------------- | -------- |
+| name             | 表单名称 |
+| method           | 提交方式 |
+| action           | 提交地址 |
+| target           | 打开方式 |
+| enctype          | 编码方式 |
+
+详细说明：
+
+name:给表单进行命名，从而区分页面中不同表单
+
+method:指定表单数据使用哪一种http提交方法(get或post)
+
+action:指定表单数据提交到哪一个地址进行处理
+
+target:与a标签的target属性相同，用来指定窗口的打开方式，一般只会用到`_blank`这一个属性值
+#### input标签
+大部分表单都是用input标签完成的
+`<input type="表单类型"/>`
+
+![input标签type属性值](https://s11.ax1x.com/2024/02/07/pF1D7J1.png "input标签type属性值"){:width="400px" height="400px"}
+
+补充：`type="submit"`表示提交按钮
+##### 单行文本框
+
+| 单行文本框常用属性 | 语义                             |
+| ------------------ | -------------------------------- |
+| value              | 设置文本框的默认显示值           |
+| size               | 设置文本框的长度                 |
+| maxlength          | 设置文本框中最多可以输入的字符数 |
+
+
+```
+<form method="post">
+    姓名：<input type="text" /><br />
+    姓名：<input type="text" value="helicopter"/>
+ </form>
+```
+![单行文本框](https://s11.ax1x.com/2024/02/07/pF1Dbz6.png "单行文本框"){:width="200px" height="200px"}
+
+##### 密码文本框
+与单行文本框与相同的属性，区别是：在单行文本框中输入的字符是可见的，而在密码文本框中输入的字符不可见
+```
+<form method="post">
+    账号：<input type="text" /><br />
+    密码：<input type="password" />
+</form>
+```
+![密码文本框](https://s11.ax1x.com/2024/02/07/pF1DLQK.png "密码文本框"){:width="200px" height="200px"}
+
+##### 单选框
+`<input type="radio" name="组名" value="取值" />`
+
+name属性表示单选按钮所在的组名，而value表示单选按钮的取值，这两个属性必须要设置。
+
+如果想要在默认情况下，让某个单选框选中，就给它加上checked属性
+```
+<form method="post">
+    性别:
+    <input type="radio" name="gender" value="男" checked />男
+    <input type="radio" name="gender" value="女" />女<br />
+    年龄:
+    <input type="radio" name="age" value="80后" checked />80后
+    <input type="radio" name="age" value="90后" />90后
+    <input type="radio" name="age" value="00后" />00后
+</form>
+```
+![单选框](https://s11.ax1x.com/2024/02/07/pF1DOsO.png "单选框"){:width="200px" height="200px"}
+
+这里定义了两组单选框，在每一组中，选项之间都是互斥的，即在同一组中只能选中其中一项。
+
+组使用name值来区分的，如果想要同组的几个选项的name值缺失或不同，就会出现可多选的情况
+
+对于value值的设置，一般跟后面的文本相同，方便后续js或服务器操作数据。其它表单元素value值作用与之类似
+##### 复选框
+`<input type="checkbox" name="组名" value="取值" />`
+属性设置与单选框相同，区别是它可以选中多个
+```
+<form method="post">
+    你喜欢的水果：<br/>
+    <input type="checkbox" name="fruit" value="苹果" checked/>苹果
+    <input type="checkbox" name="fruit" value="香蕉"/>香蕉
+    <input type="checkbox" name="fruit" value="西瓜" checked/>西瓜
+    <input type="checkbox" name="fruit" value="李子"/>李子
+</form>
+```
+![复选框](https://s11.ax1x.com/2024/02/07/pF1r0l6.png "复选框"){:width="200px" height="200px"}
+
+##### 按钮
+- 普通按钮button：一般用于js进行操作
+  
+`<input type="button" value="取值" />`其中value的取值就是按钮上的文字（所有按钮都是如此）
+- 提交按钮submit：一般都是用来给服务器提交数据的
+  
+`<input type="submit" value="取值" />`
+- 重置按钮reset：一般用来清除用户在表单中输入的内容
+  
+`<input type="reset" value="取值" />`
+注意：重置按钮只能清空它**所在form标签**内表单中的内容，对于当前所在form标签之外的表单清除是无效的。
+
+
+#### 多行文本框
+单行文本框只能输入一行文本，而多行文本框却可以输入多行文本
+
+`<textarea rows="行数" cols="列数" value="取值">默认内容</textarea>`
+
+多行文本框的**默认显示文本是在标签对内部设置**，而不是在value属性中设置的。
+```
+<form method="post">
+    个人简介：<br/>
+    <textarea rows="5" cols="20">请介绍一下你自己</textarea>
+</form>
+```
+![多行文本框](https://s11.ax1x.com/2024/02/07/pF1rB6K.png "多行文本框"){:width="200px" height="200px"}
+
+#### 下拉列表
+由select和option这两个标签配合使用，类似于列表中ul和li的使用方式，可以把下拉列表看成是一种“特殊的无序列表”。
+```
+<select>
+    <option>选项内容</option>
+    ……
+    <option>选项内容</option>
+</select>
+```
+
+| select标签常用属性 | 语义                                   |
+| ------------------ | -------------------------------------- |
+| multiple           | 设置下拉列表可以选择多项               |
+| size               | 设置下拉列表显示几个列表项，取值为整数 |
+
+- multiple:默认情况下，下拉列表只能选择一项，可以使用“Ctrl+鼠标左键”来选取多项
+- size:根据浏览器不同，size选项可能只能选取4及以上数字
+
+
+| option标签常用属性 | 语义     |
+| ------------------ | -------- |
+| selected           | 是否选中 |
+| value              | 选项值   |
+
+- selected:表示列表项是否被选中，与单选框中的checked属性是一样的
+- value:根其它的表单标签一样，是配合JavaScript以及服务器进行操作的
+
+
+例：
+```
+<form method="post">
+    <select size="5" multiple>
+        <option value="HTML">HTML</option>
+        <option value="CSS">CSS</option>
+        <option value="jQuery" selected>jQuery</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="vue.js">Vue.js</option>
+        <option value="HTML5">HTML5</option>
+        <option value="CSS3">CSS3</option>
+    </select>
+</form>
+```
+初始状态：![下拉列表初始状态](https://s11.ax1x.com/2024/02/07/pF1rDOO.png "下拉列表初始状态"){:width="100px" height="100px"}
+
+按住“Ctrl+鼠标左键”可多选：![下拉列表多选](https://s11.ax1x.com/2024/02/07/pF1rsmD.png "下拉列表多选"){:width="100px" height="100px"}
+
+若不设置multiple属性和size属性：![下拉列表原始状态](https://s11.ax1x.com/2024/02/07/pF1ry0e.png "下拉列表原始"){:width="100px" height="30px"}
+
+点击了右侧箭头后：![下拉列表展开](https://s11.ax1x.com/2024/02/07/pF1r6TH.png "下拉列表展开"){:width="100px" height="100px"}
+
+即不设置multiple时，size默认为1；设置multiple后，size默认为4；当选项设置selected后，若size为1，就优先显示selected的选项
+#### 表单元素不一定都要放在form标签内
+注意：**表单元素不一定都要放在form标签内**。对于要与服务器进行交互的表单元素就必须放在form标签内才有效。如果表单元素不需要跟服务器进行交互，那就没必要放在form标签内。
+
+### 多媒体
+#### 插入音频、视频和flash
+`<embed src="多媒体文件地址" width="播放界面的宽度" height="播放界面的高度"></embed>`
+
+地址可以是相对地址，也可以是绝对地址；width和height使用px作为单位。
+#### 插入背景音乐
+`<bgsound src="背景音乐的地址" loop="循环次数"/>`
+
+loop="2"表示重复2次，loop="infinite"表示无限次循环播放，也可以使用loop="-1"表示无限次循环播放。
+
+bgsound标签只适用于IE浏览器，在Firefox等浏览器中未必适用。设置网页背景音乐时常用的方法除了使用bgsound标签，还有使用embed标签和object标签。
+
+### 浮动框架iframe
+iframe标签：可以实现一个内嵌框架，即在当前页面再嵌入另外一个网页。
+
+`<iframe src="链接地址" width="浮动框架的宽" height="浮动框架的高" scrolling="取值"></iframe>`
+
+src是必选的，用于定义链接页面的地址。width和height这两个属性是可选的，分别用于定义框架的宽度和高度。
+
+| scrolling属性值 | 说明                                                               |
+| --------------- | ------------------------------------------------------------------ |
+| auto            | 默认值，整个表格在浏览器页面中左对齐                               |
+| yes             | 总是显示滚动条，即使页面内容不足以撑满框架范围，滚动条的位置也预留 |
+| no              | 在任何情况下都不显示滚动条                                         |
+
+
+`<iframe src="http://www.baidu.com" width="400px" height="300px" scrolling="no"></iframe>`效果如图：
+
+![浮动框架](https://s11.ax1x.com/2024/02/07/pF1rgkd.png "浮动框架"){:width="250px" height="250px"}
+
+iframe实际上就是在当前页面嵌入了另外一个页面，也可以同时嵌入多个页面
+
+### 对前述内容的一些补充
+#### div和span
+div和span没有任何语义，正是因为没有语义，这两个标签一般都是配合CSS来定义元素样式的。
+区别：
+-  div是块元素，可以包含任何块元素和行内元素，不会与其他元素位于同一行；span是行内元素，可以与其他行内元素位于同一行。
+-  div常用于页面中较大块的结构划分，然后配合CSS来操作；span一般用来包含文字等，它没有结构的意义，纯粹是应用样式。当其他行内元素都不适合的时候，可以用span来配合CSS操作。
+#### id和class
+id和class是HTML元素中两个最基本的公共属性，用来选 择元素，以便进行CSS操作或者JavaScript操作。
+- id属性具有唯一性，也就是说在一个页面中相同的id只允许出现一次。使用id的一般都是页面关键的结构或者大结构（如LOGO、导航、主体内容、底部信息栏等）
+- 釆用的思想跟C、Java等编程语言中的“类”相似，可以为同一个页面的相同元素或者不同元素设置相同的class，然后使得相同class的元素具有相同的CSS样式。注意：**一个元素可以定义多个类**，一般用一个class抽取公共样式，然后用另外一个class定义单独样式，如`class="panel active"`就是同时为该元素指定了panel和active类，
+#### 浏览器标题栏小图标
+只需要在head标签添加一个link标签即可：
+
+`<link rel="shortcut icon" type="image/x-icon" href="favicon.icon"/>`
+
+rel和type这两个属性的取值是固定形式，无需多讲。href属性取值为小图标的地址，这个地址是根据小图标在站点文件夹路径而定的（与图片引用相同）
+
+### 语义化
+#### 标题语义化
+h1-h6是标题标签，h表示“header”。h1~h6在HTML语义化中占有极其重要的地位。h1~h6按照标题的重要性依次递减，其中h1重要性最高，h6重要性最低。一般情况下我们只会用到h1、h2、h3和h4。
+注意：
+- 一个页面只能有一个h1标签
+- h1~h6之间不要断层（要按h1、h2、h3、h4顺序依次）排列，不要出现h1、h3、h4而漏掉h2的情况
+- 不要用h1 ~ h6来代替CSS样式，结构跟样式应该分离
+- 不要用div来代替h1~h6
+#### 图片语义化
+##### alt属性和title属性
+alt属性用于图片描述，这个描述文字是给捜索引擎看的。当图片无法显示时，页面会显示alt中的文字。
+
+title属性也用于图片描述，这个描述文字是给用户看的。当鼠标指针移到图片上时，会显示title中的内容。
+
+注意：**alt属性是img标签必需属性**，而title属性是img标签可选属性
+##### figure元素和figcaption元素
+![figure元素和figcaption元素](https://s11.ax1x.com/2024/02/07/pF1r2tA.png "figure元素和figcaption元素"){:width="100px" height="100px"}
+
+对于如图所示的效果，可使用以下代码实现：
+```
+<figure>
+    <img src="" alt=""/>
+    <figcaption>图注</figcaption>
+</figure>
+```
+其中figure元素用于包含图片和图注，figcaption元素用于表示图注文字
+
+#### 表单语义化
+##### label标签
+label标签用于显示在输入控件旁边的说明性文字，也就是将某个表单元素和某段说明文字关联起来。
+
+`<label for="所关联的表单元素的id">说明性文字</label>`
+
+作用：
+- 语义上绑定了label元素和表单元素
+- 增强了鼠标可用性，当点击label中的文本时，就相当于点击了其所关联的表单元素
+
+```
+<div>
+    <input id="Radio1" type="radio"/>单选框
+    <input id="Checkbox1" type="checkbox" />复选框
+</div>
+<hr />
+<div>
+    <input id="rdo" name="rdo" type="radio"/><label for="rdo">单选框</label>
+    <input id="cbk" name="cbk" type="checkbox"/><label for="cbk">复选框</label>
+</div>
+```
+
+![label标签](https://s11.ax1x.com/2024/02/07/pF1s2bF.png "label标签"){:width="300px" height="300px"}
+
+区别在于：在第一组表单中，只能点击单选框才能选中单选框，点击它旁边的说明文字是不能选中的；在第二组表单中，我们可以点击单选框来选中单选 ，并且点击它旁边的说明文字同样也可以选中单选框。复选框也是相同效果
+
+label标签有两种关联方式：
+
+`<input id="cbk" type="checkbox" /><label for="cbk">复选框</label>`等价于
+
+`<label>复选框<input id="cbk" type="checkbox"/></label>`
+##### fieldset标签和legend标签
+```
+<form>
+    <fieldset>
+        <legend> 表单组标题 </legend>
+        /*其它表单标签*/
+    </fieldset>
+</form>
+```
+作用：
+- 增强表单的语义
+- 可以定义fieldset元素的disabled属性来禁用整个组中的表单元素
+
+一个综合举例：
+
+```
+<form action="index.aspx" method="post">
+    <fieldset>
+        <legend>登录绿叶学习网</legend>
+        <p>
+            <label for="name"> 账号：</label><input type="text" id="name" name="name" />
+        </p>
+        <p>
+            <label for="pwd"> 密码：</label><input type="password" id="pwd" name="pwd" />
+        </p>
+        <input type="checkbox" id="remember-me" name="remember-me" /> <label for="remember-me"> 记住我 </label>
+        <input type="submit" value="登录" />
+    </fieldset>
+</form>
+
+```
+![label标签综合举例](https://s11.ax1x.com/2024/02/07/pF1sh59.png "label标签综合举例"){:width="200px" height="200px"}
+
+#### 其他语义化
+- `<br/>`标签仅仅用于段落中的换行，不能用于其他情况，即只只适合用于p标签内部的换行
+- 对于列表型的数据，建议使用列表来实现，大多数情况下都是使用无序列表
+- strong标签和em标签有“强调”的语义，为了SEO而想要突出某些关键字，可以使用strong和em这两个标签
+- del标签和ins标签：del表示“delete”，用于定义被删除的文本。ins表示“insert”，用于定义被更新的文本。一般情况下会使用CSS来重新定义它们的样式
+- img标签：如果图片作为HTML的一部分，并且想要被捜索引擎识别，则应该使用img标签；如果图片仅仅是起到修饰作用，并且不想被搜索引擎识别，则应该使用背景图片（通过CSS实现）。
+#### HTML5舍弃的标签
+- 仅仅为了定义样式的标签，没有任何语义，因此被舍弃
+
+    | 被舍弃的定义样式标签 | 说明                               |
+    | -------------------- | ---------------------------------- |
+    | basefont             | 定义页面文本的默认字体、颜色或尺寸 |
+    | big                  | 定义大字号文本                     |
+    | center               | 定义文本居中                       |
+    | font                 | 定义文本的字体样式                 |
+    | strike/s             | 定义删除线文本                     |
+    | u                    | 定义下划线文本                     |
+
+---
+
+- 很少使用或者已经被新标签代替，因此被舍弃
+
+    | 被代替/很少使用的标签 | 说明                             |
+    | --------------------- | -------------------------------- |
+    | dir                   | 定义目录列表，应用ul代替         |
+    | acronym               | 定义首字母缩写，应用abbr代替     |
+    | applet                | 定义嵌入的applet,应用object代替  |
+    | isindex               | 定义与文档相关的可搜索索引       |
+    | frame                 | 定义frameset中的一个特定的框架   |
+    | frameset              | 定义一个框架集                   |
+    | noframes              | 为那些不支持框架的浏览器显示文本 |
+
+
+注意：
+- 应舍弃那些仅为了定义样式而存在的HTML标签。如果只是为了改变样式，应使用CSS来实现，不应使用HTML标签
+- 在不同的页面部分，优先使用正确的语义化标签。如果没有语义标签可用，才考虑div和span等无语义标签
+
+### HTML5
+#### 一些与旧版本的区别
+- 标签不再区分大小写
+  
+`<div></DIV>`是合法的
+- 允许属性值不加引号
+  
+`<div id=wrapper></div>`是合法的
+- 允许部分属性的属性值省略
+  
+    `<input checked/>`相当于`<input checked="checked"/>`
+
+    即当属性值和属性名相同时，可以只简写属性名
+
+    包括`checked` `readonly` `selected` `disabled` `multiple`等
+#### 新增语义化标签
+
+| 新增语义化标签 | 说明       |
+| -------------- | ---------- |
+| header         | 头部标签   |
+| nav            | 导航标签   |
+| article        | 内容标签   |
+| section        | 块级标签   |
+| aside          | 侧边栏标签 |
+| footer         | 尾部标签   |
+
+
+![新增语义化标签图例](https://s11.ax1x.com/2024/02/07/pF1sI81.png "新增语义化标签图例"){:width="300px" height="300px"}
+
+注意：
+- 语义化标签主要针对搜索引擎
+- 可以使用一次或者多次
+- 在移动端支持比较友好
+- 在IE9浏览器中，需要把语义化标签都转换为块级元素
+
+
+#### 多媒体音频标签
+
+##### audio标签
+
+- audio支持的音频格式：
+  
+![audio支持的音频格式](https://s11.ax1x.com/2024/02/07/pF1sTv6.png "audio支持的音频格式"){:width="600px" height="200px"}
+
+- audio的参数：
+  
+![audio的参数](https://s11.ax1x.com/2024/02/07/pF1sHKK.png "audio的参数"){:width="600px" height="300px"}
+
+注：在chrome浏览器中已经禁用了autoplay属性
+- 例：
+
+    ```
+    <audio controls>
+        <source src="./media/snow.mp3" type="audio/mpeg" />
+    </audio>
+    ```
+##### video视频标签
+- video支持的格式：
+  
+![video支持的格式](https://s11.ax1x.com/2024/02/07/pF1sbDO.png "avideo支持的格式"){:width="600px" height="200px"}
+
+- video的参数
+  
+    ![video的参数](https://s11.ax1x.com/2024/02/07/pF1sOVe.png "video的参数"){:width="600px" height="600px"}
+
+    注：chrome浏览器禁用了自动播放功能，如果想自动播放，需要添加muted属性
+- 例：
+    ```
+    <video src="./media/video.mp4" controls="controls"></video>
+    <video controls="controls" autoplay muted loop poster="./media/pig.jpg">
+        <source src="./media/video.mp4" type="video/mp4">
+        <source src="./media/video.ogg" type="video/ogg">
+    </video>
+    ```
+注意：
+- 音频标签与视频标签使用基本一致
+- 多媒体标签在不同浏览器下情况不同，存在兼容性问题
+
+#### 新增input属性
+
+![新增input属性](https://s21.ax1x.com/2024/07/07/pkWdBkQ.png "新增input属性"){:width="700px" height="700px"}
+
+#### 新增表单属性
+
+![新增表单属性](https://s21.ax1x.com/2024/07/07/pkWdwTg.png "新增表单属性"){:width="800px" height="560px"}
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('.toc').toc({ listType: 'ul', headers: 'h3, h4, h5', showSpeed: 0 });
+}); </script>

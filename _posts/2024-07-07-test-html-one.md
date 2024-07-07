@@ -1,46 +1,11 @@
 ---
-layout: post
+layout: mypost
 title: html基础
 category: HTML
 ---
 html基础部分
 
 <!-- more -->
-<script src="../../../../../assets/scripts/jquery.min.js" type="text/javascript"></script>
-<script src="../../../../../assets/scripts/toc.js" type="text/javascript"></script>
-<div class="toc"></div>
-<style>
-    .toc i{
-        display: none;
-    }
-    .toc{
-        opacity: 0.2;
-        height: 90%;
-        width: 20%;
-        overflow: scroll;
-        overflow-x: hidden;
-        position: fixed;
-        left: 0px;
-        top: 5%;
-        background-color: lightyellow;
-    }
-    .toc li{
-        border-bottom: none;
-        font-size: 20px;
-        line-height: 22px;
-    }
-    .toc a{
-        background-image: none !important;
-    }
-    .toc ul{
-        padding-top: 0px !important;
-        margin-bottom: 0px !important;
-    }
-    .toc:hover{
-        opacity: 1;
-    }
-
-</style>
 
 ### 段落与文字
 #### 段落标签
@@ -732,8 +697,3 @@ label标签有两种关联方式：
 #### 新增表单属性
 
 ![新增表单属性](https://s21.ax1x.com/2024/07/07/pkWdwTg.png "新增表单属性"){:width="800px" height="560px"}
-
-<script type="text/javascript">
-$(document).ready(function() {
-    $('.toc').toc({ listType: 'ul', headers: 'h3, h4, h5', showSpeed: 0 });
-}); </script>

@@ -125,6 +125,10 @@ navigation_header:
     url: /JS/
   - title: HTML-CSS
     url: /HTML/
+  - title: python
+    url: /python/
+  - title: R
+    url: /r/
 #  - title: Search
 #    url: /search/
 #  - title: Fork Alembic

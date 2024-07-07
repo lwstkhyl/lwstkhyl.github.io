@@ -1,0 +1,70 @@
+---
+layout: default
+---
+
+<script src="../../../../../assets/scripts/jquery.min.js" type="text/javascript"></script>
+<script src="../../../../../assets/scripts/toc.js" type="text/javascript"></script>
+<style>
+    .toc i {
+        display: none;
+    }
+
+    .toc {
+        opacity: 0.2;
+        height: 80%;
+        width: 20%;
+        overflow: scroll;
+        overflow-x: hidden;
+        position: fixed;
+        left: 0px;
+        top: 10%;
+        background-color: lightyellow;
+    }
+
+    .toc li {
+        border-bottom: none;
+        font-size: 20px;
+        line-height: 22px;
+    }
+
+    .toc a {
+        background-image: none !important;
+    }
+
+    .toc ul {
+        padding-top: 0px !important;
+        margin-bottom: 0px !important;
+    }
+
+    .toc:hover {
+        opacity: 1;
+    }
+</style>
+
+{% include site-header.html %}
+
+<main class="main  container">
+
+    <article class="article  article--post  content  typeset">
+
+        <h1>{{ page.title }}</h1>
+        {% include post-meta.html %}
+        <div class="toc"></div>
+        {{ content }}
+
+        {% include nav-share.html %}
+
+        {% include post-comments.html %}
+
+    </article>
+
+    {% if page.aside == true %}{% include site-aside.html %}{% endif %}
+
+</main>
+
+{% include site-footer.html %}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('.toc').toc({ listType: 'ul', headers: 'h3, h4, h5', showSpeed: 0 });
+    }); </script>

@@ -54,6 +54,10 @@ layout: default
         opacity: 1;
     }
 
+    .toc:hover~.scrollspy-is-scroll {
+        opacity: 0.5;
+    }
+
     .toc .current {
         color: red;
     }
@@ -81,9 +85,16 @@ layout: default
     }
 
     .scrollspy-is-scroll {
+        opacity: 0.2;
         position: fixed;
         left: 0px;
         top: 7%;
+        border: none;
+    }
+
+    .scrollspy-is-scroll:hover {
+        color: red;
+        opacity: 1;
     }
 
     .scrollspy-is-scroll label {

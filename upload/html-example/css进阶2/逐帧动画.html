@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    .border1 {
+        width: 140px;
+        height: 140px;
+        border: 5px solid #000;
+        margin: 100px auto;
+        overflow: hidden;
+        background-image: url(../../md-image/css进阶2/精灵动画.png);
+        animation: run1 1s steps(12) infinite;
+    }
+
+    @keyframes run1 {
+        from {
+            background-position: 0 0;
+        }
+
+        to {
+            background-position: -1680px 0;
+        }
+    }
+
+    .border2 {
+        width: 140px;
+        height: 140px;
+        overflow: hidden;
+        background-image: url(../../md-image/css进阶2/精灵动画.png);
+        animation:
+            run2 1s steps(12) infinite,
+            move2 3s forwards linear infinite;
+    }
+
+    @keyframes move2 {
+        to {
+            transform: translate(800px);
+            /*移动800px*/
+        }
+    }
+
+    @keyframes run2 {
+        to {
+            background-position: -1680px 0;
+            /*表示精灵图应在的最终位置，即让最后一张图片展示*/
+        }
+    }
+</style>
+
+<body>
+    <div class="border1"></div>
+    <div class="border2"></div>
+</body>
+
+</html>

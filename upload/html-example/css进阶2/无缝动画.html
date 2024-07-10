@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .border {
+        width: 600px;
+        height: 112px;
+        border: 5px solid #000;
+        margin: 100px auto;
+        overflow: hidden;
+    }
+
+    .test {
+        width: 200px;
+        height: 112px;
+    }
+
+    @keyframes move {
+        from {
+            transform: translate(0px);
+            /*初始位置不移动*/
+        }
+
+        to {
+            transform: translate(-1000px);
+            /*往左移5张图片的距离*/
+        }
+    }
+
+    .border ul {
+        display: flex;
+        /*使图片横向排列*/
+        animation: move 6s infinite linear;
+    }
+
+    .border:hover ul {
+        animation-play-state: paused;
+        /*鼠标移入展示框时暂停*/
+    }
+</style>
+
+<body>
+    <div class="border">
+        <ul>
+            <li><img src="" alt="" class="test" style="background-color: red;"></li>
+            <li><img src="" alt="" class="test" style="background-color: blue;"></li>
+            <li><img src="" alt="" class="test" style="background-color: yellow;"></li>
+            <li><img src="" alt="" class="test" style="background-color: pink;"></li>
+            <li><img src="" alt="" class="test" style="background-color: green;"></li>
+            <!-- 填补展示框的空白 -->
+            <li><img src="" alt="" class="test" style="background-color: red;"></li>
+            <li><img src="" alt="" class="test" style="background-color: blue;"></li>
+            <li><img src="" alt="" class="test" style="background-color: yellow;"></li>
+        </ul>
+    </div>
+</body>
+
+</html>

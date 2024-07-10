@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>产品展示效果</title>
+  <style>
+    .box {
+      position: relative;
+      width: 300px;
+      height: 212px;
+    }
+
+    .box img {
+      width: 300px;
+    }
+
+    .box .title {
+      position: absolute;
+      /*子绝父相设置悬浮*/
+      left: 15px;
+      bottom: 20px;
+      z-index: 2;
+      width: 260px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .mask {
+      /*单独设置一个盒子作渐变，之后把盒子加到图片上*/
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      /*把盒子加到图片上，绝对定位（子绝父相）、位置靠左上、宽高同父级*/
+      background-image: linear-gradient(transparent,
+          /*透明色*/
+          rgba(0, 0, 0, 0.5)
+          /*半透明黑色*/
+        );
+      opacity: 0;
+      /*初始状态不可见*/
+      transition: all .5s;
+    }
+
+    .box:hover .mask {
+      opacity: 1;
+      /*鼠标移到上面时可见*/
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <img src="../../md-image/css进阶2/images/product.jpeg" alt="" />
+    <div class="title">OceanStor Pacific 海量存储斩获2021 Interop金奖</div>
+    <div class="mask"></div>
+  </div>
+</body>
+
+</html>

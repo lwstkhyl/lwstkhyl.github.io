@@ -20,6 +20,8 @@ layout: default
         left: 0px;
         top: 10%;
         background-color: lightyellow;
+        overscroll-behavior: contain;
+        /*阻止滚动溢出*/
     }
 
     .toc li {
@@ -55,7 +57,7 @@ layout: default
     }
 
     .toc:hover~.scrollspy-is-scroll {
-        opacity: 0.5;
+        opacity: 0.6;
     }
 
     .toc .current {
@@ -88,18 +90,32 @@ layout: default
         opacity: 0.2;
         position: fixed;
         left: 0px;
-        top: 7%;
+        top: 5.7%;
         border: none;
     }
 
+    .scrollspy-is-scroll div {
+        height: 20px;
+        line-height: 15px;
+        padding-top: 0px;
+    }
+
     .scrollspy-is-scroll:hover {
-        color: red;
         opacity: 1;
     }
 
     .scrollspy-is-scroll label {
         font-size: 15px;
         line-height: 15px;
+        padding-top: 0px !important;
+    }
+
+    .scrollspy-is-scroll label:hover {
+        color: red;
+    }
+
+    .scrollspy-is-scroll input:hover~label {
+        color: red;
     }
 </style>
 

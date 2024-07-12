@@ -21,6 +21,7 @@ exclude:
   - Gemfile.lock
   - alembic-jekyll-theme.gemspec
   - .jekyll-cache
+  - not_use_file
 # 2. Installed Gems
 plugins:
   - jekyll-sitemap
@@ -119,8 +120,6 @@ favicons: # Favicons are also used in the manifest file. Syntax is 'size: path'
 navigation_header:
   - title: Home
     url: /
-  - title: Elements
-    url: /elements/
   - title: JS
     url: /JS/
   - title: HTML-CSS
@@ -129,6 +128,8 @@ navigation_header:
     url: /python/
   - title: R
     url: /r/
+  - title: Elements
+    url: /elements/
 #  - title: Search
 #    url: /search/
 #  - title: Fork Alembic

@@ -85,7 +85,7 @@ input的返回值a是str类型，因此若要将a转成数值型，需要`a=int(
 
     in、not in判断是否有包含关系：
 
-    ```
+    ``` py
     s='abc'
     print('a' in s) #true
     print('d' in s) #false
@@ -124,14 +124,14 @@ input的返回值a是str类型，因此若要将a转成数值型，需要`a=int(
 
 输出python中的关键字:
 
-```
+``` py
 import keyword
 print(keyword.kwlist) 
 ```
 
 标识符：字母 数字 下划线，不能以数字开头，不能是关键字，区分大小写
 
-```
+``` py
 name='111'
 print('标识：',id(name)) #标识（地址）：1359494586032
 print('类型：',type(name)) #类型：<class 'str'>
@@ -154,7 +154,7 @@ print('值：',name) #值：111
 
     `a=1.1  b=2.2  print(a*b)`  输出2.4200000000000004  存在误差，使用以下方法解决：
 
-    ```
+    ``` py
     from decimal import Decimal
     print(Decimal('1.1')*Decimal('2.2')) #2.42
     ```
@@ -169,7 +169,7 @@ print('值：',name) #值：111
 
     可以使用一对单引号、双引号、3\*单引号、3\*双引号，其中3\*单引号、3\*双引号可以换行输出
 
-    ```
+    ``` py
     str1='111'
     str2="111"
     str3='''111
@@ -198,16 +198,16 @@ print('值：',name) #值：111
 
 - 单双分支：
 
-    ```
-    if 条件判断语句 ：
+    ``` py
+    if 条件判断语句:
         执行语句1
-    else：
+    else:
         执行语句2
     ```
 
     如
 
-    ```
+    ``` py
     if num%2==0:
         print(num,'是偶数')
     else:
@@ -216,19 +216,19 @@ print('值：',name) #值：111
 
 - 多分支：
 
-    ```
+    ``` py
     if 条件判断1 :
         执行语句1
     elif 条件判断2 :
         执行语句2
     elif 条件判断n :
         执行语句n 
-    [else:]->可写可不写
+    [else:]可写可不写
     ```
 
     如
 
-    ```
+    ``` py
     a=int(input('成绩：'))
     if a<=100 and a>80:   #也可以写80<=a<=100  
         print('a')
@@ -252,7 +252,7 @@ print('值：',name) #值：111
 
 只是占位符，用到需要写语句的地方，让语法不报错
 
-```
+``` py
 if a==1:
     pass
 else:
@@ -279,7 +279,7 @@ else:
 
 注意：range函数返回值不是列表，而是一个迭代器：
 
-```
+``` py
 print(r) #range(0, 10)
 print(list(r)) #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 ```
@@ -288,14 +288,14 @@ print(list(r)) #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 - while循环
 
-    ```
-    while 条件表达式：
+    ``` py
+    while 条件表达式:
         循环体
     ```
 
     如
 
-    ```
+    ``` py
     a=sum=0
     while a<11: #计算0-10之间的累加和
         sum+=a
@@ -304,14 +304,14 @@ print(list(r)) #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 - for-in循环
 
-    ```
+    ``` py
     for 自定义变量 in 可迭代对象(字符串、range序列) ：
         循环体
     ```
 
     如
 
-    ```
+    ``` py
     for item in '12345':
         print(item) #1 2 3 4 5
     for item in range(10):
@@ -320,7 +320,7 @@ print(list(r)) #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     **如果在循环体中不需要用到自定义变量，可将自定义变量写为`_`**，如
 
-    ```
+    ``` py
     for _ in range(5):
         print("111") #输出5次111
     ```
@@ -329,7 +329,7 @@ print(list(r)) #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     用于跳出循环，用法同c，如
 
-    ```
+    ``` py
     for item in range(3):
         pwd=input('输入：')
         if pwd=='111':
@@ -343,7 +343,7 @@ print(list(r)) #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     跳过这一次循环，直接进入下一次，用法同c，如
 
-    ```
+    ``` py
     for item in range(1,51):
         if item%5!=0:
             continue
@@ -354,7 +354,7 @@ print(list(r)) #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     else语句不仅可以与if联用，还可以与while和for语句联用，当整个循环过程中没有碰到break时执行else语句，如
 
-    ```
+    ``` py
     for item in range(3):
         pwd=input('密码：')
         if pwd=='111':
@@ -372,7 +372,7 @@ print(list(r)) #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 列表相当于c的数组，可以存储数据，用`[]`定义
 
-```
+``` py
 list=['111','11','1111']
 print(id(list)) #地址：1731304894528
 print(type(list)) #类型：<class 'list'>
@@ -415,7 +415,7 @@ print(list) #值：['111', '11', '1111']
 
 列表的index方法：`list.index(元素值[,start,end])` 表示在索引为[start,end)的范围内查找，返回该元素第一次出现的索引。例：
 
-```
+``` py
 lst=list(['11',2,'2','11'])
 print(lst.index('2',1,3)) #2
 #表示从索引为1的位置（即列表元素2）开始查找，一直找到3（不包括3，即列表元素'11'）
@@ -423,7 +423,7 @@ print(lst.index('2',1,3)) #2
 
 start与end可省略，表示在整个列表内查找：
 
-```
+``` py
 print(lst.index('11')) #0 
 ```
 
@@ -437,7 +437,7 @@ print(lst.index('11')) #0
 
 这三个参数都可省略，start默认为0（第一个元素）、end默认为最后一个元素的索引+1、seq默认为1（与range里的相同）
 
-```
+``` py
 lst=list([0,1,2,3,4,5,6,7,8])
 lst[1:3] #[1,2]
 lst[1:6:2] #[1,3,5]
@@ -447,7 +447,7 @@ lst[1::2] #[1,3,5,7]  默认到最后结束
 
 当seq为负数时，切片表达式含义变为：从索引为start元素向索引为end的元素逆向输出（仍不包括end元素），start默认指向最后1个元素，end默认指向第一个元素
 
-```
+``` py
 lst=list([0,1,2,3,4,5,6,7,8])
 lst[::-1] #[8, 7, 6, 5, 4, 3, 2, 1] 将列表倒序输出
 lst[6:4:-1] #[6, 5]
@@ -457,7 +457,7 @@ lst[6::-2] #[6, 4, 2, 0]
 
 #### 遍历
 
-```
+``` py
 for item in lst:
     print(item) #item为列表中的每个元素
 ```
@@ -466,7 +466,7 @@ for item in lst:
 
 1. 向列表末尾添加一个元素:列表的append方法，改变列表值，不改变列表地址
 
-    ```
+    ``` py
     lst=list([1,2,3,4,5,6,7,8])
     lst.append(100) #[1, 2, 3, 4, 5, 6, 7, 8, 100]
     ```
@@ -475,7 +475,7 @@ for item in lst:
 
 2. 向列表末尾添加多个元素
 
-    ```
+    ``` py
     lst=list([1,2,3,4,5,6,7,8])
     lst2=list([9,10,11])
     lst.append(lst2) #[1, 2, 3, 4, 5, 6, 7, 8, [9, 10, 11]]
@@ -490,7 +490,7 @@ for item in lst:
 
 4. 任意位置上添加:list.insert(index,value)表示在索引为index的位置上添加value元素
 
-    ```
+    ``` py
     lst=list([1,2,3,4,5,6,7,8])
     lst.insert(1,90) #[1, 90, 2, 3, 4, 5, 6, 7, 8]  在索引为1的位置上添加元素
     ```
@@ -499,7 +499,7 @@ for item in lst:
 
 1. 根据列表元素值移除:remove(元素值)
 
-    ```
+    ``` py
     lst=list([1,2,3,4,5,6,7,3,8])
     lst.remove(3) #[1, 2, 4, 5, 6, 7, 3, 8]  只删除第一个元素
     ```
@@ -508,7 +508,7 @@ for item in lst:
 
 2. 根据索引移除:pop(索引)
 
-    ```
+    ``` py
     lst=list([1,2,3,4,5,6,7,3,8])
     lst.pop(1) #[1, 3, 4, 5, 6, 7, 3, 8]
     ```
@@ -517,7 +517,7 @@ for item in lst:
 
 3. 切片删除:实质上是将列表切片选中的元素替换成空列表
 
-    ```
+    ``` py
     lst=list([1,2,3,4,5,6,7,8])
     lst[1:3]=[] #[1,4,5,6,7,8]  索引为[1,3)的元素被删除
     ```
@@ -532,14 +532,14 @@ for item in lst:
 
 1. 替换修改:直接用索引操作元素
 
-    ```
+    ``` py
     lst=list([1,2,3,4,5,6,7,3,8])
     lst[2]=100 #[1, 2, 100, 4, 5, 6, 7, 3, 8]
     ```
 
 2. 切片赋新值
 
-    ```
+    ``` py
     lst=list([1,2,3,4,5,6,7,3,8])
     lst[1:3]=[100,200] #[1, 100, 200, 4, 5, 6, 7, 3, 8]  即索引为[1,3)的元素被替换
     ```
@@ -550,7 +550,7 @@ for item in lst:
 
 1. list.sort(reverse=False) 改变列表值，不改变地址
 
-    ```
+    ``` py
     lst.sort() #[0, 1, 2, 3, 4, 5, 5, 9] 默认从小到大排
     lst.sort(reverse=False) #[0, 1, 2, 3, 4, 5, 5, 9]
     lst.sort(reverse=True) #[9, 5, 5, 4, 3, 2, 1, 0]
@@ -558,7 +558,7 @@ for item in lst:
 
 2. sorted(list,reverse=False) **不改变lst**，返回新列表
 
-    ```
+    ``` py
     lst2=sorted(lst) #[0, 1, 2, 3, 4, 5, 5, 9]
     lst2=sorted(lst,reverse=False) #[0, 1, 2, 3, 4, 5, 5, 9]
     lst2=sorted(lst,reverse=True) #[9, 5, 5, 4, 3, 2, 1, 0]
@@ -570,14 +570,14 @@ for item in lst:
 
 其中，`item_expression`是用于生成列表的表达式，`item`是在`iterable`（可迭代对象）中的每个元素，`condition`是一个可选的条件，用于过滤生成字典的元素
 
-```
+``` py
 #生成1-10的平方，取其中为偶数的部分
 lst=[i*i for i in range(1,10) if (i*i)%2==0] #[4, 16, 36, 64]
 ```
 
 `for i in range(1,10)`决定i都有哪些值，`if (i*i)%2==0`对i的所有可能取值进行筛选，`i*i`根据得到i的值组装结果列表。相当于：
 
-```
+``` py
 lst=[]
 for i in range(1,10):
     if (i*i)%2==0:
@@ -602,7 +602,7 @@ for i in range(1,10):
 
 1. 使用`{}` 
 
-    ```
+    ``` py
     a={'a':100,'b':200}
     print(a,type(a)) #{'a': 100, 'b': 200} <class 'dict'>
     a={} #空字典
@@ -610,7 +610,7 @@ for i in range(1,10):
 
 2. 内置函数dict
 
-    ```
+    ``` py
     a=dict(name='a',age=100)
     ```
 
@@ -618,7 +618,7 @@ for i in range(1,10):
 
 1. `dict[键]`
 
-    ```
+    ``` py
     a={'a':100,'b':200,'c':300}
     print(a['a']) #100
     ```
@@ -627,7 +627,7 @@ for i in range(1,10):
 
 2. `dict.get(键)`
 
-    ```
+    ``` py
     a={'a':100,'b':200,'c':300}
     print(a.get('a')) #100
     ```
@@ -656,7 +656,7 @@ for i in range(1,10):
 
 1. `del list[键]`
 
-    ```
+    ``` py
     a={'a':100,'b':200,'c':300}
     del a['a'] #删除'a'键值对{'b': 200, 'c': 300}
     ```
@@ -669,7 +669,7 @@ for i in range(1,10):
 
 都使用`list[键]=值`方式，若字典中已经有了这个键就是修改它的值，若没有就创建该键值对
 
-```
+``` py
 a={'a':100,'b':200,'c':300}
 a['d']=400 #{'a': 100, 'b': 200, 'c': 300, 'd': 400}
 a['d']=401 #{'a': 100, 'b': 200, 'c': 300, 'd': 401}
@@ -679,7 +679,7 @@ a['d']=401 #{'a': 100, 'b': 200, 'c': 300, 'd': 401}
 
 1. `list.keys()`获取字典的所有键
 
-    ```
+    ``` py
     a={'a':100,'b':200,'c':300}
     b=a.keys()
     print(b) #dict_keys(['a', 'b', 'c'])
@@ -688,7 +688,7 @@ a['d']=401 #{'a': 100, 'b': 200, 'c': 300, 'd': 401}
 
 2. `list.values()`获取字典的所有值
 
-    ```
+    ``` py
     a={'a':100,'b':200,'c':300}
     b=a.values()
     print(b) #dict_values([100, 200, 300])
@@ -697,7 +697,7 @@ a['d']=401 #{'a': 100, 'b': 200, 'c': 300, 'd': 401}
 
 3. `list.items()`以元组形式获取所有元素
 
-    ```
+    ``` py
     a={'a':100,'b':200,'c':300}
     b=a.items()
     print(b) #dict_items([('a', 100), ('b', 200), ('c', 300)])
@@ -706,7 +706,7 @@ a['d']=401 #{'a': 100, 'b': 200, 'c': 300, 'd': 401}
 
 #### 字典元素的遍历
 
-```
+``` py
 a={'a':100,'b':200,'c':300}
 for item in a: 
     print(item,a[item]) #a 100  b 200  c 300
@@ -722,7 +722,7 @@ for item in a:
 
 - 一个简单的例子：
 
-    ```
+    ``` py
     numbers = [1, 2, 3, 4, 5]
     squared_dict = {num: num**2 for num in numbers} #列表中的每个数字作为键，并将其平方作为值
     print(squared_dict) #{1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
@@ -732,7 +732,7 @@ for item in a:
 
 - 一个较复杂的例子：使用一个列表作为键，另一个列表作为值
 
-    ```
+    ``` py
     items=['a','b','c'] #键
     values=[100,200,300] #值
     a={item:value for item,value in zip(items,values)}
@@ -758,7 +758,7 @@ for item in a:
 
 2. tuple()函数
 
-    ```
+    ``` py
     a=tuple(('100','200','300'))
     print(a,type(a)) #('100', '200', '300') <class 'tuple'>
     ```
@@ -773,7 +773,7 @@ for item in a:
 
 2. for in 方法：
 
-    ```
+    ``` py
     a=(10,20,30,40)
     for item in a:
         print(item) #10 20 30 40
@@ -783,7 +783,7 @@ for item in a:
 
 元组没有增加/删除元素的方法，只能对元素进行修改
 
-```
+``` py
 a=(10,[20,30],40)
 a[0]=20 #报错，元组的常量型元素不可修改
 a[1]=[20,30,40] #报错，元组的可变型元素的地址不可修改
@@ -815,7 +815,7 @@ print(a) #(10, [20, 30, 40], 40)
 
 2. set(可迭代对象)：可迭代对象包括range()、列表、元组、集合及字符串等
 
-    ```
+    ``` py
     a=set(range(6))  
     print(a,type(a)) #{0, 1, 2, 3, 4, 5} <class 'set'>
     a=set([1,2,3,4,5,6,6]) #{1, 2, 3, 4, 5, 6}
@@ -830,7 +830,7 @@ print(a) #(10, [20, 30, 40], 40)
 
 与列表元组字典相同：
 
-```
+``` py
 for item in a:
     print(item)
 ```
@@ -841,14 +841,14 @@ for item in a:
 
 1. `set.add(元素)` 一次只添加一个元素
 
-    ```
+    ``` py
     a={'100','200','300'}
     a.add(400) #{'100', '300', 400, '200'}
     ```
 
 2. `set.update(可迭代对象)`
 
-    ```
+    ``` py
     a={'100','200','300'}
     a.update({500,400,600}) #{400, '300', '100', '200', 500, 600}
     a.update([500,400,600]) #{'300', 400, '200', 500, 600, '100'}
@@ -859,7 +859,7 @@ for item in a:
 
 4种方法:
 
-```
+``` py
 a={'100','200','300'}
 a.remove('100') #{'300', '200'}  如果不存在报错keyerror
 a.discard('100') #{'300', '200'}  不存在也不报错
@@ -873,7 +873,7 @@ a.clear #清空集合元素  输出set()
 
 如想修改`a={'100','200','300'}`中的'200'为'2000':
 
-```
+``` py
 a.remove('200')
 a.add('2000')
 print(a) #{'2000', '300', '100'}
@@ -889,13 +889,13 @@ print(a) #{'2000', '300', '100'}
 
 1. 相等不相等 `==`和`!=`
 
-    ```
+    ``` py
     a={'100','200','300'}
     b={'100','200','300'} 
     print(a==b) #True
     ```
 
-    ```
+    ``` py
     a={'100','200','300'}
     b={'100','200','300','400'}
     print(a!=b) #True
@@ -905,7 +905,7 @@ print(a) #{'2000', '300', '100'}
 
     `a.issubset(b)`表示"a是b的子集么？"
 
-    ```
+    ``` py
     a={'100','200','300'}
     b={'100','200','300','400'}
     print(a.issubset(b)) #True
@@ -916,7 +916,7 @@ print(a) #{'2000', '300', '100'}
 
     `a.issuperset(b)`表示"a是b的超集么？"
 
-    ```
+    ``` py
     a={'100','200','300'}
     b={'100','200','300','400'}
     print(a.issuperset(a)) #True
@@ -927,7 +927,7 @@ print(a) #{'2000', '300', '100'}
 
     `a.isdisjoint(b)`表示"a和b没有交集么？"
 
-    ```
+    ``` py
     a={'100','200','300'}
     b={'100','200','300','400'}
     print(b.isdisjoint(a)) #False
@@ -943,7 +943,7 @@ print(a) #{'2000', '300', '100'}
 
 对称差集（a+b减去a交b的部分）：`a.symmetric_difference(b)`或`a^b`
 
-```
+``` py
 a={'100','200','300','500'} 
 b={'100','200','300','400'}
 print(a.intersection(b)) #{'100', '300', '200'}
@@ -980,7 +980,7 @@ len(obj)函数可以获取序列（如字符串、字典、元组、列表、ran
 
 - -5至256的数字会驻留
 
-```
+``` py
 a='py'
 c='''py'''
 print(a,id(a))
@@ -989,7 +989,7 @@ print(c,id(c))   输出后地址相同
 
 强制驻留：
 
-```
+``` py
 import sys
 a='abc%' #含有%字符，本来不会驻留
 b='abc%'
@@ -1001,7 +1001,7 @@ print(a is b) #地址相同
 
 #### 查询
 
-```
+``` py
 a='onpython'
 print(a.index('on')) #0，'on'第一次出现的位置，不存在则报错ValueError
 print(a.find('on')) #0，'on'第一次出现的位置，不存在则输出-1
@@ -1033,7 +1033,7 @@ print(a.rfind('on')) #6，'on'最后一次出现的位置，不存在则输出-1
 
 同理还有`ljust` `rjust` `zfill`等函数，具体用法如下：
 
-```
+``` py
 a='my'
 b=a.center(20,'*') #---------my---------
 b=a.ljust(10,'*') #my------**   同center，唯一区别是将a放在左面（左对齐）
@@ -1047,7 +1047,7 @@ b=a.zfill(10) #-000000111，'0'会加在减号内
 
 `str.split(seq=' ',maxsplit)`按seq将str切分（seq默认为空格），返回一个列表，maxsplit设置最大切分次数（默认没有最大次数），分完后剩下部分不再分；同理还有`rsplit`是从字符串结尾往前切分
 
-```
+``` py
 lst='hello world'.split() #['hello', 'world']
 lst='he|llo world'.split(sep='|') #['he', 'llo world']
 a='hello world py th on'
@@ -1073,7 +1073,7 @@ lst=a.rsplit(maxsplit=1) #['hello world py th', 'on']
 
 `res=str.replace(old_val,new_val,num)`表示用new_val来替换str中的old_val，将替换后的新串返回，num控制替换次数（默认全部替换）
 
-```
+``` py
 a='abc,bcd,abc,abc'
 b='cde'
 c=a.replace('abc',b) #'cde,bcd,cde,cde'
@@ -1084,7 +1084,7 @@ c=a.replace('abc',b,2) #'cde,bcd,cde,abc' 表示替换2次，从左往右
 
 `res=seq.join(可迭代对象)`将列表或元组中的字符串合并成一个字符串，合并时间隔符为seq
 
-```
+``` py
 lst=['12','34','56']
 a='|'.join(lst) #12|34|56
 a=''.join(lst) #123456
@@ -1103,7 +1103,7 @@ a='|'.join('python') #p|y|t|h|o|n  把每个字母看成单独字符串进行连
 
 规则：首先比较两个字符串中的第一个字符（按ASCII码），如果相等则继续比较下一个字符，依次比较直到某两个字符不相等，其比较结果就是字符串比较结果，后续字符将不再比较
 
-```
+``` py
 a='abcde'
 b='abced'
 print(a>b) #False，因为'd'<'e'，所以a<b
@@ -1121,7 +1121,7 @@ print(a>b) #False，因为'd'<'e'，所以a<b
 
 `res=str[start:end:len]`取索引为[start,end)范围的字符串，步长为len，start默认最开始，end默认结尾，len默认为1，它们都可以为负数
 
-```
+``` py
 a='abcdefg'
 b=a[:2] #ab
 b=a[3:] #defg
@@ -1140,7 +1140,7 @@ b=a[::2] #aceg 默认从头到结尾
 
 %s为string类型占位,%d或%i为int型占位，%f为浮点数占位，输出时会把占位符转为后面的变量进行输出，如
 
-```
+``` py
 name='abc'
 age=20
 print('My name is %s,age is %d'%(name,age)) #My name is abc,age is 20
@@ -1150,7 +1150,7 @@ print('My name is %s,age is %d'%(name,age)) #My name is abc,age is 20
 
 控制输出的宽度和小数点位数：`'宽度.小数点位数%f'%数'`，当数的小数点位数<传入的位数时，用0补齐（以下的也遵循该规则）
 
-```
+``` py
 print('%10d'%99) #10表示宽度，把99放在最右面（前面加负号%-10d就是放在最左面），前面用8个空格占位，即'        99'
 print('%.3f'%3.1415926) #3.142 表示保留3位小数
 print('%10.3f'%3.1415926)  #同时要求宽度和保留小数，'     3.142'
@@ -1160,7 +1160,7 @@ print('%10.3f'%3.1415926)  #同时要求宽度和保留小数，'     3.142'
 
 `'{index}'.format(变量)`，format括号内可传入多个变量，前面{}内的index表示此处想替换的变量在括号内的位置
 
-```
+``` py
 name='abc'
 age=20
 print('My name is {0},age is {1}'.format(name,age)) #My name is abc,age is 20
@@ -1172,7 +1172,7 @@ print('My name is {0},age is {1}'.format(name,age)) #My name is abc,age is 20
 
 控制输出的宽度和小数点位数：`'{index:宽度.小数点位数f}.format(数)'`
 
-```
+``` py
 print('{0:.3}'.format(3.1415926)) #3.14 表示一共3位数
 print('{0:.3f}'.format(3.1415926)) #3.142 表示3位小数
 print('{0:10.3f}'.format(3.1415926)) #等价于('%10.3f'%3.1415926)
@@ -1184,7 +1184,7 @@ print('{0:10.3f}'.format(3.1415926)) #等价于('%10.3f'%3.1415926)
 
 **f-string**:用于将变量传入字符串中（更推荐使用），在字符串首个`'`前加上字母`f`，想传入的变量在字符串中用{}括起来即可
 
-```
+``` py
 name='abc'
 age=20
 print(f'My name is {name},age is {age}') #My name is abc,age is 20
@@ -1196,7 +1196,7 @@ print(f'My name is {name},age is {age}') #My name is abc,age is 20
 
 在f-string的大括号内结尾加上`!r`可以使输出字符串替换部分加上单引号（如果该部分本身就是字符串类型），`!s`是不加单引号（默认情况），如
 
-```
+``` py
 val="test"
 str1 = f'str1 is {val}'
 str2 = f'str2 is {val!s}'
@@ -1212,14 +1212,14 @@ print(str3) #str3 is 'test'
 
 **r-string**:禁止字符串中转义字符，在字符串首个`'`前加上字母`r`，常用于文件路径的表示中
 
-```
+``` py
 print ('\t \\ \n \\t') #未使用r标识，则特殊字符\t,\n无法打印，必须经过转义符\进行才行
 print (r'\t \\ \n \\t') #使用r标识，则不进行转义，打印字符串'\t \\ \n \\t'
 ```
 
 除此之外也可以使用`repr(str)`禁止转义
 
-```
+``` py
 s = '\n是一个转义字符'
 print(repr(s)) #'\n是一个转义字符'
 ```
@@ -1228,7 +1228,7 @@ print(repr(s)) #'\n是一个转义字符'
 
 将字符串编码：`str.encode(encoding=编码格式)`
 
-```
+``` py
 s='字符串'
 byte_gbk=s.encode(encoding='GBK') #b'\xd7\xd6\xb7\xfb\xb4\xae' GBK格式中一个汉字两个字节 
 byte_utf8=s.encode(encoding='UTF-8') #b'\xe5\xad\x97\xe7\xac\xa6\xe4\xb8\xb2' UTF-8格式中一个汉字三个字节
@@ -1238,7 +1238,7 @@ byte_utf8=s.encode(encoding='UTF-8') #b'\xe5\xad\x97\xe7\xac\xa6\xe4\xb8\xb2' UT
 
 解码：`byte.decode(encoding=编码格式)`
 
-```
+``` py
 #接上述字符串码
 s_gbk=byte_gbk.decode(encoding='GBK')
 s_utf8=byte_utf8.decode(encoding='UTF-8')

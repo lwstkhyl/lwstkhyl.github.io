@@ -1,0 +1,111 @@
+.toc i {
+    display: none;
+}
+
+.toc {
+    opacity: 0.2;
+    height: 80%;
+    width: 20%;
+    overflow: auto;
+    overflow-x: hidden;
+    position: fixed;
+    left: 0px;
+    top: 10%;
+    background-color: lightyellow;
+    overscroll-behavior: contain;
+    /*阻止滚动溢出*/
+}
+
+.toc li {
+    border-bottom: none;
+    font-size: 20px;
+    line-height: 22px;
+}
+
+/*以下代码去掉a标签的默认样式以及点击后出现的边框*/
+.toc a {
+    background-image: none !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+}
+
+.toc a:focus,
+a:hover:focus {
+    outline: none !important;
+}
+
+.toc a:hover:focus {
+    outline: none !important;
+}
+
+/*以上代码去掉a标签的默认样式以及点击后出现的边框*/
+
+.toc ul {
+    padding-top: 0px !important;
+    margin-bottom: 0px !important;
+}
+
+.toc:hover {
+    opacity: 1;
+}
+
+.toc:hover~.scrollspy-is-scroll {
+    opacity: 0.6;
+}
+
+.toc .current {
+    color: red;
+}
+
+.scrollspy-backtotop {
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+    line-height: 50px;
+    font-size: 48px;
+    background-color: lightyellow;
+    position: fixed;
+    bottom: 20%;
+    right: 10%;
+    z-index: 999;
+    border: 2px solid pink;
+    opacity: 0.3;
+    transition: all 0.3s;
+    color: green;
+}
+
+.scrollspy-backtotop:hover {
+    color: red;
+    opacity: 1
+}
+
+.scrollspy-is-scroll {
+    opacity: 0.2;
+    position: fixed;
+    left: 0px;
+    top: 5.7%;
+    border: none;
+}
+
+.scrollspy-is-scroll div {
+    height: 20px;
+    line-height: 15px;
+    padding-top: 0px;
+}
+
+.scrollspy-is-scroll:hover {
+    opacity: 1;
+}
+
+.scrollspy-is-scroll label {
+    font-size: 15px;
+    line-height: 15px;
+    padding-top: 0px !important;
+}
+
+.scrollspy-is-scroll label:hover {
+    color: red;
+}
+
+.scrollspy-is-scroll input:hover~label {
+    color: red;
+}

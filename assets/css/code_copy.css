@@ -1,0 +1,43 @@
+/* 复制按钮 */
+.code-copy {
+    /* 初始可见度 */
+    opacity: 0.1;
+    /* 绝对定位 */
+    position: absolute;
+    top: 8px;
+    right: 2%;
+    /* 宽高背景色 */
+    width: 69.6px;
+    height: 31.2px;
+    background-color: #9999AA;
+    /* 字体颜色大小 */
+    color: #ffffff;
+    font-size: 21.6px;
+    /*垂直居中*/
+    line-height: 31.2px;
+    /*水平居中*/
+    text-align: center;
+    /* 圆角 */
+    border-radius: 4px;
+    /* 光标 */
+    cursor: pointer;
+}
+
+/* 更改按钮父级定位，使按钮的绝对定位生效 */
+/* 只有最外层的div没有滚动条，内层div有滚动条，如果设置它们的定位，则按钮会跟着滚动条滚动 */
+.highlighter-rouge {
+    position: relative;
+}
+
+/* 去除代码框中不必要的X轴滚动条 */
+.highlighter-rouge .highlight {
+    overflow-x: auto;
+}
+
+.highlighter-rouge .highlight:hover .code-copy {
+    opacity: 0.5;
+}
+
+.code-copy:hover {
+    opacity: 1 !important;
+}

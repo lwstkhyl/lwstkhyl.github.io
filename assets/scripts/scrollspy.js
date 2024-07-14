@@ -73,6 +73,7 @@ $(document).ready(function () {
     }
     if (!have_scroll(toc)) { //如果没有滚动条，不显示两个单选框
         is_scroll1.prop('checked', false);
+        is_scroll2.prop('checked', false);
         is_scroll.css('display', 'none');
     }
     //根据页面滚动距离更改目录div标签滚动距离

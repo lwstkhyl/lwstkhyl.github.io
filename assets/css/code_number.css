@@ -1,0 +1,26 @@
+main.main .highlighter-rouge pre .code-number {
+    position: absolute !important;
+    width: 48px !important;
+    background-color: #fafafa !important;
+    top: 0 !important;
+    left: 0 !important;
+    margin: 0 !important;
+    padding: 8px 0 !important;
+    list-style: none !important;
+    text-align: right !important;
+    font-size: 16px !important;
+    overflow: hidden !important;
+    overflow-x: auto !important;
+    font-weight: normal !important;
+    line-height: 22px !important;
+    color: #000 !important;
+}
+
+main.main .highlighter-rouge pre .code-number li {
+    color: #383a42 !important;
+    border-right: 1px solid #c5c5c5 !important;
+    padding: 0 8px !important;
+    list-style: none !important;
+    margin: 0 !important;
+    font-weight: normal !important;
+}

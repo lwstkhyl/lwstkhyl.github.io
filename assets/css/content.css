@@ -1,0 +1,144 @@
+/* 文本 */
+main.main p {
+    color: #4d4d4d !important;
+    font-weight: 400 !important;
+    font-size: 16px !important;
+    line-height: 26px !important;
+    margin: 0 0 16px !important;
+    padding: 0 !important;
+}
+
+/* 标签 */
+main.main h1,
+h2,
+h3,
+h4,
+h5 {
+    color: #4f4f4f !important;
+    margin: 24px 0 8px !important;
+    padding: 0 !important;
+    font-weight: 600 !important;
+}
+
+main.main h1 {
+    font-size: 24px !important;
+    line-height: 34px !important;
+}
+
+main.main h2 {
+    font-size: 22px !important;
+    line-height: 32px !important;
+}
+
+main.main h3 {
+    font-size: 20px !important;
+    line-height: 30px !important;
+}
+
+main.main h4 {
+    font-size: 18px !important;
+    line-height: 28px !important;
+}
+
+main.main h5 {
+    font-size: 16px !important;
+    line-height: 26px !important;
+}
+
+/* 列表 */
+main.main li {
+    margin: 8px 0 0 32px !important;
+    padding: 0 !important;
+    font-weight: normal !important;
+}
+
+main.main ul {
+    margin: 0 0 24px !important;
+    padding: 0 !important;
+    font-size: 16px !important;
+}
+
+/* 表格 */
+main.main table {
+    margin-bottom: 24px !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+}
+
+main.main table tr {
+    border: 0 !important;
+    border-top: 1px solid #ddd !important;
+    background-color: #fff !important;
+}
+
+main.main table tr th,
+main.main table tr td {
+    font-size: 14px !important;
+    color: #4f4f4f !important;
+    line-height: 22px !important;
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+    /* 单元格居中 */
+    text-align: center !important;
+}
+
+main.main table tr th {
+    font-weight: 700 !important;
+    background-color: #eff3f5 !important;
+}
+
+main.main .table tr td {
+    font-weight: normal !important;
+}
+
+main.main table tr:nth-of-type(2n) {
+    background-color: #f7f7f7 !important;
+}
+
+/* 代码框内文字 */
+main.main .highlighter-rouge pre {
+    font-size: 14px !important;
+    line-height: 22px !important;
+    margin: 0 0 24px !important;
+    padding: 8px 16px 6px 56px !important;
+}
+
+main.main .highlighter-rouge code span {
+    font-size: 14px !important;
+}
+
+main.main .highlighter-rouge code {
+    line-height: 22px !important;
+    font-size: 14px !important;
+}
+
+/* 设置代码框内滚动条在code框上 */
+main.main .highlighter-rouge pre {
+    overflow-x: hidden !important;
+}
+
+main.main .highlighter-rouge pre code {
+    display: block !important;
+    overflow-x: auto !important;
+}
+
+/* 滚动条样式 */
+main.main .highlighter-rouge pre code::-webkit-scrollbar {
+    height: 8px !important;
+    width: 138px !important;
+}
+
+main.main .highlighter-rouge pre code::-webkit-scrollbar-thumb {
+    background: #C2C2C2 !important;
+    border-radius: 4px !important;
+}
+
+/* 字体 */
+
+/* 去掉点击边框 */
+
+/* 解决于scrollspycss冲突 */
+
+/* 分割线样式 */

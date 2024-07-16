@@ -21,6 +21,9 @@
     border-radius: 4px;
     /* 光标 */
     cursor: pointer;
+    /* 字体 */
+    font-family: Source Code Pro, DejaVu Sans Mono, Ubuntu Mono, Anonymous Pro, Droid Sans Mono, Menlo, Monaco, Consolas, Inconsolata, Courier, monospace, PingFang SC, Microsoft YaHei, sans-serif !important;
+    font-feature-settings: normal !important;
 }
 
 /* 更改按钮父级定位，使按钮的绝对定位生效 */

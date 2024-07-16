@@ -1,0 +1,30 @@
+/* 去掉链接、按钮等点击后出现的边框 */
+a:focus,
+a:hover:focus,
+button:focus,
+button:hover:focus,
+.button:focus,
+.button:hover:focus,
+input:focus,
+input:hover:focus,
+textarea:focus,
+textarea:hover:focus,
+select:focus,
+select:hover:focus {
+    outline: none !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+}
+
+small,
+small span,
+small time {
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
+}
+
+/* 改下footer*/
+
+/* 头像框 */
+
+/* 目录样式 */

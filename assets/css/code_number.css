@@ -23,4 +23,7 @@ main.main .highlighter-rouge pre .code-number li {
     list-style: none !important;
     margin: 0 !important;
     font-weight: normal !important;
+    /* 字体 */
+    font-family: Source Code Pro, DejaVu Sans Mono, Ubuntu Mono, Anonymous Pro, Droid Sans Mono, Menlo, Monaco, Consolas, Inconsolata, Courier, monospace, PingFang SC, Microsoft YaHei, sans-serif !important;
+    font-feature-settings: normal !important;
 }

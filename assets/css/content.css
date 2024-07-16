@@ -1,5 +1,5 @@
 /* 文本 */
-main.main p {
+article p {
     color: #4d4d4d !important;
     font-weight: 400 !important;
     font-size: 16px !important;
@@ -9,70 +9,97 @@ main.main p {
 }
 
 /* 标签 */
-main.main h1,
-h2,
-h3,
-h4,
-h5 {
+article h1,
+article h2,
+article h3,
+article h4,
+article h5 {
     color: #4f4f4f !important;
     margin: 24px 0 8px !important;
     padding: 0 !important;
     font-weight: 600 !important;
+    /* 字体 */
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
 }
 
-main.main h1 {
+article h1 {
     font-size: 24px !important;
     line-height: 34px !important;
 }
 
-main.main h2 {
+article h2 {
     font-size: 22px !important;
     line-height: 32px !important;
 }
 
-main.main h3 {
+article h3 {
     font-size: 20px !important;
     line-height: 30px !important;
 }
 
-main.main h4 {
+article h4 {
     font-size: 18px !important;
     line-height: 28px !important;
 }
 
-main.main h5 {
+article h5 {
     font-size: 16px !important;
     line-height: 26px !important;
 }
 
+/* 超链接 */
+article p a {
+    color: #4EA1DB !important;
+    background: none !important;
+    font-weight: normal !important;
+    line-height: 26px !important;
+    font-size: 16px !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    text-shadow: none !important;
+    outline: 0 !important;
+    /* 字体 */
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
+}
+
+article p a:hover {
+    color: #ca0c16 !important;
+}
+
 /* 列表 */
-main.main li {
+article li {
     margin: 8px 0 0 32px !important;
     padding: 0 !important;
     font-weight: normal !important;
 }
 
-main.main ul {
+article ul {
     margin: 0 0 24px !important;
     padding: 0 !important;
     font-size: 16px !important;
 }
 
 /* 表格 */
-main.main table {
+article table {
+    margin: 0 !important;
+    padding: 0 !important;
     margin-bottom: 24px !important;
     border-collapse: collapse !important;
     width: 100% !important;
 }
 
-main.main table tr {
+article table tr {
     border: 0 !important;
     border-top: 1px solid #ddd !important;
     background-color: #fff !important;
 }
 
-main.main table tr th,
-main.main table tr td {
+article table tr th,
+article table tr td {
     font-size: 14px !important;
     color: #4f4f4f !important;
     line-height: 22px !important;
@@ -82,63 +109,89 @@ main.main table tr td {
     vertical-align: middle !important;
     /* 单元格居中 */
     text-align: center !important;
+    /* 字体 */
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
 }
 
-main.main table tr th {
+article table tr th {
     font-weight: 700 !important;
     background-color: #eff3f5 !important;
 }
 
-main.main .table tr td {
+article table tr td {
     font-weight: normal !important;
 }
 
-main.main table tr:nth-of-type(2n) {
+article table tr:nth-of-type(2n) {
     background-color: #f7f7f7 !important;
 }
 
 /* 代码框内文字 */
-main.main .highlighter-rouge pre {
+article .highlighter-rouge pre {
     font-size: 14px !important;
     line-height: 22px !important;
     margin: 0 0 24px !important;
     padding: 8px 16px 6px 56px !important;
 }
 
-main.main .highlighter-rouge code span {
+article .highlighter-rouge code span {
     font-size: 14px !important;
 }
 
-main.main .highlighter-rouge code {
+article .highlighter-rouge code,
+article .highlighter-rouge code span {
     line-height: 22px !important;
     font-size: 14px !important;
+    /* 字体 */
+    font-family: Source Code Pro, DejaVu Sans Mono, Ubuntu Mono, Anonymous Pro, Droid Sans Mono, Menlo, Monaco, Consolas, Inconsolata, Courier, monospace, PingFang SC, Microsoft YaHei, sans-serif !important;
+    font-feature-settings: normal !important;
 }
 
 /* 设置代码框内滚动条在code框上 */
-main.main .highlighter-rouge pre {
+article .highlighter-rouge pre {
     overflow-x: hidden !important;
 }
 
-main.main .highlighter-rouge pre code {
+article .highlighter-rouge pre code {
     display: block !important;
     overflow-x: auto !important;
 }
 
+/* 用单个`括起来的代码 */
+article code.highlighter-rouge {
+    padding: 2px 4px !important;
+    font-size: 14px !important;
+    line-height: 22px !important;
+    color: #c7254e !important;
+    background-color: #f9f2f4 !important;
+    border-radius: 2px !important;
+    font-family: Source Code Pro, DejaVu Sans Mono, Ubuntu Mono, Anonymous Pro, Droid Sans Mono, Menlo, Monaco, Consolas, Inconsolata, Courier, monospace, PingFang SC, Microsoft YaHei, sans-serif !important;
+    font-feature-settings: normal !important;
+}
+
 /* 滚动条样式 */
-main.main .highlighter-rouge pre code::-webkit-scrollbar {
+article .highlighter-rouge pre code::-webkit-scrollbar {
     height: 8px !important;
     width: 138px !important;
 }
 
-main.main .highlighter-rouge pre code::-webkit-scrollbar-thumb {
+article .highlighter-rouge pre code::-webkit-scrollbar-thumb {
     background: #C2C2C2 !important;
     border-radius: 4px !important;
 }
 
 /* 字体 */
-
-/* 去掉点击边框 */
-
-/* 解决于scrollspycss冲突 */
+article,
+article p {
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
+}
 
 /* 分割线样式 */
+article hr {
+    background-size: 100% 5px !important;
+    padding-bottom: 1rem !important;
+    padding-top: 1rem !important;
+    margin-bottom: 16px !important;
+}

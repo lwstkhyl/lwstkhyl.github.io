@@ -13,6 +13,7 @@ $(document).ready(function () {
     //点击目录a标签跳转到对应标题
     const h_list = $('h3,h4,h5'); //所有的标题
     const a_list = $('.toc a'); //所有的目录a标签
+    if (a_list.length == 0) return; //如果没有目录就退出
     a_list.prop('href', '#'); //禁用a标签锚点跳转
     let is_click = false; //添加判断条件--是否是因为点击了按钮而滚动
     a_list.on("click", function () {

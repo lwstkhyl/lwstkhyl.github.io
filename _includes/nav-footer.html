@@ -1,20 +1,23 @@
 {% if site.navigation_footer %}
 <nav class="nav  nav--footer">
-  <ul class="list list--nav">
-    {% for item in site.navigation_footer %}
+  <!-- <ul class="list list--nav"> -->
+  {% for item in site.navigation_footer %}
 
-      {% if item.url contains '://' %}
-        {% assign url = item.url %}
-      {% else %}
-        {% assign url = item.url | relative_url %}
-      {% endif %}
+  {% if item.url contains '://' %}
+  {% assign url = item.url %}
+  {% else %}
+  {% assign url = item.url | relative_url %}
+  {% endif %}
 
-      <li class="item  item--nav{% if item.url == page.url %}  item--current{% endif %}">
+  <!-- <li class="item  item--nav{% if item.url == page.url %}  item--current{% endif %}">
         <a href="{{ url }}">{{ item.title }}</a>
-      </li>
-    {% endfor %}
-  </ul>
+      </li> -->
+  <small class="small">Use <a href="https://jekyllrb.com/">Jekyll</a> theme <a
+      href="https://github.com/daviddarnes/alembic"> Alembic</small>
+  </a>
+  {% endfor %}
+  <!-- </ul> -->
 </nav>
 {% else %}
-  {% include nav-default.html %}
+{% include nav-default.html %}
 {% endif %}

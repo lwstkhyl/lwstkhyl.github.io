@@ -16,6 +16,7 @@ select:hover:focus {
     background-image: none !important;
 }
 
+/* 博客标题中small标签 */
 small,
 small span,
 small time {
@@ -23,8 +24,61 @@ small time {
     font-feature-settings: normal !important;
 }
 
-/* 改下footer*/
+/* footer部分small标签 */
+footer.footer .container small.small,
+footer.footer .container nav.nav small.small {
+    padding-top: 0 !important;
+    line-height: 1rem !important;
+    font-size: 0.96rem !important;
+    font-family: "Merriweather", serif !important;
+    font-style: normal !important;
+    font-weight: 400 !important;
+    color: #a8adac !important;
+    display: inline-block !important;
+}
+
+footer.footer .container small.small a,
+footer.footer .container nav.nav small.small a {
+    padding: 0 !important;
+}
+
+/* header */
+/* 应fixed的是header中的container */
+/* header.header .container {
+    padding: 0.5rem 0 !important;
+}
+
+header.header .container a {
+    font-size: 1.2rem !important;
+} */
+
+/* header.header {
+    top: 0px !important;
+    left: 0px !important;
+    z-index: 1000 !important;
+    min-width: 100% !important;
+    width: max-content !important;
+    background: #fff !important;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, .05) !important;
+} */
+
+/* header.header .logo {
+    max-height: 2.5rem !important;
+}
+
+header.header .container {
+    padding: 0.25rem 0 !important;
+}
+
+header.header .container a {
+    font-size: 1rem !important;
+}*/
 
 /* 头像框 */
+header.header .container .logo a.logo img {
+    max-height: 4rem !important;
+}
 
 /* 目录样式 */
+
+/* 回到顶部按钮 */

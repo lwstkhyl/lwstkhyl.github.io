@@ -1,0 +1,72 @@
+/* 页面内容字体样式 */
+.container .typeset,
+.container .typeset h1,
+.container .typeset h2,
+.container .typeset h3,
+.container .typeset h4,
+.container .typeset h5,
+.container .typeset h6,
+.container .typeset ul li,
+.container .typeset a,
+.container .typeset p {
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
+}
+
+/* 页面内容字体尺寸 */
+.container .typeset h1 {
+    font-size: 1.8rem !important;
+    margin-bottom: 0.15rem !important;
+    padding-top: 0.35rem !important;
+}
+
+.container .typeset h2 {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.12rem !important;
+    padding-top: 0.30rem !important;
+}
+
+/* .container .typeset h3 {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.12rem !important;
+    padding-top: 0.30rem !important;
+}
+
+.container .typeset h4 {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.12rem !important;
+    padding-top: 0.30rem !important;
+}
+
+.container .typeset h5 {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.12rem !important;
+    padding-top: 0.30rem !important;
+}
+
+.container .typeset h6 {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.12rem !important;
+    padding-top: 0.30rem !important;
+}
+
+.container .typeset,
+.container .typeset ul li,
+.container .typeset a,
+.container .typeset p {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.12rem !important;
+    padding-top: 0.30rem !important;
+} */
+
+/* 博客标题中small标签 */
+small,
+small span,
+small time {
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
+}
+
+/* 目录样式 */
+
+/* 回到顶部按钮 */

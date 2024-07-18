@@ -10,27 +10,29 @@ layout: default
 <link rel="stylesheet" href="../../../../../assets/css/code_copy.css">
 <link rel="stylesheet" href="../../../../../assets/css/code_number.css">
 
-{% include site-header.html %}
+<div class="page">
+    <!-- div.page让header部分的position:sticky生效 -->
+    {% include site-header.html %}
 
-<main class="main  container">
+    <main class="main  container">
 
-    <article class="article  article--post  content  typeset">
+        <article class="article  article--post  content  typeset">
 
-        <h1>{{ page.title }}</h1>
-        {% include post-meta.html %}
-        <div class="toc"></div>
-        {{ content }}
+            <h1>{{ page.title }}</h1>
+            {% include post-meta.html %}
+            <div class="toc"></div>
+            {{ content }}
 
-        {% include nav-share.html %}
+            {% include nav-share.html %}
 
-        {% include post-comments.html %}
+            {% include post-comments.html %}
 
-    </article>
+        </article>
 
-    {% if page.aside == true %}{% include site-aside.html %}{% endif %}
+        {% if page.aside == true %}{% include site-aside.html %}{% endif %}
 
-</main>
-
+    </main>
+</div>
 {% include site-footer.html %}
 
 <script type="text/javascript">

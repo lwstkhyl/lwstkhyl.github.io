@@ -1,4 +1,5 @@
 /* 去掉链接、按钮等点击后出现的边框 */
+a,
 a:focus,
 a:hover:focus,
 button:focus,
@@ -16,13 +17,39 @@ select:hover:focus {
     background-image: none !important;
 }
 
-/* 博客标题中small标签 */
-small,
-small span,
-small time {
-    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
-    font-feature-settings: normal !important;
+/* header */
+header.header {
+    /* 顶边导航栏置顶，删去position: sticky;即可取消 */
+    position: sticky;
+    top: 0px;
+    z-index: 1000;
 }
+
+/* 头像框 */
+header.header .container .logo a.logo img {
+    max-height: 4rem !important;
+}
+
+/* 使底边栏固定在页面最底部↓ */
+html {
+    height: 100%;
+}
+
+body {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.page {
+    flex: 1;
+}
+
+.footer {
+    z-index: 1000;
+}
+
+/* 使底边栏固定在页面最底部↑ */
 
 /* footer部分small标签 */
 footer.footer .container small.small,
@@ -41,44 +68,3 @@ footer.footer .container small.small a,
 footer.footer .container nav.nav small.small a {
     padding: 0 !important;
 }
-
-/* header */
-/* 应fixed的是header中的container */
-/* header.header .container {
-    padding: 0.5rem 0 !important;
-}
-
-header.header .container a {
-    font-size: 1.2rem !important;
-} */
-
-/* header.header {
-    top: 0px !important;
-    left: 0px !important;
-    z-index: 1000 !important;
-    min-width: 100% !important;
-    width: max-content !important;
-    background: #fff !important;
-    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, .05) !important;
-} */
-
-/* header.header .logo {
-    max-height: 2.5rem !important;
-}
-
-header.header .container {
-    padding: 0.25rem 0 !important;
-}
-
-header.header .container a {
-    font-size: 1rem !important;
-}*/
-
-/* 头像框 */
-header.header .container .logo a.logo img {
-    max-height: 4rem !important;
-}
-
-/* 目录样式 */
-
-/* 回到顶部按钮 */

@@ -22,23 +22,6 @@
     line-height: 22px;
 }
 
-/*以下代码去掉a标签的默认样式以及点击后出现的边框*/
-.toc a {
-    background-image: none !important;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
-}
-
-.toc a:focus,
-a:hover:focus {
-    outline: none !important;
-}
-
-.toc a:hover:focus {
-    outline: none !important;
-}
-
-/*以上代码去掉a标签的默认样式以及点击后出现的边框*/
-
 .toc ul {
     padding-top: 0px !important;
     margin-bottom: 0px !important;
@@ -82,7 +65,7 @@ a:hover:focus {
     opacity: 0.2;
     position: fixed;
     left: 0px;
-    top: 5.7%;
+    bottom: 5%;
     border: none;
 }
 

@@ -126,10 +126,8 @@ navigation_header:
     url: /HTML/
   - title: python
     url: /python/
-  - title: R
+  - title: R与生信
     url: /r/
-  - title: Elements
-    url: /elements/
 #  - title: Search
 #    url: /search/
 #  - title: Fork Alembic

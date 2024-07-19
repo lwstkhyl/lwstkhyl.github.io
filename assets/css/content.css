@@ -1,3 +1,17 @@
+/* 笔记内容页header样式 */
+.page header.header .container {
+    padding: 0.3rem 0 !important;
+}
+
+/* 头像框 */
+.page header.header .container .logo a.logo img {
+    max-height: 2.8rem !important;
+}
+
+.page header.header .container a {
+    font-size: 1rem !important;
+}
+
 /* 博客标题中small标签 */
 small,
 small span,

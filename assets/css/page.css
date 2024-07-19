@@ -15,37 +15,37 @@
 
 /* 页面内容字体尺寸 */
 .container .typeset h1 {
-    font-size: 1.8rem !important;
+    font-size: 1.7rem !important;
     margin-bottom: 0.15rem !important;
     padding-top: 0.35rem !important;
 }
 
 .container .typeset h2 {
-    font-size: 1.5rem !important;
+    font-size: 1.6rem !important;
     margin-bottom: 0.12rem !important;
     padding-top: 0.30rem !important;
 }
 
-/* .container .typeset h3 {
+.container .typeset h3 {
     font-size: 1.5rem !important;
     margin-bottom: 0.12rem !important;
     padding-top: 0.30rem !important;
 }
 
 .container .typeset h4 {
-    font-size: 1.5rem !important;
+    font-size: 1.4rem !important;
     margin-bottom: 0.12rem !important;
     padding-top: 0.30rem !important;
 }
 
 .container .typeset h5 {
-    font-size: 1.5rem !important;
+    font-size: 1.3rem !important;
     margin-bottom: 0.12rem !important;
     padding-top: 0.30rem !important;
 }
 
 .container .typeset h6 {
-    font-size: 1.5rem !important;
+    font-size: 1.2rem !important;
     margin-bottom: 0.12rem !important;
     padding-top: 0.30rem !important;
 }
@@ -54,17 +54,57 @@
 .container .typeset ul li,
 .container .typeset a,
 .container .typeset p {
-    font-size: 1.5rem !important;
+    font-size: 1.1rem !important;
+}
+
+.container .typeset ul {
     margin-bottom: 0.12rem !important;
     padding-top: 0.30rem !important;
-} */
+}
 
-/* 博客标题中small标签 */
-small,
-small span,
-small time {
-    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
-    font-feature-settings: normal !important;
+/* 笔记概览页面字体尺寸 */
+/* 笔记页面简介 */
+.container .typeset .introduce {
+    font-size: 1.7rem !important;
+    margin-bottom: 1rem !important;
+    padding-top: 0.35rem !important;
+    font-weight: bold;
+}
+
+/* 列表各li间距 */
+.container .typeset ul.blog li {
+    margin-bottom: 1.2rem;
+}
+
+/* 笔记简介 */
+.container .typeset ul.blog li p {
+    font-size: 1.1rem !important;
+    line-height: 1.7rem !important;
+    opacity: 0.8 !important;
+    padding-top: 0.3rem !important;
+}
+
+.container .typeset ul.blog li div.title-date {
+    display: flex;
+    align-items: flex-end;
+}
+
+/* 笔记题目 */
+.container .typeset ul.blog li div.title-date a.title {
+    font-size: 1.5rem !important;
+    line-height: 2.2rem !important;
+    opacity: 1 !important;
+    margin-bottom: 0rem !important;
+    padding-top: 0rem !important;
+}
+
+/* 日期 */
+.container .typeset ul.blog li div.title-date p.date {
+    font-size: 0.9rem !important;
+    line-height: 0.9rem !important;
+    opacity: 0.5 !important;
+    margin-bottom: 0.25rem !important;
+    padding-top: 0 !important;
 }
 
 /* 目录样式 */

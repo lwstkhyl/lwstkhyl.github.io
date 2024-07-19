@@ -1,3 +1,24 @@
+/* 博客标题中small标签 */
+small,
+small span,
+small time {
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
+}
+
+/* 去掉笔记日期那行上下间距 */
+small.post-meta,
+small.post-meta span.label,
+small.post-meta time {
+    padding-top: 0 !important;
+}
+
+/* 去掉笔记标题上下间距 */
+article h1:first-child {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
 /* 文本 */
 article p {
     color: #4d4d4d !important;

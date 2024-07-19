@@ -53,6 +53,7 @@ body {
 
 /* footer部分small标签 */
 footer.footer .container small.small,
+footer.footer .container small.small a,
 footer.footer .container nav.nav small.small {
     padding-top: 0 !important;
     line-height: 1rem !important;

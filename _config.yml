@@ -128,6 +128,20 @@ navigation_header:
     url: /python/
   - title: R与生信
     url: /r/
+  - title: HP
+    sub_navigation:
+      - title: Human Practices
+        url: /human-practices/
+      - title: Education & Communication
+        url: /education/
+  - title: Team
+    sub_navigation:
+      - title: Members
+        url: /members/
+      - title: Contribution
+        url: /contribution/
+      - title: Attributions
+        url: /attributions/
 #  - title: Search
 #    url: /search/
 #  - title: Fork Alembic

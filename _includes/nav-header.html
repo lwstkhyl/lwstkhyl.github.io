@@ -3,15 +3,27 @@
   <ul class="list  list--nav">
     {% for item in site.navigation_header %}
 
-      {% if item.url contains '://' %}
-        {% assign url = item.url %}
-      {% else %}
-        {% assign url = item.url | relative_url %}
-      {% endif %}
+    {% if item.url contains '://' %}
+    {% assign url = item.url %}
+    {% else %}
+    {% assign url = item.url | relative_url %}
+    {% endif %}
 
-      <li class="item  item--nav{% if item.url == page.url %}  item--current{% endif %}">
-        <a href="{{ url }}">{{ item.title }}</a>
-      </li>
+    <li class="item  item--nav{% if item.url == page.url %}  item--current{% endif %}">
+      <a href="{{ url }}">{{ item.title }}
+        {% if item.sub_navigation %}
+        <span class="icon iconfont icon-down-line-free"></span>
+        {% endif %}</a>
+      {% if item.sub_navigation %}
+      <ul class="sub_nav" style="display: none;">
+        {% for sub_nav in item.sub_navigation %}
+        <li class="sub_nav item--nav">
+          <a href="{{ sub_nav.url }}" class="sub_nav">{{ sub_nav.title }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </li>
     {% endfor %}
   </ul>
   <button class="button  button--nav" aria-label="Menu toggle">
@@ -19,13 +31,13 @@
   </button>
 </nav>
 {% else %}
-  {% include nav-default.html %}
+{% include nav-default.html %}
 {% endif %}
 
 <script type="text/javascript">
   // Get list and button
   const navList = document.querySelector('.header .list--nav')
-  const button  = document.querySelector('.header .button--nav')
+  const button = document.querySelector('.header .button--nav')
 
   // Hide nav and apply toggle
   const collapseNav = () => {

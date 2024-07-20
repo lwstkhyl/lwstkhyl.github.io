@@ -9,19 +9,35 @@ const throttle = (func, wait = 0) => { //节流，wait毫秒执行一次
         }
     };
 };
+const debounce = (fn, delay) => {
+    let timer;
+    return function () {
+        if (timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+            fn();
+        }, delay);
+    }
+};
 $(document).ready(function () {
     //点击目录a标签跳转到对应标题
     const h_list = $('h3,h4,h5'); //所有的标题
     const a_list = $('.toc a'); //所有的目录a标签
     if (a_list.length == 0) return; //如果没有目录就退出
     a_list.prop('href', '#'); //禁用a标签锚点跳转
+    let nav_height = $("header.header").height();
+    const get_nav_height = () => {
+        nav_height = $("header.header").height();
+    };
+    window.addEventListener('resize', debounce(get_nav_height, 500));
     let is_click = false; //添加判断条件--是否是因为点击了按钮而滚动
     a_list.on("click", function () {
         is_click = true; //点击了按钮，进行上锁的操作
         const a_index = a_list.index(this); //点击的是第几个li
         const scroll_distance = h_list.eq(a_index).offset().top; //它对应的h标签距页面顶端距离
         $("body,html").stop().animate({ //进行滚动
-            scrollTop: scroll_distance
+            scrollTop: scroll_distance - nav_height
         }, function () { //animate回调函数，当动画播放完执行
             is_click = false; //滚动完了就把锁打开
         });
@@ -122,7 +138,7 @@ $(document).ready(function () {
         a_list.eq(a_index).addClass('current'); //让对应的a标签改变
         const scroll_distance = h_list.eq(a_index).offset().top; //它对应的h标签距页面顶端距离
         $("body,html").stop().animate({ //进行滚动
-            scrollTop: scroll_distance
+            scrollTop: scroll_distance - nav_height
         });
     }
     toc.on('mousewheel DOMMouseScroll', throttle(update_window_scroll_distance, 200)); //只有鼠标滚动才触发，滚动动画不能触发
@@ -131,7 +147,7 @@ $(document).ready(function () {
         if (is_in_toc && is_scroll2.prop('checked')) return; //如果鼠标在目录中，就不用根据页面滚动距离更改目录a标签
         const scroll_distance = $(document).scrollTop(); //当前页面滚动的距离
         for (let i = h_list.length - 1; i >= 0; i--) {
-            if (scroll_distance + 1 >= h_list.eq(i).offset().top) { //找到滚动到了哪个h标签
+            if (scroll_distance + nav_height + 1 >= h_list.eq(i).offset().top) { //找到滚动到了哪个h标签
                 a_list.removeClass("current");
                 a_list.eq(i).addClass('current'); //让对应的a标签改变
                 update_div_scroll_distance(i, is_scroll1.prop('checked'));

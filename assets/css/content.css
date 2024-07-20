@@ -107,6 +107,8 @@ article p a:hover {
 
 /* 列表 */
 article li {
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
     margin: 8px 0 0 32px !important;
     padding: 0 !important;
     font-weight: normal !important;

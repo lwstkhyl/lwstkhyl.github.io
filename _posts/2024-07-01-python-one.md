@@ -155,7 +155,7 @@ print('值：',name) #值：111
     `a=1.1  b=2.2  print(a*b)`  输出2.4200000000000004  存在误差，使用以下方法解决：
 
     ``` py
-    from decimal import Decimal
+  from decimal import Decimal
     print(Decimal('1.1')*Decimal('2.2')) #2.42
     ```
 
@@ -199,7 +199,7 @@ print('值：',name) #值：111
 - 单双分支：
 
     ``` py
-    if 条件判断语句:
+  if 条件判断语句:
         执行语句1
     else:
         执行语句2

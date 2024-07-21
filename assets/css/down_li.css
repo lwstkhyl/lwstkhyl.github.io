@@ -40,3 +40,7 @@ ul.sub_nav li.sub_nav a.sub_nav {
 nav.nav a.current {
     color: #a8adac;
 }
+
+nav.nav a.current:hover {
+    color: #05bf85;
+}

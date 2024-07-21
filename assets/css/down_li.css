@@ -1,0 +1,42 @@
+nav.nav ul.list--nav li.item--nav {
+    cursor: pointer;
+}
+
+nav.nav ul.list--nav li.item--nav span.icon-down-line-free {
+    display: inline-block;
+    vertical-align: middle;
+    /* 箭头默认向右 */
+    transform: rotate(-90deg);
+    /* 旋转原点 */
+    transform-origin: center center;
+    /* 旋转时间 */
+    transition: 0.5s;
+}
+
+ul.sub_nav {
+    flex-direction: column;
+    z-index: 2000;
+    margin-top: 0.6rem;
+    /* background-image: radial-gradient(transparent 1px, #fff);
+    background-size: 4px 4px;
+    backdrop-filter: blur(6px); */
+}
+
+ul.sub_nav li.sub_nav {
+    text-align: left !important;
+    padding-top: 0.2rem;
+    margin: 0;
+}
+
+ul.sub_nav li.sub_nav a.sub_nav {
+    /* 强制不换行 */
+    white-space: nowrap;
+    font-size: 1rem;
+    line-height: 1rem;
+    padding: 0 0.5rem;
+    margin: 0;
+}
+
+nav.nav a.current {
+    color: #a8adac;
+}

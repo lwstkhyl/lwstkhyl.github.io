@@ -17,6 +17,11 @@ select:hover:focus {
     background-image: none !important;
 }
 
+a.no-hover:focus,
+a.no-hover:hover:focus {
+    color: #05bf85 !important;
+}
+
 /* header */
 header.header {
     /* 顶边导航栏置顶，删去position: sticky;即可取消 */

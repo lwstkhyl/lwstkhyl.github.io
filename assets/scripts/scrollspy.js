@@ -9,17 +9,6 @@ const throttle = (func, wait = 0) => { //节流，wait毫秒执行一次
         }
     };
 };
-const debounce = (fn, delay) => {
-    let timer;
-    return function () {
-        if (timer) {
-            clearTimeout(timer);
-        }
-        timer = setTimeout(() => {
-            fn();
-        }, delay);
-    }
-};
 $(document).ready(function () {
     //点击目录a标签跳转到对应标题
     const h_list = $('h3,h4,h5'); //所有的标题

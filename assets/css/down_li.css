@@ -42,5 +42,5 @@ nav.nav a.current {
 }
 
 nav.nav a.current:hover {
-    color: #05bf85;
+    color: green;
 }

@@ -1,3 +1,8 @@
+nav.nav--header li.item a {
+    position: relative;
+    z-index: 1000;
+}
+
 nav.nav ul.list--nav li.item--nav {
     cursor: pointer;
 }
@@ -14,26 +19,33 @@ nav.nav ul.list--nav li.item--nav span.icon-down-line-free {
 }
 
 ul.sub_nav {
-    flex-direction: column;
-    z-index: 2000;
-    margin-top: 0.6rem;
-    /* background-image: radial-gradient(transparent 1px, #fff);
+    background-image: radial-gradient(transparent 1px, #fff);
     background-size: 4px 4px;
-    backdrop-filter: blur(6px); */
+    backdrop-filter: blur(6px);
+    /* background-color: white; */
+    flex-direction: column;
+    height: fit-content;
+    z-index: 999;
+    margin-top: 0.6rem;
+    border-radius: 0.2rem;
 }
 
 ul.sub_nav li.sub_nav {
+    /* 清除li左边默认的点 */
+    list-style-type: none;
+    /* 靠左对齐 */
     text-align: left !important;
     padding-top: 0.2rem;
     margin: 0;
 }
 
 ul.sub_nav li.sub_nav a.sub_nav {
+    z-index: 999;
     /* 强制不换行 */
     white-space: nowrap;
     font-size: 1rem;
     line-height: 1rem;
-    padding: 0 0.5rem;
+    padding: 0 0.2rem;
     margin: 0;
 }
 
@@ -43,4 +55,9 @@ nav.nav a.current {
 
 nav.nav a.current:hover {
     color: green;
+}
+
+/* 优化下拉箭头样式 */
+nav.nav a .icon {
+    height: fit-content;
 }

@@ -10,33 +10,78 @@ const debounce = (fn, delay) => {
     }
 };
 $(document).ready(function () {
-    const down_ul = $("nav ul.sub_nav"); //获取全部的下拉菜单
+    const down_ul = $("nav ul.sub_nav"); //获取全部的下拉菜单ul
     if (!down_ul) return; //如果没有就退出
     down_ul.each(function (index, dom) {
         $(dom).css("display", "flex"); //给ul设置默认display样式为flex
         $(dom).hide(); //ul默认隐藏
         const parent = $(dom).parent()[0];  //父级li
+        const parent_a = $(parent).children("a.no-hover");  //父级li中的a
         const down_point = $(parent).children("a.no-hover").children("span.icon-down-line-free"); //向下箭头
         const down_a = $(dom).children("li.sub_nav").children("a.sub_nav"); //子级li
-        const update_position_resize_func = () => update_position($(dom), $(parent)); //页面尺寸变化时更新
-        const add_event = () => { //为下拉菜单设置位置、添加hover事件
+        const update_position_resize_func = () => update_position($(dom), $(parent)); //更新ul位置
+        const update_resize_func = () => { //更新ul位置及宽度
+            down_ul.css("height", " fit-content");
+            update_position($(dom), $(parent));
+        }
+        const change_zindex_mouseon_func = () => change_zindex_mouseon($(dom), down_a, $(parent), parent_a); //鼠标进入父级li时改变z-index
+        const change_zindex_mouseout_func = () => change_zindex_mouseout($(dom), down_a, $(parent), parent_a); //鼠标退出父级li时改变z-index
+        const change_zindex_mouseon1_func = () => change_zindex_mouseon1($(dom), down_a, $(parent), parent_a); //鼠标进入父级li时改变z-index
+        const change_zindex_mouseon2_func = () => change_zindex_mouseon2($(dom), down_a, $(parent), parent_a); //鼠标进入父级li时改变z-index
+        const add_event = () => { //为下拉菜单初始化位置，并添加hover事件
             update_position_resize_func();
             $(parent).hover(() => { //鼠标移入就显示
-                down_point.css("transform", "rotate(0)");
-                $(dom).stop().slideDown();
+                if ($("button.button--nav").css("display") === "none") {
+                    change_zindex_mouseon1_func();
+                    down_point.css("transform", "rotate(0)");
+                    $(dom).stop().slideDown("normal", "swing", change_zindex_mouseon2_func);
+                }
+                else {
+                    change_zindex_mouseon_func();
+                    down_point.css("transform", "rotate(0)");
+                    $(dom).stop().slideDown("normal", "swing");
+                }
             }, () => { //鼠标移出时隐藏
-                down_point.css("transform", "rotate(-90deg)");
-                $(dom).stop().slideUp();
+                if ($("button.button--nav").css("display") === "none") {
+                    down_point.css("transform", "rotate(-90deg)");
+                    change_zindex_mouseout_func();
+                    $(dom).stop().slideUp("normal", "swing");
+                }
+                else {
+                    down_point.css("transform", "rotate(-90deg)");
+                    $(dom).stop().slideUp("normal", "swing", change_zindex_mouseout_func);
+                }
             });
         }
         setTimeout(add_event, 100); //待元素加载完毕后添加hover事件
         //页面尺寸变化时更新top/left
-        window.addEventListener('resize', debounce(update_position_resize_func, 100));
+        window.addEventListener('resize', debounce(update_resize_func, 100));
         //点击后更改样式
         down_a.on("click", function () {
             $(this).addClass("current").siblings().removeClass("current");
         });
     });
+    //解决z-index冲突：让展示出来的ul优先级比它对应的主菜单li小，比其它的li大
+    function change_zindex_mouseon(ul, down_a, parent, parent_a) { //鼠标进入父级li时改变z-index
+        ul.css("z-index", "1001");
+        down_a.css("z-index", "1001");
+        parent.css("z-index", "1002");
+        parent_a.css("z-index", "1002");
+    }
+    function change_zindex_mouseon2(ul, down_a, parent, parent_a) { //鼠标进入父级li时改变z-index
+        ul.css("z-index", "1001");
+        down_a.css("z-index", "1001");
+    }
+    function change_zindex_mouseon1(ul, down_a, parent, parent_a) { //鼠标进入父级li时改变z-index
+        parent.css("z-index", "1002");
+        parent_a.css("z-index", "1002");
+    }
+    function change_zindex_mouseout(ul, down_a, parent, parent_a) { //鼠标退出父级li时改变z-index
+        ul.css("z-index", "999");
+        down_a.css("z-index", "999");
+        parent.css("z-index", "1000");
+        parent_a.css("z-index", "1000");
+    }
     function update_position(ul, parent) { //更新top/left
         const { top, left } = parent.offset();
         const parent_height = parent.height();

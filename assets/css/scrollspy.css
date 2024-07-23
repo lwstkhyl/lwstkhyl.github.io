@@ -19,8 +19,9 @@
 
 .toc li {
     border-bottom: none;
-    font-size: 20px;
-    line-height: 22px;
+    font-size: 18px !important;
+    line-height: 20px !important;
+    margin: 6px 0 0 20px !important;
 }
 
 .toc ul {
@@ -40,26 +41,49 @@
     color: red;
 }
 
+/* 滚动条样式 */
+.toc::-webkit-scrollbar {
+    /*滚动条整体样式*/
+    width: 7px;
+    /*高宽分别对应横竖滚动条的尺寸*/
+    height: 1px;
+}
+
+.toc::-webkit-scrollbar-thumb {
+    /*滚动条里面小方块*/
+    border-radius: 10px;
+    box-shadow: inset 0 0 5px rgba(178, 176, 176, 0.1);
+    background: #535353;
+}
+
+.toc::-webkit-scrollbar-track {
+    /*滚动条里面轨道*/
+    box-shadow: inset 0 0 5px rgba(228, 226, 226, 0.1);
+    border-radius: 10px;
+    background: #ededed;
+}
+
 .scrollspy-backtotop {
+    cursor: pointer;
     z-index: 600;
-    width: 100px;
-    height: 100px;
+    width: 6rem;
+    height: 6rem;
     display: inline-block;
-    line-height: 50px;
-    font-size: 48px;
-    background-color: lightyellow;
+    /* line-height: 50px;
+    font-size: 48px; 
+    color: green;
+    background-color: lightyellow;*/
     position: fixed;
     bottom: 20%;
     right: 10%;
     z-index: 999;
-    border: 2px solid pink;
+    border: 2px solid gray;
     opacity: 0.3;
     transition: all 0.3s;
-    color: green;
 }
 
 .scrollspy-backtotop:hover {
-    color: red;
+    /* color: red; */
     opacity: 1 !important
 }
 
@@ -83,9 +107,14 @@
 }
 
 .scrollspy-is-scroll label {
+    cursor: pointer;
     font-size: 15px;
     line-height: 15px;
     padding-top: 0px !important;
+}
+
+.scrollspy-is-scroll input {
+    cursor: pointer;
 }
 
 .scrollspy-is-scroll label:hover {
@@ -95,8 +124,3 @@
 .scrollspy-is-scroll input:hover~label {
     color: red;
 }
-
-
-/* 目录样式 */
-
-/* 回到顶部按钮 */

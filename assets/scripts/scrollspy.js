@@ -34,7 +34,7 @@ $(document).ready(function () {
     if (a_list.length == 0) return; //如果没有目录就退出
     a_list.prop('href', '#'); //禁用a标签锚点跳转
     const toc = $('.toc'); //目录标签
-    setTimeout(() => toc.css("opacity", 0.2), 110);
+    setTimeout(() => toc.css("opacity", 0.5), 110);
     let nav_height = $("header.header").height(); //顶部导航栏高度，用于调节滚动距离
     //目录是否随内容滚动按钮
     const is_scroll = $(`
@@ -43,7 +43,7 @@ $(document).ready(function () {
                 <div><input id="scrollspy-is-scroll2" type="checkbox" /><label for="scrollspy-is-scroll2">内容随目录滚动</label></div>
             </div>`); //制作是否跟随按钮
     toc.after(is_scroll); //添加
-    setTimeout(() => is_scroll.css("opacity", 0.2), 110);
+    setTimeout(() => is_scroll.css("opacity", 0), 110);
     const is_scroll1 = $('#scrollspy-is-scroll1'); //目录是否随内容滚动
     const is_scroll2 = $('#scrollspy-is-scroll2'); //内容是否随目录滚动
     //判断是否有滚动条，如果没有滚动条就不显示两个单选框
@@ -61,7 +61,7 @@ $(document).ready(function () {
         is_scroll.css('display', 'none');
     }
     //回到顶部按钮
-    let backtotop = $('<div class="scrollspy-backtotop">回到顶部</div>'); //制作回到顶部按钮
+    let backtotop = $('<div class="scrollspy-backtotop"><img src="https://s21.ax1x.com/2024/07/23/pkHtAhT.png" alt="回到顶部" title="回到顶部"></div>'); //制作回到顶部按钮
     if ($(document).scrollTop() >= h_list.eq(0).offset().top - nav_height && $(".scrollspy-backtotop").length == 0 && !isElementOverlapped(toc, $("article.article")))
         toc.after(backtotop); //添加
     function update_backtotop() { //更新回到顶部按钮
@@ -94,7 +94,8 @@ $(document).ready(function () {
             is_scroll.css("display", "none");
         } else {
             toc.css("display", "block");
-            backtotop.css("display", "block");
+            if ($(document).scrollTop() >= h_list.eq(0).offset().top - nav_height)
+                backtotop.css("display", "block");
             is_scroll.css("display", "block");
         }
     };

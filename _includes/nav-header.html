@@ -60,9 +60,11 @@
         navList.style.setProperty('--listHeight', `-${navList.offsetHeight}px`)
       }
     }
+    $(navList).css("opacity", 1);
   }
-
   collapseNav()
+  $(navList).css("opacity", 0);
+  setTimeout(collapseNav, 50);
 
   // Check on resize if to collapse nav
   window.addEventListener('resize', () => {

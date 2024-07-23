@@ -47,6 +47,10 @@ header.header .container .logo a.logo img {
     max-height: 4rem !important;
 }
 
+.page {
+    z-index: 500;
+}
+
 /* 使底边栏固定在页面最底部↓ */
 html {
     height: 100%;

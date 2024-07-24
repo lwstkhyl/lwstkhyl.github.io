@@ -30,6 +30,10 @@ header.header {
     z-index: 1000;
 }
 
+.page header.header .container li.item--current a:hover {
+    color: green;
+}
+
 /* 导航栏模糊 */
 header.header {
     background-image: radial-gradient(transparent 1px, #fff);
@@ -89,4 +93,8 @@ footer.footer .container nav.nav small.small {
 footer.footer .container small.small a,
 footer.footer .container nav.nav small.small a {
     padding: 0 !important;
+}
+
+footer.footer .container small.small a:hover {
+    color: #fff !important;
 }

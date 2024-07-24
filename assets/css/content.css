@@ -12,6 +12,22 @@
     font-size: 1rem !important;
 }
 
+.page header.header .container a.current {
+    color: #a8adac;
+}
+
+.page header.header .container li.current a {
+    color: #a8adac;
+}
+
+.page header.header .container a.current:hover {
+    color: green;
+}
+
+.page header.header .container li.current a:hover {
+    color: green;
+}
+
 /* 博客标题中small标签 */
 small,
 small span,

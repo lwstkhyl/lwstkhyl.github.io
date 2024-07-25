@@ -22,5 +22,8 @@ $(document).ready(function () {
         }
         const code_text = $(dom).children('code').text(); //文本内容
         $(dom).append(create_ul(code_text)); //循环添加
+        if (get_count(code_text) == 1) {
+            $(dom).children(".code-copy").css("top", "2.3px");
+        }
     });
 });

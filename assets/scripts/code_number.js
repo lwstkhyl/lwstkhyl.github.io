@@ -16,14 +16,14 @@ $(document).ready(function () {
     }
     const code_pre = $(".highlighter-rouge pre.highlight"); //代码框
     code_pre.each(function (index, dom) {
+        const code_text = $(dom).children('code').text(); //文本内容
+        if (get_count(code_text) == 1) {
+            $(dom).children(".code-copy").css("top", "2.3px");
+        }
         if ($(dom).parents(".language-plaintext")[0]) { //如果是普通文本框
             $(dom).css("cssText", "padding-left: 16px !important;");
             return; //不显示行数
         }
-        const code_text = $(dom).children('code').text(); //文本内容
         $(dom).append(create_ul(code_text)); //循环添加
-        if (get_count(code_text) == 1) {
-            $(dom).children(".code-copy").css("top", "2.3px");
-        }
     });
 });

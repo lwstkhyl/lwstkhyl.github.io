@@ -13,17 +13,17 @@ python基础--函数和类
 
 格式：
 
-```
-def 函数名(形参)：
+``` py
+def 函数名(形参):
     函数体
-    return 值（可省略）
+    return 值(可省略)
 ```
 
 ---
 
 传参时可以**位置传参/关键字传参**：
 
-```
+``` py
 def calc(a,b):
     c=a+b
     return c
@@ -43,7 +43,7 @@ def calc(a,b):
 
 如果是**可变对象**（列表，字典，集合），在函数体内修改会改变实参，即**引用传递**。
 
-```
+``` py
 def fun(arg1,arg2):
     arg1=100
     arg2.append(10)
@@ -60,7 +60,7 @@ print(n2) #[22, 33, 44, 10]
 
 注意：和C相同，带默认值的形参需放到函数形参列表的结尾，如`fun(a,b=10)`，`fun(a=10,b)`是不对的
 
-```
+``` py
 def fun(a,b=10):
     print(a,b)
 fun(100) #100 10 --只有100一个实参，才用形参默认值
@@ -77,7 +77,7 @@ fun(20,30) #20 30 --与形参数量相同，不用默认值
 
 - 函数返回多个值时，结果为元组
 
-```
+``` py
 def fun(num):
     odd=[]
     even=[]
@@ -93,23 +93,23 @@ print(fun(lst)) #([29, 53, 55], [10, 34, 24, 44])
 
 #### 函数的参数传入
 
-1. 个数可变的位置形参：定义函数时，可能无法事先确定传递的位置实参的个数时，使用可变的位置参数，在参数前加上`*`，结果为元组，最多只能定义一个
+- 个数可变的位置形参：定义函数时，可能无法事先确定传递的位置实参的个数时，使用可变的位置参数，在参数前加上`*`，结果为元组，最多只能定义一个
 
-    ```
-    def fun(*args):
-        print(args) #args是一个元组
-        print(args[0]) #可以根据索引取到元组中元素，即传入的实参
-    fun(10) #(10,)  10
-    fun(1,2,3) #(1, 2, 3)  1
+    ``` py
+  def fun(*args):
+      print(args) #args是一个元组
+      print(args[0]) #可以根据索引取到元组中元素，即传入的实参
+  fun(10) #(10,)  10
+  fun(1,2,3) #(1, 2, 3)  1
     ```
 
-2. 个数可变的关键字形参：在参数前加上**，结果为一个字典，也是最多只能定义一个
+- 个数可变的关键字形参：在参数前加上`**`，结果为一个字典，也是最多只能定义一个
 
-    ```
-    def fun1(**args):
-        print(args) #args是一个字典，键为传入的实参变量名，值为实参值
-    fun1(a=10) #{'a': 10}
-    fun1(a=20,b=30,c=40) #{'a': 20, 'b': 30, 'c': 40}
+    ``` py
+  def fun1(**args):
+      print(args) #args是一个字典，键为传入的实参变量名，值为实参值
+  fun1(a=10) #{'a': 10}
+  fun1(a=20,b=30,c=40) #{'a': 20, 'b': 30, 'c': 40}
     ```
 
     注意：想要把实参传给个数可变的关键字形参，就必须有实参变量名，不能`fun1(10)`，只能`fun1(a=10)`
@@ -118,7 +118,7 @@ print(fun(lst)) #([29, 53, 55], [10, 34, 24, 44])
 
 在一个函数的定义过程中，若既有个数可变的关键字形参也有个数可变的位置形参，要求**在定义时先位置形参再关键字形参**。同时**调用函数也必须先传位置实参再传关键字实参**。
 
-```
+``` py
 def fun2(*arg1,**arg2):
     print(arg1)
     print(arg2)
@@ -130,7 +130,7 @@ fun2(10,20,a=10,b=20) #(10, 20)  {'a': 10, 'b': 20}
 
 调用函数时：可以使用**列表传入位置实参**，可以使用**字典传入关键字实参**。
 
-```
+``` py
 def fun(a,b,c):
     print(a,b,c)
 
@@ -147,7 +147,7 @@ fun(**dic) #100 200 300  将字典中的键值对都转换为关键字实参传�
 
 函数形参列表中使用`*`作为分隔符：`*`之前的参数采用哪种方式传入都行，之后的只能采用关键字实参传递
 
-```
+``` py
 def fun1(a,b,*,c,d):
     print(a,b,c,d)
 fun1(a=10,b=20,c=30,d=40) #10 20 30 40
@@ -157,7 +157,7 @@ fun1(20,10,d=30,c=40) #20 10 40 30
 
 #### 变量的作用域
 
-```
+``` py
 def fun(a,b):
     c=a+b         
     print(c)
@@ -169,7 +169,7 @@ def fun(a,b):
 
 **函数内无法访问或改变外部声明的全局变量**，除非以实参的形式传入函数：
 
-```
+``` py
 a=1
 def func():
     #print(a)报错，函数内无法访问外部变量
@@ -183,7 +183,7 @@ print(a) #1 函数内无法修改全局变量
 
 若真的想在函数内部使用全局变量，可使用`global`关键字：
 
-```
+``` py
 a=1
 def func():
     global a #在a前加上global，表明函数内使用全局变量a
@@ -203,7 +203,7 @@ print(a) #2
 
 例1：求阶乘
 
-```
+``` py
 def fac(n):
     if n==1: #一直乘到n为1的时候
         return 1
@@ -216,7 +216,7 @@ print(fac(6)) #720
 
 例2：斐波那契数列(1 1 2 3 5 8 13 21...)
 
-```
+``` py
 def fac(n): #n为数列的第几位
     if n==1:
         return 1
@@ -232,7 +232,7 @@ for i in range(1,7): #输出数列中前6个数
 
 例3：现有一个文件夹test，里面有一个txt文件和2个文件夹a、b，a中有1个txt文件，b中有1个txt文件和文件夹c，c中又有1个txt文件；现要写一个函数找到test下所有的txt文件，就可以用递归实现，返回一个list包含所有.txt文件的路径
 
-```
+``` py
 test--a-------2.txt
       b-------3.txt
               c--------4.txt
@@ -247,7 +247,7 @@ test--a-------2.txt
 
 - `path.exists(p)`判断给定路径p是否存在
 
-```
+``` py
 import os
 def get_files_recursion_from_dir(path):
     file_list=[] #定义一个列表用于存储文件路径
@@ -267,7 +267,7 @@ print(get_files_recursion_from_dir("D:/python/test"))
 
 #### 函数作为参数传入/闭包
 
-```
+``` py
 def use_computer(computer_method): #将computer这个方法作为computer_method传入
     result=computer_method(1,2) 
     print(result)
@@ -282,7 +282,7 @@ use_computer(computer) #3
 
 形式：`lambda 形参列表:函数返回值`，lambda表达式返回一个函数，这个函数没有名字且只能在定义处使用一次，称为匿名函数
 
-```
+``` py
 def use_func(func):
     res=func(1,2)
     print(res)
@@ -295,7 +295,7 @@ use_func(add) #3
 
 更直接的写法：
 
-```
+``` py
 def use_func(func):
     res=func(1,2)
     print(res)
@@ -306,7 +306,7 @@ use_func(lambda x,y:x+y) #3
 
 #### 基础结构
 
-```
+``` py
 class student: #student为类名，由一个或多个单词组成，类名的首字母常大写
     place='abc' #直接写在类里面的变量称为类属性
     def eat(self): #实例方法（是在类内定义的函数）（类外的def才叫函数）
@@ -329,7 +329,7 @@ print(student) #<class '__main__.student'>
 
 在创建类对象的时候，会自动执行，将调用时传入的参数传递给该方法使用。
 
-```
+``` py
 def __init__(self,name_val,age_val):
     self.name=name_val 
     self.age=age_val
@@ -343,7 +343,7 @@ def __init__(self,name_val,age_val):
 
 创建类的实例对象：
 
-```
+``` py
 stu1=student('abc',20)
 stu2=student('ABC',18)
 ```
@@ -354,7 +354,7 @@ student/stu1/stu2的地址都不同，因为student是类对象（上面的定�
 
 #### 类属性和实例属性
 
-```
+``` py
 stu1=student('abc',20)
 stu2=student('ABC',18)
 print(student.place) #abc
@@ -363,7 +363,7 @@ print(stu1.place) #abc
 
 **类对象和实例对象都可以使用类属性**
 
-```
+``` py
 #print(student.name)报错，类对象不能使用实例属性
 print(stu1.name) #'abc'
 print(stu2.name) #'ABC'
@@ -371,7 +371,7 @@ print(stu2.name) #'ABC'
 
 **只有实例对象才能使用实例属性**，因为实例对象有构造方法
 
-```
+``` py
 student.place='ab'
 print(student.place) #ab
 print(stu1.place) #ab
@@ -386,7 +386,7 @@ print(stu1.place) #AB
 
 实例对象self必须出现在传参列表中，通过它来传递实例的属性和方法（也可以传递类的属性和方法），但在实际调用时可以忽略
 
-```
+``` py
 class student:
     name=None
     def say(self):
@@ -403,7 +403,7 @@ stu.say_msg("111") #'hi,I'm abc,111'
 
 #### 动态绑定属性和方法
 
-```
+``` py
 stu1=student(name='abc',age=20)     
 stu2=student(name='abcd',age=21)
 stu1.gender='female'
@@ -415,7 +415,7 @@ print(stu1.gender) #female
 
 ---
 
-```
+``` py
 def show(): #在类外定义，是函数
     print('show')
 stu1.show=show #在这被绑定到stu1上，变成实例方法
@@ -433,7 +433,7 @@ stu1.show() #show
 
 **实例对象和类对象都可以调用**
 
-```
+``` py
 class Student:
     school='abc'
     @classmethod
@@ -453,7 +453,7 @@ stu.say_school() #My school is abc
 
 **实例对象和类对象都可以调用**
 
-```
+``` py
 class Student:
     school='abc'
     @staticmethod
@@ -477,7 +477,7 @@ stu.say_time() #2024-02-16 10:46:35
 
 控制类转换成字符串的行为，默认情况下`print(类)`都是输出它的内存地址
 
-```
+``` py
 class student:
     name=None
     age=None
@@ -491,7 +491,7 @@ print(str(stu)) #两个输出都是stu对象的内存地址
 
 在类定义中加上：
 
-```
+``` py
     def __str__(self):  
         return f"name:{self.name},age:{self.age}"
 ```
@@ -502,7 +502,7 @@ print(str(stu)) #两个输出都是stu对象的内存地址
 
 默认情况下两个类不能用`<`和`>`进行比较，即`类<类`或`类>类`会报错，但通过该方法可以实现
 
-```
+``` py
     def __lt__(self, other):
         return self.age<other.age #设置通过age进行比较
 stu1=student("abc",11)
@@ -517,9 +517,9 @@ print(stu1>stu2) #false
 
 #### 其它比较符号
 
-<=或>=：` __le__`
+<=或>=：`__le__`
 
-```
+``` py
     def __le__(self, other):
         return self.age<=other.age #也是必须是<=
 stu1=student("abc",11)
@@ -529,7 +529,7 @@ print(stu1<=stu2) #true  如果不写这个方法会报错
 
 ==: `__eq__`
 
-```
+``` py
     def __eq__(self, other):
         return self.age==other.age
 stu1=student("abc",11)
@@ -543,7 +543,7 @@ print(stu1==stu2) #false
 
 `__repr__ `方法应该返回一个字符串，该字符串显示如何创建实例对象，以将该字符串传递给`eval()`来重新构造实例对象。
 
-```
+``` py
 class Product:
     def __init__(self, name, price):
         self.name = name
@@ -560,7 +560,7 @@ evaluated = eval(repr(product))
 
 `__call__`将对象当作函数调用时触发，使用形式为`对象名称()`，会默认调用`__call__`函数里的内容，如
 
-```
+``` py
 p = People('liuming', 20)
 p('abc')  # 调用__call__方法
 ```
@@ -589,7 +589,7 @@ p('abc')  # 调用__call__方法
 
 私有方法无法直接被类对象/实例对象使用（在主函数中调用），私有变量无法在主函数中赋值和获取
 
-```
+``` py
 class phone:
     __current=None
     def __single(self):
@@ -603,7 +603,7 @@ p1=phone()
 
 私有成员/方法可以被类中的其他成员使用
 
-```
+``` py
 class phone:
     __current=1
     def __single(self):
@@ -625,17 +625,17 @@ p1.pd_current() #true
 
 - 私有成员方法:`check_5g()`，会判断私有成员`is_5g_enable`的值：
 
-	1. 若为True，打印输出:5g开启
+	- 若为True，打印输出:5g开启
 
-	2. 若为False，打印输出:5g关闭，使用4g网络
+	- 若为False，打印输出:5g关闭，使用4g网络
 
 - 公开成员方法:`call_by_5g()`，调用它会执行：
 
-	1. 调用私有成员方法:`check_5g()`，判断5g网络状态
+	- 调用私有成员方法:`check_5g()`，判断5g网络状态
 
-	2. 打印输出:正在通话中
+	- 打印输出:正在通话中
 
-```
+``` py
 class phone:
     __is_5g_enable=False
     def __check_5g(self):
@@ -656,7 +656,7 @@ phone1.call_by_5g() #5g关闭，使用4g网络	正在通话中
 
 **单继承**：`class 类名(父类名):`
 
-```
+``` py
 class phone:
     producer="abc"
     def call_by_4g(self):
@@ -675,7 +675,7 @@ n_phone.call_by_4g() #这些功能都可以使用
 
 **多继承**：`class 类名(父类1,父类2,...):`
 
-```
+``` py
 class newest_phone(new_phone,phone):
     def call_by_6g(self):
         print("6g通话")
@@ -689,7 +689,7 @@ n_phone.call_by_6g() #这些功能都可以使用
 
 **继承的优先级**：多个父类中，如果有同名的成员，则默认以继承顺序（从左到右）为优先级，即先继承的保留，后继承的被覆盖
 
-```
+``` py
 class phone:
     def call(self):
         print("4g通话")
@@ -706,7 +706,7 @@ n_phone.call() #5g通话
 
 **复写**：子类在继承父类的成员属性和方法后，可以对其进行修改，只要在子类中重新定义同名的属性/方法即可
 
-```
+``` py
 #接上例
 class newest_phone(new_phone,phone):
     def call(self):
@@ -719,26 +719,26 @@ n_phone.call() #6g通话
 
 **调用父类的同名成员**：如果想使用被复写的父类的成员，有两种方法:
 
-1. `父类名.成员变量/成员方法(self)`，如`phone.producer`和`phone.call(self)`
+- `父类名.成员变量/成员方法(self)`，如`phone.producer`和`phone.call(self)`
 
-    ```
-    class phone:
-        def call(self):
-            print("4g通话")
-    class new_phone(phone):
-        def call(self):
-            print("5g通话")
-        def use_call(self,is_old=False):
-            if is_old:
-                phone.call(self) #调用父级成员方法，注意需传入self
-            else:
-                self.call() #调用复写后的新方法
-    new_p=new_phone()
-    new_p.use_call() #5g通话
-    new_p.use_call(True) #4g通话
+    ``` py
+  class phone:
+      def call(self):
+          print("4g通话")
+  class new_phone(phone):
+      def call(self):
+          print("5g通话")
+      def use_call(self,is_old=False):
+          if is_old:
+              phone.call(self) #调用父级成员方法，注意需传入self
+          else:
+              self.call() #调用复写后的新方法
+  new_p=new_phone()
+  new_p.use_call() #5g通话
+  new_p.use_call(True) #4g通话
     ```
 
-2. `super().成员变量/成员方法()`，如`super().producer`和`super().call()`
+- `super().成员变量/成员方法()`，如`super().producer`和`super().call()`
 
 注意这里调用父级方法时不用写`self`
 
@@ -748,7 +748,7 @@ n_phone.call() #6g通话
 
 多态常作用在继承关系上，比如函数形参声明接收父类对象，实际传入父类的子类对象进行工作，达到同一行为不同状态的结果。
 
-```
+``` py
 class animal:
     def speak(self):
         pass
@@ -768,7 +768,7 @@ do_speak(c) #'meow'
 
 抽象类：如前面的父类`animal`中的`speak`方法是空实现`pass`，这样设计的含义是：由父类确定有哪些方法，而具体的实现由子类自行决定。这种写法就叫做抽象类（接口），方法体是空实现`pass`的称为抽象方法
 
-```
+``` py
 class ac: #抽象类
     def cool_wind(self):
         pass
@@ -804,9 +804,9 @@ make_cool(g) #'g制冷'
 
 #### 变量的类型注解
 
-1. 第一种方法：创建变量时使用`变量:类型`，如：
+- 第一种方法：创建变量时使用`变量:类型`，如：
 
-   ```
+   ``` py
    #基本数据类型
    var_1:int=10
    var_2:str="abc"
@@ -823,19 +823,19 @@ make_cool(g) #'g制冷'
 
     类型详细注解：标注容器内元素的类型--使用`[元素类型,...]`
 
-    ```
-    my_list:list[int]=[1,2,3]
-    my_tuple:tuple[int,str,bool]=(1,"abc",True)
-    my_dict:dict[str,int]={"abc":111}
+    ``` py
+  my_list:list[int]=[1,2,3]
+  my_tuple:tuple[int,str,bool]=(1,"abc",True)
+  my_dict:dict[str,int]={"abc":111}
     ```
 
     其中，元组类型设置类型详细注解，需要将每一个元素都标记出来；字典类型设置类型详细注解，需要两个类型，第一个是key第二个是value
 
-2. 以注释的形式`#type:类型`，各类型的表示方式同上
+- 以注释的形式`#type:类型`，各类型的表示方式同上
 
-    ```
-    var_1=10 #type:int
-    my_dict={"abc":111} #type:dict[str,str]
+    ``` py
+  var_1=10 #type:int
+  my_dict={"abc":111} #type:dict[str,str]
     ```
 
 #### 函数的类型注解
@@ -858,7 +858,7 @@ make_cool(g) #'g制冷'
 
 在使用联合类型注解前需导入`typing`模块的`Union`函数：
 
-```
+``` py
 from typing import Union
 my_list:list[Union[str,int]]=[1,"abc"] #列表中元素为str或int类型
 my_dict:dict[str,Union[str,int]]={"name":"abc","age":11} #str表示该字典的键是str类型，Union[str,int]表示值是str或int类型
@@ -871,7 +871,7 @@ def func(data:Union[str,int])->Union[str,int]: #返回str或int类型
 
 类型注解主要用于帮助ide对代码进行类型推断、协助做代码提示，以及帮助作者自己备注变量类型，但**不会真正决定变量的类型**，ide仍会根据注解中的实际值给变量赋值，而不是根据作者写的类型
 
-```
+``` py
 var1:int="abc"
 var2:str=111
 print(var1,var2) #'abc' 111
@@ -913,7 +913,7 @@ print(var1,var2) #'abc' 111
 
 为应对这些数据处理过程中出现的问题，引入`try...except...else...finally`异常捕获机制，结构：
 
-```
+``` py
 try:
     ...
 except 异常种类:  #可以有多个except块
@@ -930,7 +930,7 @@ finally:
 
 一个例子：
 
-```
+``` py
 try:
     a = int(input('第一个整数：'))
     b = int(input('第二个整数：'))
@@ -982,23 +982,23 @@ finally: #程序结束
 
 导入模块：
 
-1. `import 模块名`，如：
+- `import 模块名`，如：
 
-    ```
-    import math
-    print(dir(math)) #可以查看该模块中都有什么功能
-    print(math.pow(2,3)) #使用模块中的函数
-    ```
-
-2. `from 模块名 import 函数`，如：
-
-    ```
-    from math import pow
-    print(pow(2,3)) #只导入了math中的pow函数，调用时不用加math.
-    from math import * #导入math中的所有函数，使用math中的函数都不用加math.
+    ``` py
+  import math
+  print(dir(math)) #可以查看该模块中都有什么功能
+  print(math.pow(2,3)) #使用模块中的函数
     ```
 
-3. 导入自己创建的模块：自己创建一个.py文件，写入函数；左侧文件列表中找到它所在文件夹，右键->将目录标记为->源代码根目录；之后在main中可以使用前面两种方法导入模块（模块名就是文件名.py之前的部分）。
+- `from 模块名 import 函数`，如：
+
+    ``` py
+  from math import pow
+  print(pow(2,3)) #只导入了math中的pow函数，调用时不用加math.
+  from math import * #导入math中的所有函数，使用math中的函数都不用加math.
+    ```
+
+- 导入自己创建的模块：自己创建一个.py文件，写入函数；左侧文件列表中找到它所在文件夹，右键->将目录标记为->源代码根目录；之后在main中可以使用前面两种方法导入模块（模块名就是文件名.py之前的部分）。
 
     注意这个.py文件和main.py要在一个文件夹下。
 
@@ -1018,14 +1018,14 @@ finally: #程序结束
 
 新建一个python软件包package1，里面自动包含`__init__.py`文件，在这个文件夹里面再新建一个`model1.py`（包中新建一个模块）,在里面写入`a=10`，回到main中：
 
-```
+``` py
 import package1.model1 #导入package1包中的model1模块
 print(package1.model1.a) #10
 ```
 
 也可以：
 
-```
+``` py
 import package1.model1 as pm #声明pm为package1.model1的别名
 print(pm.a) #更加简洁
 ```
@@ -1040,13 +1040,13 @@ print(pm.a) #更加简洁
 
 第三方包的安装：
 
-1. 命令行中输入：`pip install 包名称`，也可设置国内镜像地址提高安装速度：
+- 命令行中输入：`pip install 包名称`，也可设置国内镜像地址提高安装速度：
 
     `pip install -i https://pypi.tuna.tsinghua.edu.cn/simple 包名称` （https://pypi.tuna.tsinghua.edu.cn/simple 为国内镜像地址）
 
     安装特定版本：`pip install cchardet==2.1.3`即是安装2.1.3版本的cchardet包
 
-2. 用pycharm自带的安装：点击右下角的`python.exe`，选择`解释器设置`，可以看到安装了哪些包；
+- 用pycharm自带的安装：点击右下角的`python.exe`，选择`解释器设置`，可以看到安装了哪些包；
 
     点击`+`，可以进入安装界面，搜索想安装的包，点击右下角的选项，输入`-i https://pypi.tuna.tsinghua.edu.cn/simple`设置国内镜像地址
 
@@ -1058,21 +1058,21 @@ print(pm.a) #更加简洁
 
 `file_util.py`包含函数:`print_file_info(file_name)`接收传入文件的路径，打印文件的全部内容，如文件不存在则捕获异常，输出提示信息，通过finally关闭文件对象;`append_to_file(file_name，data)`接收文件路径以及传入数据，将数据追加写入到文件中>
 
-1. 创建包：右键左侧`pythonproject`，选择`new`（新建）->`python package`（软件包），名称为`my_utils`，回车，可以找到一个`__init__.py`的文件；
+- 创建包：右键左侧`pythonproject`，选择`new`（新建）->`python package`（软件包），名称为`my_utils`，回车，可以找到一个`__init__.py`的文件；
 
-2. 右键左侧my_utils，选择`new`（新建）->`python file`（文件），名称为`str_util.py`，同样方法添加一个`file_util.py`
+- 右键左侧my_utils，选择`new`（新建）->`python file`（文件），名称为`str_util.py`，同样方法添加一个`file_util.py`
 
-3. 说明文档：在.py文件中连续输入3次`"`，再回车，会出现
+- 说明文档：在.py文件中连续输入3次`"`，再回车，会出现
 
+    ``` py
+  """
+  #第一行可以写入描述函数功能的文字
+  :param s: #函数传入参数
+  :return: #函数返回参数
+  """
     ```
-    """
-    #第一行可以写入描述函数功能的文字
-    :param s: #函数传入参数
-    :return: #函数返回参数
-    """
-    ```
 
-4. 在str_util.py中测试函数功能：记住一定要在`if __name__=='__main__':`下写测试代码，这样在作为包导入的时候就不会执行调用函数进行测试的内容；注意右上角运行按钮左面的那个小框框里面应该是`当前文件`或者是当前`.py文件名`
+- 在str_util.py中测试函数功能：记住一定要在`if __name__=='__main__':`下写测试代码，这样在作为包导入的时候就不会执行调用函数进行测试的内容；注意右上角运行按钮左面的那个小框框里面应该是`当前文件`或者是当前`.py文件名`
 
 
 
@@ -1080,7 +1080,7 @@ print(pm.a) #更加简洁
 
 str_util.py：
 
-```
+``` py
 def str_reverse(s):
     """
     功能是将字符串完成反转
@@ -1104,7 +1104,7 @@ if __name__ == '__main__':
 
 file_util.py：
 
-```
+``` py
 def print_file_info(file_name):
     """
     功能是将给定路径的文件内容输出到控制台中
@@ -1146,7 +1146,7 @@ if __name__ == '__main__':
 
 main.py主函数调用：
 
-```
+``` py
 import my_utils.str_util #这种方法调用其中函数时要加上my_utils
 from my_utils import file_util #这种方法就不用，只需加file_util
 print(my_utils.str_util.str_reverse("123"))
@@ -1159,7 +1159,7 @@ file_util.print_file_info("D:/test1.txt")
 
 #### 打开和关闭
 
-1. `open(文件名，打开模式，编码格式)`
+- `open(文件名，打开模式，编码格式)`
 
     - 文件名：以字符串形式，用`/`不是`\`
 
@@ -1169,18 +1169,18 @@ file_util.print_file_info("D:/test1.txt")
 
     如：
 
-    ```
-    f=open("D:/python/shiyan.txt","r",encoding="UTF-8") #encoding参数不是open构造函数中的第三个参数，中间省略了多个复杂参数，所以要用关键字传参
-    print(type(f)) #<class '_io.TextIOWrapper'>
+    ``` py
+  f=open("D:/python/shiyan.txt","r",encoding="UTF-8") #encoding参数不是open构造函数中的第三个参数，中间省略了多个复杂参数，所以要用关键字传参
+  print(type(f)) #<class '_io.TextIOWrapper'>
     ```
 
     最后使用`f.close()`关闭文件，注意用这种方法打开文件后必须手动关闭
 
-2. 另一种打开文件的方法：
+- 另一种打开文件的方法：
 
-    ```
-    with open(文件名，打开模式，编码格式) as f: 
-        #对文件的操作
+    ``` py
+  with open(文件名，打开模式，编码格式) as f: 
+      #对文件的操作
     ```
 
     **该方法可以自动关闭文件**
@@ -1197,9 +1197,9 @@ file_util.print_file_info("D:/test1.txt")
 
 - 用for循环读取每行数据：也不读取换行`\n`
 
-    ```
-    for line in f: #用for循环读取每行数据
-        print(line) #123456789  abcd
+    ``` py
+  for line in f: #用for循环读取每行数据
+      print(line) #123456789  abcd
     ```
 
 
@@ -1218,7 +1218,7 @@ file_util.print_file_info("D:/test1.txt")
 
 如：
 
-```
+``` py
 f=open("D:/python/shiyan.txt","w",encoding="UTF-8") 
 f.write("123")  
 f.close() #close函数会内置flush的功能，若有close就无需flush
@@ -1226,7 +1226,7 @@ f.close() #close函数会内置flush的功能，若有close就无需flush
 
 或
 
-```
+``` py
 with open('D:/python/shiyan.txt','w',encoding='utf-8') as fp:
     fp.write("123")
 ```
@@ -1254,29 +1254,29 @@ with open('D:/python/shiyan.txt','w',encoding='utf-8') as fp:
 
 ##### 统计给定单词的出现次数
 
-1. 第一种方法：把所有内容读取成一个字符串，用字符串的`count(给定单词)`方法直接统计
+- 第一种方法：把所有内容读取成一个字符串，用字符串的`count(给定单词)`方法直接统计
 
-    ```
-    f=open("D:/python/shiyan.txt","r",encoding="UTF-8")
-    content=f.read()
-    count = content.count("word")
-    print(f"word出现了{count}次")
-    f.close()
+    ``` py
+  f=open("D:/python/shiyan.txt","r",encoding="UTF-8")
+  content=f.read()
+  count = content.count("word")
+  print(f"word出现了{count}次")
+  f.close()
     ```
 
-2. 第二种方法：按照空格进行切分，把每个单词与给定单词进行比较
+- 第二种方法：按照空格进行切分，把每个单词与给定单词进行比较
 
-    ```
-    f=open("D:/python/shiyan.txt","r",encoding="UTF-8")
-    count=0
-    for line in f:
-        line=line.strip() #去除每行单词开头和结尾的空格以及换行符，若没有，切分完成后每行的最后一个单词后面就会带一个\n影响判断
-        words=line.split(" ") #以空格为分界线进行切分
-        for word in words:
-            if word=="word":
-                count+=1
-    print(f"word出现了{count}次")
-    f.close()
+    ``` py
+  f=open("D:/python/shiyan.txt","r",encoding="UTF-8")
+  count=0
+  for line in f:
+      line=line.strip() #去除每行单词开头和结尾的空格以及换行符，若没有，切分完成后每行的最后一个单词后面就会带一个\n影响判断
+      words=line.split(" ") #以空格为分界线进行切分
+      for word in words:
+          if word=="word":
+              count+=1
+  print(f"word出现了{count}次")
+  f.close()
     ```
 
 ##### 文件的备份
@@ -1285,7 +1285,7 @@ with open('D:/python/shiyan.txt','w',encoding='utf-8') as fp:
 
 思路：r模式打开一个文件对象并读取文件，再用w模式打开另一个文件用于写出，用for循环检测是否是测试，如果不是就写出，最后将两个文件关闭。
 
-```
+``` py
 fr=open("D:/python/bill.txt","r",encoding="UTF-8")
 fw=open("D:/python/bill.txt.bak","w",encoding="UTF-8")
 #这里使用w或a模式都可，因为写出的内容在内存中，还没到磁盘中，可以在循环中追加写入（w模式写入内存中是不会覆盖的，只有写入文件中才会覆盖原有文件）

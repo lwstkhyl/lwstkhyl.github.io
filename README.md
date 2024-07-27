@@ -34,7 +34,8 @@
 │   │   ├── down_li.css 导航栏下拉子菜单
 │   │   ├── iconfont系列 字体图标
 │   │   ├── page.css page.html页CSS
-│   │   └── scrollspy.css 笔记页目录和回到顶部按钮
+│   │   ├── scrollspy.css 笔记页目录和回到顶部按钮
+│   │   └── spinner.css 页面加载动画
 │   ├── logos 网页图标
 │   ├── scripts 各种JS文件
 │   │   ├── click_header.js 控制笔记页双击标题跳转
@@ -45,6 +46,7 @@
 │   │   ├── jquery.min.js jquery源码
 │   │   ├── scrollspy.js 笔记页目录和回到顶部按钮
 │   │   ├── site.js 所在页导航栏标签变灰，用于标识现在正处于哪页中
+│   │   ├── spinner.js 页面加载动画
 │   │   ├── sw.js 框架自带
 │   │   └── toc.js 用于生成笔记页目录
 │   └── ... 其它框架自带配置文件，无需更改

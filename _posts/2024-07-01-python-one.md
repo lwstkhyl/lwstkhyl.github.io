@@ -7,6 +7,8 @@ python基础--基本数据类型
 
 <!-- more -->
 
+写在前面：本笔记为[我的python TXT版笔记](https://github.com/lwstkhyl/python/tree/main/python)的重新整理
+
 ### print
 
 `print('hello\nworld')` `\n`换行

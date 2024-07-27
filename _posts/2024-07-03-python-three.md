@@ -7,6 +7,8 @@ python基础--一些进阶内容
 
 <!-- more -->
 
+写在前面：本笔记为[我的python TXT版笔记](https://github.com/lwstkhyl/python/tree/main/python)的重新整理
+
 ### 正则表达式
 
 #### 基础概念

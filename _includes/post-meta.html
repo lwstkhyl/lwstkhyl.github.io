@@ -1,13 +1,7 @@
-{% if page.categories %}
+{% if page.subcategory %}
 {% capture categories %}
-{% for category in page.categories %}
-<span class="label  label--category"><a href="{{ site.baseurl }}{{ page.category }}">{{ category }}</a></span>{% if
-forloop.last == false %},{% endif %}
-{% endfor %}
-{% endcapture %}
-{% elsif page.category %}
-{% capture categories %}
-<span class="label  label--category"><a href="{{ site.baseurl }}{{ page.category }}">{{ page.category }}</a></span>
+<span class="label  label--category"><a href="{{ site.baseurl }}{{ page.subcategory }}">{{ page.subcategory
+    }}</a></span>
 {% endcapture %}
 {% endif %}
 

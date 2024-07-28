@@ -49,12 +49,16 @@ ul.sub_nav li.sub_nav a.sub_nav {
     margin: 0;
 }
 
+nav.nav a:hover {
+    color: green !important;
+}
+
 nav.nav a.current {
-    color: #a8adac;
+    color: #a8adac !important;
 }
 
 nav.nav a.current:hover {
-    color: green;
+    color: green !important;
 }
 
 /* 优化下拉箭头样式 */

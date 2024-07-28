@@ -124,16 +124,16 @@ navigation_header:
     url: /JS/
   - title: HTML-CSS
     url: /HTML/
+    sub_navigation:
+      - title: HTML基础教程
+        url: /HTML-HTML/
+      - title: CSS基础教程
+        url: /HTML-CSSbase/
   - title: python
     url: /python/
   - title: R与生信
     url: /r/
   # - title: HP
-  #   sub_navigation:
-  #     - title: Human Practices
-  #       url: /human-practices/
-  #     - title: Education & Communication
-  #       url: /education/
   # - title: Team
   #   sub_navigation:
   #     - title: Members

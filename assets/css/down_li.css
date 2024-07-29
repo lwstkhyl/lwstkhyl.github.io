@@ -19,10 +19,7 @@ nav.nav ul.list--nav li.item--nav span.icon-down-line-free {
 }
 
 ul.sub_nav {
-    background-image: radial-gradient(transparent 1px, #fff);
-    background-size: 4px 4px;
-    backdrop-filter: blur(6px);
-    /* background-color: white; */
+    background-color: white;
     flex-direction: column;
     height: fit-content;
     z-index: 999;

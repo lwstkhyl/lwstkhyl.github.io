@@ -1,8 +1,7 @@
 {% if site.favicons %}
 {% for icon in site.favicons %}
-<link rel="icon" type="image/png" href="https://lwstkhyl.github.io/assets/logos/favicon.ico" sizes="32x32">
-<link rel="apple-touch-icon" sizes="{{ icon[0] }}x{{ icon[0] }}"
-  href="https://lwstkhyl.github.io/assets/logos/favicon.ico">
+<link rel="icon" type="image/png" href="{{ icon[1] | relative_url }}" sizes="{{ icon[0] }}x{{ icon[0] }}">
+<link rel="apple-touch-icon" sizes="{{ icon[0] }}x{{ icon[0] }}" href="{{ icon[1] | relative_url }}">
 {% endfor %}
 {% endif %}
 <link rel="shortcut icon" href="https://lwstkhyl.github.io/assets/logos/logo.svg">

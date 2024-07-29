@@ -122,6 +122,13 @@ navigation_header:
     url: /
   - title: JS
     url: /JS/
+    sub_navigation:
+      - title: JS基础教程
+        url: /JS-JSbase/
+      - title: jQuery教程
+        url: /JS-jQuery/
+      - title: 其它
+        url: /JS-other/
   - title: HTML-CSS
     url: /HTML/
     sub_navigation:
@@ -129,23 +136,26 @@ navigation_header:
         url: /HTML-HTML/
       - title: CSS基础教程
         url: /HTML-CSSbase/
+      - title: 其它
+        url: /HTML-other/
   - title: python
     url: /python/
+    sub_navigation:
+      - title: python基础教程
+        url: /python-pythonbase/
+      - title: 数据分析基础教程
+        url: /python-database/
+      - title: 其它
+        url: /python-other/
   - title: R与生信
     url: /r/
-  # - title: HP
-  # - title: Team
-  #   sub_navigation:
-  #     - title: Members
-  #       url: /members/
-  #     - title: Contribution
-  #       url: /contribution/
-  #     - title: Attributions
-  # url: /attributions/
-#  - title: Search
-#    url: /search/
-#  - title: Fork Alembic
-#    url: https://github.com/daviddarnes/alembic
+    sub_navigation:
+      - title: R基础教程
+        url: /r-rbase/
+      - title: b站生信课程
+        url: /r-bioinfolesson/
+      - title: 其它
+        url: /r-other/
 
 navigation_footer:
   - title: Created by lwl

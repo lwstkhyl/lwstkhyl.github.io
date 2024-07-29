@@ -2,6 +2,7 @@
 layout: mypost
 title: python基础
 category: python
+subcategory: python-pythonbase
 ---
 python基础--函数和类
 

@@ -2,6 +2,7 @@
 layout: mypost
 title: python基础
 category: python
+subcategory: python-pythonbase
 ---
 python基础--一些进阶内容
 

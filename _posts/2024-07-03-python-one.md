@@ -2,6 +2,7 @@
 layout: mypost
 title: python基础
 category: python
+subcategory: python-pythonbase
 ---
 python基础--基本数据类型
 

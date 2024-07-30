@@ -83,7 +83,8 @@ $(document).ready(function () {
         parent_a.css("z-index", "1000");
     }
     function update_position(ul, parent) { //更新top/left
-        const { top, left } = parent.offset();
+        // const { top, left } = parent.offset();
+        const { top, left } = parent[0].getBoundingClientRect();
         const parent_height = parent.height();
         ul.css("top", top + parent_height * 2 / 3);
         ul.css("left", left);

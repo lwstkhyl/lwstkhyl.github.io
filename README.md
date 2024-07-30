@@ -41,6 +41,7 @@
 │   │   ├── click_header.js 控制笔记页双击标题跳转
 │   │   ├── code_copy.js 代码复制按钮
 │   │   ├── code_number.js 代码行数
+│   │   ├── confirm_href.js 调整导航栏中a标签的跳转链接
 │   │   ├── down_li.js 导航栏下拉子菜单
 │   │   ├── fetch.js 框架自带
 │   │   ├── jquery.min.js jquery源码
@@ -60,11 +61,23 @@
 ├── 404.md 网址无法加载/网址不存在时显示的页面
 ├── elements.md Alembic样式展示，之后会移除
 ├── Gemfile系列 框架运行的配置文件，只需在第一次运行错误时更改
-├── HTML.html HTML与CSS笔记总展示页面
+├── HTML-CSSbase.html CSS基础教程笔记总展示页面
+├── HTML-HTML.html HTML笔记总展示页面
+├── HTML-other.html HTML与CSS的其它内容总展示页面
+├── HTML.html 所有HTML与CSS笔记总展示页面
 ├── index.md 网站首页
-├── JS.html JS笔记总展示页面
-├── python.html python笔记总展示页面
-├── r.html R与生信笔记总展示页面
+├── JS-jQuery.html jQuery笔记总展示页面
+├── JS-JSbase.html JS基础教程笔记总展示页面
+├── JS-other.html JS的其它内容总展示页面
+├── JS.html 所有JS笔记总展示页面
+├── python-database.html 数据分析基础教程笔记总展示页面
+├── python-other.html python的其它内容总展示页面
+├── python-pythonbase.html python基础教程笔记总展示页面
+├── python.html 所有python笔记总展示页面
+├── r-bioinfolesson.html b站生信课程笔记总展示页面
+├── r-other.html R与生信的其它内容总展示页面
+├── r-rbase.html R基础教程笔记总展示页面
+├── r.html 所有R与生信笔记总展示页面
 ├── README.md GitHub的readme
 ├── test.html 新增功能（还未完成）
 └── 其它都是框架自带文件，无需更改

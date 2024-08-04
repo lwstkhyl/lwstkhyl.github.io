@@ -1,6 +1,7 @@
 $(document).ready(function () {
     const h_list = $('main.main h3,h4,h5'); //所有的标题
     $("main.main a").each(function (index, dom) {
+        if ($(dom).prop("class") === "title") return;
         const href = $(dom).prop("href");
         if ((href.includes("https://") || href.includes("http://")) && !href.includes("#")) { //如果不是锚点链接，就在新页面中打开
             $(dom).prop("target", "_blank");

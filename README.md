@@ -38,7 +38,7 @@
 │   │   └── spinner.css 页面加载动画
 │   ├── logos 网页图标
 │   ├── scripts 各种JS文件
-│   │   ├── click_header.js 控制笔记页双击标题跳转
+│   │   ├── change_a.js 改变a标签跳转方式：如果是链接就在新页面中打开，如果是锚点就跳转到对应标题
 │   │   ├── code_copy.js 代码复制按钮
 │   │   ├── code_number.js 代码行数
 │   │   ├── confirm_href.js 调整导航栏中a标签的跳转链接

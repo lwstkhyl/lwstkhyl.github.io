@@ -32,7 +32,7 @@ $(document).ready(function () {
     const h_list = $('h3,h4,h5'); //所有的标题
     const a_list = $('.toc a'); //所有的目录a标签
     if (a_list.length == 0) return; //如果没有目录就退出
-    a_list.prop('href', '#'); //禁用a标签锚点跳转
+    a_list.prop('href', 'javascript:;'); //禁用a标签锚点跳转
     const toc = $('.toc'); //目录标签
     setTimeout(() => toc.css("opacity", 0.5), 110);
     let nav_height = $("header.header").height(); //顶部导航栏高度，用于调节滚动距离
@@ -187,4 +187,10 @@ $(document).ready(function () {
         }
     });
     update_classname();
+    //双击标题事件
+    const header = $(".clickable-header");
+    header.off("click"); //清除默认点击事件
+    header.on("dblclick", function () { //双击标题，滑到它的位置
+        $("html,body").animate({ scrollTop: $(this).offset().top - nav_height });
+    });
 });

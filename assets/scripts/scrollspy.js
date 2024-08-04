@@ -188,9 +188,11 @@ $(document).ready(function () {
     });
     update_classname();
     //双击标题事件
-    const header = $(".clickable-header");
+    const header = $(".clickable-header"); //获取所有clickable的标题
     header.off("click"); //清除默认点击事件
     header.on("dblclick", function () { //双击标题，滑到它的位置
-        $("html,body").animate({ scrollTop: $(this).offset().top - nav_height });
+        const h_index = h_list.index(this); //双击的是第几个标题
+        a_list.eq(h_index).click(); //调用目录a标签的点击事件，双击标题就相当于点击了目录中对应a标签
+        //$("html,body").animate({ scrollTop: $(this).offset().top - nav_height });
     });
 });

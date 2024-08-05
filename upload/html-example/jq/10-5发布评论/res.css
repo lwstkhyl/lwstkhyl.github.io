@@ -1,0 +1,41 @@
+* {
+    margin: 0;
+    padding: 0
+}
+
+ul {
+    list-style: none
+}
+
+.box {
+    width: 600px;
+    margin: 100px auto;
+    border: 1px solid #000;
+    padding: 20px;
+}
+
+textarea {
+    width: 450px;
+    height: 160px;
+    outline: none;
+    resize: none;
+}
+
+ul {
+    width: 450px;
+    padding-left: 80px;
+}
+
+ul li {
+    line-height: 25px;
+    border-bottom: 1px dashed #cccccc;
+    display: none;
+}
+
+input {
+    float: right;
+}
+
+ul li a {
+    float: right;
+}

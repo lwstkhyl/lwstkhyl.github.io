@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="../jquery.min.js"></script>
+    <script src="./fullpage.min.js"></script>
+    <link rel="stylesheet" href="./fullpage.min.css">
+</head>
+<style>
+    .section {
+        text-align: center;
+        font: 50px "Microsoft Yahei";
+        color: #fff;
+    }
+</style>
+
+<body>
+    <div id="dowebok">
+        <div class="section">第一屏</div>
+        <div class="section">第二屏</div>
+        <div class="section">
+            <div class="slide">第三屏的第一屏</div>
+            <div class="slide">第三屏的第二屏</div>
+            <div class="slide">第三屏的第三屏</div>
+            <div class="slide">第三屏的第四屏</div>
+        </div>
+        <div class="section">第四屏</div>
+    </div>
+</body>
+<script>
+    /*$(function () {
+        $('#dowebok').fullpage();
+    });*/
+    $(function () {
+        $('#dowebok').fullpage({
+            sectionsColor: ['#1bbc9b', '#4BBFC3', '#7BAABE', '#f90']
+        }); //使每屏都有颜色
+    });
+</script>
+
+</html>

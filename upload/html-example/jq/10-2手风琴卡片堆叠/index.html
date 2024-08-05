@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>手风琴案例</title>
+    <link href="res.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div class="king">
+        <ul>
+            <li class="current">
+                <a href="#">
+                    <img src="images/m1.jpg" alt="" class="small">
+                    <img src="images/m.png" alt="" class="big">
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <img src="images/l1.jpg" alt="" class="small">
+                    <img src="images/l.png" alt="" class="big">
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <img src="images/c1.jpg" alt="" class="small">
+                    <img src="images/c.png" alt="" class="big">
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <img src="images/w1.jpg" alt="" class="small">
+                    <img src="images/w.png" alt="" class="big">
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <img src="images/z1.jpg" alt="" class="small">
+                    <img src="images/z.png" alt="" class="big">
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <img src="images/h1.jpg" alt="" class="small">
+                    <img src="images/h.png" alt="" class="big">
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <img src="images/t1.jpg" alt="" class="small">
+                    <img src="images/t.png" alt="" class="big">
+                </a>
+            </li>
+        </ul>
+    </div>
+</body>
+<script src="../jquery.min.js"></script>
+<script>
+    $(".king li").mouseenter(function () {
+        $(this).stop().animate({ //选中的li
+            width: 224, //改变宽度
+        }).find(".small").stop().fadeOut().siblings(".big").stop().fadeIn(); //其中的小图片small淡出，它的兄弟元素大图片big淡入
+        $(this).siblings("li").stop().animate({ //其它的li
+            width: 69 //改变宽度
+        }).find(".small").stop().fadeIn().siblings(".big").stop().fadeOut();
+    });
+</script>
+
+</html>

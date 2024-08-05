@@ -66,7 +66,7 @@
 ├── HTML-other.html HTML与CSS的其它内容总展示页面
 ├── HTML.html 所有HTML与CSS笔记总展示页面
 ├── index.md 网站首页
-├── JS-jQuery.html jQuery笔记总展示页面
+├── JS-jQuery.html jQuery与ECharts笔记总展示页面
 ├── JS-JSbase.html JS基础教程笔记总展示页面
 ├── JS-other.html JS的其它内容总展示页面
 ├── JS.html 所有JS笔记总展示页面

@@ -33,6 +33,7 @@
 │   │   ├── content.css 笔记页(mypost.html)CSS
 │   │   ├── down_li.css 导航栏下拉子菜单
 │   │   ├── iconfont系列 字体图标
+│   │   ├── lazyload.css 图片懒加载--未加载出来时的样式
 │   │   ├── page.css page.html页CSS
 │   │   ├── scrollspy.css 笔记页目录和回到顶部按钮
 │   │   └── spinner.css 页面加载动画
@@ -45,6 +46,7 @@
 │   │   ├── down_li.js 导航栏下拉子菜单
 │   │   ├── fetch.js 框架自带
 │   │   ├── jquery.min.js jquery源码
+│   │   ├── lazyload.js 图片懒加载
 │   │   ├── scrollspy.js 笔记页目录和回到顶部按钮
 │   │   ├── site.js 所在页导航栏标签变灰，用于标识现在正处于哪页中
 │   │   ├── spinner.js 页面加载动画

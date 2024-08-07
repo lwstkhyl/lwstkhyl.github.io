@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>
+        <input type="checkbox" class="checkall" id="checkall"><label for="checkall">全选</label>
+    </div>
+    <div>
+        <input type="checkbox" class="check" id="check1"><label for="check1">第一个多选框</label>
+        <input type="checkbox" class="check" id="check2"><label for="check2">第二个多选框</label>
+        <input type="checkbox" class="check" id="check3"><label for="check3">第三个多选框</label>
+    </div>
+</body>
+<script src="./jquery.min.js"></script>
+<script>
+    //全选按钮模块--三个多选框状态与全选相同
+    $(".checkall").change(function () { //当全选按钮状态改变时
+        const is_checked = $(this).prop("checked"); //checked属性是固有属性
+        $(".check").prop("checked", is_checked); //隐式迭代，都会改变
+    });
+    //三个小按钮模块--点击多选框时判断：如果被选中的个数==3就把全选按钮选中，否则就不选中
+    $(".check").change(function () { //当多选框按钮状态改变时
+        if ($(".check:checked").length == $(".check").length) { //如果被选中的个数==全部个数
+            $(".checkall").prop("checked", true); //选中全选按钮
+        }
+        else {
+            $(".checkall").prop("checked", false);
+        }
+    });
+</script>
+
+</html>

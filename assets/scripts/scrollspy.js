@@ -35,7 +35,7 @@ $(document).ready(function () {
     a_list.prop('href', 'javascript:;'); //禁用a标签锚点跳转
     const toc = $('.toc'); //目录标签
     setTimeout(() => toc.css("opacity", 0.5), 110);
-    let nav_height = $("header.header").height(); //顶部导航栏高度，用于调节滚动距离
+    let nav_height = $("header.header").height() + 1; //顶部导航栏高度，用于调节滚动距离
     //目录是否随内容滚动按钮
     const is_scroll = $(`
             <div class="scrollspy-is-scroll">
@@ -103,13 +103,29 @@ $(document).ready(function () {
     window.addEventListener('resize', debounce(resize_func, 100));
     //点击目录a标签跳转到对应标题
     let is_click = false; //添加判断条件--是否是因为点击了按钮而滚动
+    // a_list.on("click", function () {
+    //     is_click = true; //点击了按钮，进行上锁的操作
+    //     const a_index = a_list.index(this); //点击的是第几个li
+    //     const scroll_distance = h_list.eq(a_index).offset().top; //它对应的h标签距页面顶端距离
+    //     $("body,html").stop().animate({ //进行滚动
+    //         scrollTop: scroll_distance - nav_height
+    //     }, 0, function () { //animate回调函数，当动画播放完执行
+    //         is_click = false; //滚动完了就把锁打开
+    //     });
+    //     a_list.removeClass("current");
+    //     $(this).addClass("current");
+    //     update_div_scroll_distance(a_index, is_scroll1.prop('checked'));
+    // });
     a_list.on("click", function () {
+        if (is_click) return;
         is_click = true; //点击了按钮，进行上锁的操作
         const a_index = a_list.index(this); //点击的是第几个li
         const scroll_distance = h_list.eq(a_index).offset().top; //它对应的h标签距页面顶端距离
         $("body,html").stop().animate({ //进行滚动
             scrollTop: scroll_distance - nav_height
         }, function () { //animate回调函数，当动画播放完执行
+            // if (!($("body,html").scrollTop() + 1 >= scroll_distance - nav_height && scroll_distance - nav_height >= $("body,html").scrollTop() - 1))
+            //     console.log("error");
             is_click = false; //滚动完了就把锁打开
         });
         a_list.removeClass("current");

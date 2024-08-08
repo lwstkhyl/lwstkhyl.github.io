@@ -1,4 +1,9 @@
 /* 来源：https://www.zhangxinxu.com/wordpress/2020/10/css-style-image-load-fail/ */
+
+img {
+    display: block;
+}
+
 /* 正在加载 */
 img.loading {
     display: inline-block;

@@ -36,6 +36,9 @@ $(document).ready(function () {
     const toc = $('.toc'); //目录标签
     setTimeout(() => toc.css("opacity", 0.5), 110);
     let nav_height = $("header.header").height() + 1; //顶部导航栏高度，用于调节滚动距离
+    window.addEventListener("onload", function () { //加载完成时更新nav_height
+        nav_height = $("header.header").height() + 1;
+    });
     //目录是否随内容滚动按钮
     const is_scroll = $(`
             <div class="scrollspy-is-scroll">
@@ -87,7 +90,7 @@ $(document).ready(function () {
     });
     //窗口尺寸变化事件：回到顶部按钮和目录是否有重叠，使用顶部导航栏高度调节滚动距离
     const resize_func = () => {
-        nav_height = $("header.header").height(); //更新顶部导航栏高度
+        nav_height = $("header.header").height() + 1; //更新顶部导航栏高度
         if (isElementOverlapped(toc, $("article.article"))) { //如果有重叠就隐藏
             toc.css("display", "none");
             backtotop.css("display", "none");

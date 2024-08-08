@@ -38,6 +38,7 @@ $(document).ready(function () {
     let nav_height = $("header.header").height() + 1; //顶部导航栏高度，用于调节滚动距离
     window.addEventListener("onload", function () { //加载完成时更新nav_height
         nav_height = $("header.header").height() + 1;
+        setTimeout(() => nav_height = $("header.header").height() + 1, 100);
     });
     //目录是否随内容滚动按钮
     const is_scroll = $(`

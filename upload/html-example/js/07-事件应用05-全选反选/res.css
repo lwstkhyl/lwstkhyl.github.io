@@ -1,0 +1,30 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid #c0c0c0;
+    width: 500px;
+    margin: 100px auto;
+    text-align: center;
+}
+
+th {
+    background-color: #09c;
+    font: bold 16px "微软雅黑";
+    color: #fff;
+    height: 24px;
+}
+
+td {
+    border: 1px solid #d0d0d0;
+    color: #404060;
+    padding: 10px;
+}
+
+.allCheck {
+    width: 80px;
+}

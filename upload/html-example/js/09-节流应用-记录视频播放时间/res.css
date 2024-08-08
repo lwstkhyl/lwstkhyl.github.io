@@ -1,0 +1,41 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.container {
+    width: 1200px;
+    margin: 0 auto;
+}
+
+.video video {
+    width: 100%;
+    padding: 20px 0;
+}
+
+.elevator {
+    position: fixed;
+    top: 280px;
+    right: 20px;
+    z-index: 999;
+    background: #fff;
+    border: 1px solid #e4e4e4;
+    width: 60px;
+}
+
+.elevator a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    text-align: center;
+    color: #999;
+}
+
+.elevator a.active {
+    color: #1286ff;
+}
+
+.outline {
+    padding-bottom: 300px;
+}

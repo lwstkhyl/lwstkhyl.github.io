@@ -1,0 +1,53 @@
+.modal {
+    width: 300px;
+    min-height: 100px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    position: fixed;
+    z-index: 999;
+    left: 50%;
+    top: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    background-color: #fff;
+}
+
+.modal .header {
+    line-height: 40px;
+    padding: 0 10px;
+    position: relative;
+    font-size: 20px;
+}
+
+.modal .header i {
+    font-style: normal;
+    color: #999;
+    position: absolute;
+    right: 15px;
+    top: -2px;
+    cursor: pointer;
+}
+
+.modal .body {
+    text-align: center;
+    padding: 10px;
+}
+
+.modal .footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+}
+
+.modal .footer a {
+    padding: 3px 8px;
+    background: #ccc;
+    text-decoration: none;
+    color: #fff;
+    border-radius: 2px;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.modal .footer a.submit {
+    background-color: #369;
+}

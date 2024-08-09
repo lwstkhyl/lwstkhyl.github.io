@@ -1,0 +1,100 @@
+.banner {
+    position: relative;
+    /*子绝父相*/
+    margin: 100px auto;
+    /*水平居中*/
+    width: 564px;
+    height: 315px;
+    overflow: hidden;
+    /*超出部分不显示*/
+}
+
+/*图片*/
+.banner img {
+    width: 564px;
+    /*使图片与banner等大小*/
+    border-radius: 12px;
+    /*圆角效果*/
+    vertical-align: middle;
+    /*清除图片间的间距*/
+}
+
+.banner ul {
+    display: flex;
+    /*浮动布局*/
+}
+
+/*箭头*/
+.banner .prev,
+.banner .next {
+    position: absolute;
+    /*设置绝对定位，自动变块级使宽高生效*/
+    top: 50%;
+    transform: translateY(-50%);
+    /*垂直居中*/
+    width: 20px;
+    height: 30px;
+    background-color: rgba(0, 0, 0, 0.3);
+    text-decoration: none;
+    /*去掉下划线*/
+    color: #fff;
+    line-height: 30px;
+    /*垂直居中*/
+    text-align: center;
+    /*水平居中*/
+    opacity: 0;
+    /*默认隐藏*/
+}
+
+.banner:hover .prev,
+.banner:hover .next {
+    opacity: 1;
+    transition: all 0.5s;
+}
+
+.banner .prev {
+    left: 0;
+    /*在最左侧*/
+    border-radius: 0 15px 15px 0;
+    /*只有右上和右下两个角是圆的*/
+}
+
+.banner .next {
+    right: 0;
+    /*在最右侧*/
+    border-radius: 15px 0 0 15px;
+    /*只有左上和左下两个角是圆的*/
+}
+
+/*圆点*/
+.banner ol {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    /*水平居中*/
+    height: 13px;
+    background-color: rgba(255, 255, 255, 0.3);
+    display: flex;
+    border-radius: 10px;
+    /*圆角*/
+}
+
+.banner ol li {
+    /*注意这里一定要写ol下的li，否则会选中前面图片中的li*/
+    width: 8px;
+    height: 8px;
+    background-color: #fff;
+    border-radius: 50%;
+    /*使方形变成圆*/
+    margin: 3px;
+    /*圆点间距*/
+    cursor: pointer;
+    /*鼠标移到圆点上时改变指针为小手*/
+    align-self: center;
+    /*垂直居中*/
+}
+
+.banner ol .current {
+    background-color: #ff5000;
+}

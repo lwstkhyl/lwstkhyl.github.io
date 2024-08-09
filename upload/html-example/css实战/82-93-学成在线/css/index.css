@@ -1,0 +1,439 @@
+.wrapper {
+    margin: 0 auto;
+    width: 1200px;
+    /*要设置宽度*/
+}
+
+body {
+    background-color: #f3f5f7;
+}
+
+/*头部区域*/
+.header {
+    height: 100px;
+    background-color: #fff;
+}
+
+.header .wrapper {
+    padding-top: 29px;
+    /*使里面的4个元素与顶端有一定距离*/
+    display: flex;
+}
+
+/*logo区域*/
+.logo a {
+    display: block;
+    width: 195px;
+    height: 41px;
+    background-image: url(../images/logo.png);
+    font-size: 0;
+}
+
+/*导航区域*/
+.nav {
+    margin-left: 102px;
+}
+
+.nav ul {
+    display: flex;
+}
+
+.nav li {
+    margin-right: 24px;
+}
+
+.nav li a {
+    display: block;
+    /*使上下padding生效，因为行内元素只受行高控制*/
+    padding: 6px 8px;
+    line-height: 27px;
+    font-size: 19px;
+}
+
+.nav li .active,
+.nav li a:hover {
+    border-bottom: 2px solid #00a4ff;
+}
+
+/*搜索区域*/
+.search {
+    display: flex;
+    margin-right: 64px;
+    /*与导航区域的间距*/
+    padding-left: 19px;
+    /*与内部输入框的间距*/
+    padding-right: 12px;
+    width: 412px;
+    height: 40px;
+    background-color: #f3f5f7;
+    border-radius: 20px;
+}
+
+/*搜索区域--输入框*/
+.search input {
+    flex: 1;
+    /*使输入框占用全部的父级剩余尺寸（搜索区域除了放大镜图标就是输入框）*/
+    border: 0;
+    /*清除边框线*/
+    background-color: transparent;
+    /*清除背景色，使背景色同父级*/
+    outline: none;
+    /*清除获得焦点时显示的边框（焦点框）*/
+}
+
+.search input::placeholder {
+    /*选中输入框中文字*/
+    font-size: 14px;
+    color: #999;
+}
+
+/*搜索区域--图标*/
+.search a {
+    /*因为父级已设置flex，a标签已经变成弹性盒子*/
+    width: 16px;
+    height: 16px;
+    background-image: url(../images/search.png);
+    align-self: center;
+    /*侧轴居中，使图标垂直方向在父盒子中央*/
+}
+
+/*用户区域*/
+.user {
+    margin-left: 32px;
+    margin-top: 4px;
+}
+
+.user img {
+    margin-right: 7px;
+    vertical-align: middle;
+    /*使文字垂直居中于图片*/
+}
+
+.user span {
+    font-size: 16px;
+    color: #666;
+}
+
+/*banner区域*/
+.banner {
+    height: 420px;
+    background-color: #0092cb;
+}
+
+.banner .wrapper {
+    display: flex;
+    justify-content: space-between;
+    height: 420px;
+    background-image: url(../uploads/banner.png);
+}
+
+/*left*/
+.banner .left {
+    padding: 3px 20px;
+    /*上下3px 左右20px*/
+    width: 191px;
+    height: 420px;
+    background-color: rgba(0, 0, 0, 0.42);
+    /*背景色为阴影*/
+}
+
+.banner .left a {
+    display: block;
+    /*需要将a转为行内块/块级元素才能设置高度，而块级元素会继承父级li的宽度，不用再写一遍，所以这里转为块级*/
+    height: 46px;
+    background: url(../images/right.png) no-repeat right center;
+    /*背景图片：不重复，靠右侧，垂直方向居中*/
+    line-height: 46px;
+    /*行高=元素高度，使文字垂直居中*/
+    font-size: 16px;
+    color: #fff;
+}
+
+.banner .left a:hover {
+    /*鼠标悬停时改变背景图片和文字颜色*/
+    background-image: url(../images/right-hover.png);
+    color: #00a4ff;
+}
+
+/*right*/
+.banner .right {
+    margin-top: 60px;
+    width: 218px;
+    height: 305px;
+    background-color: #209dd5;
+    border-radius: 10px;
+    /*设置圆角*/
+}
+
+.banner .right h3 {
+    margin-left: 14px;
+    height: 48px;
+    line-height: 48px;
+    font-size: 15px;
+    color: #fff;
+    font-weight: 400;
+}
+
+.banner .right .content {
+    padding: 14px;
+    height: 257px;
+    /*div自动继承父级宽度*/
+    background-color: #fff;
+    border-radius: 10px;
+}
+
+.banner .right .content dl {
+    margin-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.banner .right .content dl dt {
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+}
+
+.banner .right .content dl dd {
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.banner .right .content dl dd span {
+    color: #00a4ff;
+}
+
+.banner .right .content dl dd strong {
+    color: #7d7d7d;
+    font-weight: 400;
+}
+
+.banner .right a {
+    display: block;
+    /*转块级，使宽高生效*/
+    height: 32px;
+    background-color: #00a4ff;
+    border-radius: 15px;
+    text-align: center;
+    /*使a中文字水平居中*/
+    line-height: 32px;
+    /*行高=元素高度，使文字垂直居中*/
+    font-size: 14px;
+    color: #fff;
+}
+
+/*精品推荐*/
+.recommend {
+    display: flex;
+    margin-top: 11px;
+    /*与上面区域有一定距离*/
+    padding: 0 20px;
+    /*与里面的列表有一定距离*/
+    height: 60px;
+    background-color: #fff;
+    box-shadow: 0px 1px 2px 0px rgba(211, 211, 211, 0.5);
+    /*设置盒子外的阴影*/
+    line-height: 60px;
+    /*文字居中*/
+}
+
+.recommend h3 {
+    font-size: 18px;
+    color: #00a4ff;
+    font-weight: 400;
+}
+
+.recommend ul {
+    display: flex;
+    flex: 1;
+    /*除两侧小标签，父级剩余尺寸都给列表*/
+}
+
+.recommend ul li a {
+    padding: 0 24px;
+    border-right: 1px solid #e0e0e0;
+    font-size: 18px;
+}
+
+.recommend ul li:last-child a {
+    border-right: 0;
+    /*取消最后1个a的边框线*/
+}
+
+.recommend .modify {
+    font-size: 16px;
+    color: #00a4ff;
+}
+
+/*精品课程*/
+.course {
+    margin-top: 15px;
+}
+
+.hd {
+    display: flex;
+    justify-content: space-between;
+    height: 60px;
+    line-height: 60px;
+    /*文字垂直居中*/
+}
+
+.hd h3 {
+    font-size: 21px;
+    font-weight: 400;
+}
+
+.hd .more {
+    padding-right: 20px;
+    background: url(../images/more.png) no-repeat right center;
+    /*背景图不重复 靠右 垂直居中*/
+    font-size: 14px;
+    color: #999;
+}
+
+.bd ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.bd li {
+    margin-bottom: 14px;
+    width: 228px;
+    height: 271px;
+}
+
+.bd li .pic {
+    height: 156px;
+}
+
+.bd li .text {
+    padding: 20px;
+    height: 115px;
+    background-color: #fff;
+}
+
+.bd li .text h4 {
+    margin-bottom: 13px;
+    height: 40px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+}
+
+.bd li .text p {
+    font-size: 14px;
+    line-height: 20px;
+    color: #999;
+}
+
+.bd li .text p span {
+    color: #fa6400;
+}
+
+.bd li .text p i {
+    font-style: normal;
+    /*取消i标签默认的倾斜效果*/
+}
+
+/*前端开发工程师*/
+.hd ul {
+    display: flex;
+}
+
+.hd li {
+    margin-right: 60px;
+    /*列表项间隔*/
+    font-size: 16px;
+}
+
+.hd li .active {
+    color: #00a4ff;
+}
+
+.bd {
+    display: flex;
+    justify-content: space-between;
+}
+
+.bd .left {
+    width: 228px;
+}
+
+.bd .right {
+    width: 957px;
+}
+
+.bd .right .top {
+    margin-bottom: 15px;
+    /*上下区域间隔*/
+    height: 100px;
+}
+
+.ai .bd ul {
+    width: 100%;
+}
+
+/*版权区域*/
+.footer {
+    margin-top: 60px;
+    /*与上面内容区域的间距*/
+    padding-top: 60px;
+    /*与里面内容的间距*/
+    height: 273px;
+    background-color: #fff;
+}
+
+.footer .wrapper {
+    display: flex;
+    justify-content: space-between;
+}
+
+.footer .left {
+    width: 440px;
+}
+
+.footer .left p {
+    margin-top: 24px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    line-height: 17px;
+    color: #666;
+}
+
+.footer .left .download {
+    display: block;
+    /*使宽高生效，因为它独占一行，直接转块级就行*/
+    width: 120px;
+    height: 36px;
+    border: 1px solid #00a4ff;
+    text-align: center;
+    /*文字水平居中*/
+    line-height: 34px;
+    /*文字垂直居中（考虑到上下边框共占2px，这里用36-2=34）*/
+    font-size: 16px;
+    color: #00a4ff;
+}
+
+.footer .right {
+    display: flex;
+}
+
+.footer .right dl {
+    margin-left: 130px;
+    /*各列表项的间距*/
+}
+
+.footer .right dl dt {
+    margin-bottom: 12px;
+    /*列表项中表头和内容的间距*/
+    font-size: 16px;
+    line-height: 23px;
+}
+
+.footer .right dl dd a {
+    font-size: 14px;
+    color: #666;
+    line-height: 24px;
+}

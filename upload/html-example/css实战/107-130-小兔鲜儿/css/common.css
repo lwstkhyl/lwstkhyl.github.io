@@ -1,0 +1,268 @@
+/*版心*/
+.wrapper {
+    margin: 0 auto;
+    width: 1240px;
+}
+
+/*快捷导航*/
+.shortcut {
+    height: 52px;
+    background-color: #333;
+}
+
+.shortcut .wrapper {
+    display: flex;
+    height: 52px;
+    justify-content: flex-end;
+}
+
+.shortcut ul {
+    display: flex;
+    line-height: 52px;
+    /*使li垂直居中*/
+}
+
+.shortcut li a {
+    padding: 0 15px;
+    border-right: 1px solid #999;
+    font-size: 14px;
+    color: #fff;
+}
+
+.shortcut li:last-child a {
+    border-right: 0;
+    /*取消最后一个a的边框*/
+}
+
+.shortcut li .iconfont {
+    margin-right: 4px;
+    vertical-align: middle;
+    /*使字体图标与文字垂直居中*/
+}
+
+.shortcut li .current {
+    color: #5EB69C;
+}
+
+/*头部*/
+.header {
+    display: flex;
+    margin-top: 22px;
+    margin-bottom: 22px;
+    height: 88px;
+}
+
+/*头部--logo*/
+.header .logo {
+    width: 200px;
+    height: 88px;
+    margin-right: 40px;
+}
+
+.header .logo a {
+    display: block;
+    /*使宽高生效*/
+    width: 200px;
+    height: 88px;
+    background-image: url(../images/logo.png);
+    font-size: 0;
+    /*清除文字*/
+}
+
+/* 头部--导航 */
+.header .nav {
+    margin-top: 33px;
+    margin-right: 28px;
+}
+
+.header .nav ul {
+    display: flex;
+}
+
+.header .nav ul li {
+    margin-right: 47px;
+}
+
+.header .nav ul li a {
+    padding-bottom: 10px;
+}
+
+.header .nav ul li a:hover {
+    color: #5EB69C;
+    border-bottom: 2px solid #5EB69C;
+}
+
+/* 头部--搜索 */
+.header .search {
+    display: flex;
+    margin-right: 45px;
+    margin-top: 33px;
+    width: 170px;
+    height: 34px;
+    border-bottom: 2px solid #F4F4F4;
+}
+
+.header .search .iconfont {
+    margin-right: 8px;
+    font-size: 18px;
+    color: #CCCCCC;
+}
+
+.header .search input {
+    flex: 1;
+    width: 0;
+}
+
+/* 单独设置input内默认文字的颜色 */
+.header .search input::placeholder {
+    font-size: 16px;
+    color: #ccc;
+}
+
+/* 头部--购物车 */
+.header .cart {
+    position: relative;
+    margin-top: 32px;
+}
+
+.header .cart .iconfont {
+    font-size: 24px;
+}
+
+.header .cart i {
+    position: absolute;
+    top: 1px;
+    left: 15px;
+    padding: 0 6px;
+    height: 15px;
+    background-color: #E26237;
+    /* 圆角 */
+    border-radius: 8px;
+    font-size: 14px;
+    color: #FFFEFE;
+    /* 垂直居中 */
+    line-height: 15px;
+}
+
+/* 底部 */
+.footer {
+    height: 580px;
+    background-color: #F5F5F5;
+}
+
+/* 底部--服务 */
+.footer .service {
+    padding: 60px 0;
+    height: 178px;
+    border-bottom: 1px solid #E8E8E8;
+}
+
+.footer .service ul {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.footer .service ul li {
+    display: flex;
+    width: 190px;
+    height: 58px;
+}
+
+.footer .service ul li h5 {
+    margin-right: 20px;
+    width: 58px;
+    height: 58px;
+    background-image: url(../images/sprite.png);
+}
+
+.footer .service ul li:nth-child(2) h5 {
+    background-position: 0 -58px;
+}
+
+.footer .service ul li:nth-child(3) h5 {
+    background-position: 0 -116px;
+}
+
+.footer .service ul li:nth-child(4) h5 {
+    background-position: 0 -174px;
+}
+
+.footer .service ul li a {
+    font-size: 28px;
+    /* 垂直居中 */
+    line-height: 58px;
+}
+
+/* 底部--帮助中心 */
+.footer .helper {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 60px;
+    height: 300px;
+}
+
+/* 左侧 */
+.footer .helper .left {
+    display: flex;
+}
+
+.footer .helper .left dl {
+    margin-right: 84px;
+}
+
+.footer .helper .left dl:last-child {
+    margin-right: 0;
+}
+
+.footer .helper .left dl dt {
+    margin-bottom: 30px;
+    font-size: 18px;
+}
+
+.footer .helper .left dl dd {
+    margin-bottom: 10px;
+}
+
+.footer .helper .left dl dd a {
+    color: #969696;
+}
+
+.footer .helper .left dl dd a .iconfont {
+    color: #5EB69C;
+}
+
+/* 右侧 */
+.footer .helper .right ul {
+    display: flex;
+}
+
+.footer .helper .right ul li:first-child {
+    margin-right: 55px;
+}
+
+.footer .helper .right ul li .pic {
+    margin-bottom: 10px;
+    width: 120px;
+    height: 120px;
+}
+
+.footer .helper .right ul li p {
+    color: #969696;
+    /* 水平居中 */
+    text-align: center;
+}
+
+/* 底部--版权 */
+.footer .copyright {
+    text-align: center;
+}
+
+.footer .copyright p {
+    margin-bottom: 10px;
+    color: #A1A1A1;
+}
+
+.footer .copyright p a {
+    margin: 0 10px;
+    color: #A1A1A1;
+}

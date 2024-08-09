@@ -1,0 +1,141 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* 大背景 */
+/* 注意：默认状态HTML和body的高度是0，所以导致cover缩放背景图不成功 */
+html {
+  height: 100%;
+  /*设置html的高度=浏览器窗口*/
+}
+
+body {
+  height: 100%;
+  /*设置body的高度=父级html的高度*/
+  background: url(./images/f1_1.jpg) no-repeat center 0 / cover;
+  /*为了使背景图居中，水平居中，垂直顶对齐；cover是让高度较小的图片铺满整个界面*/
+}
+
+/* 云 */
+.cloud img {
+  position: absolute;
+  left: 50%;
+  /*大致居中显示，方便后续微调定位*/
+}
+
+@keyframes cloud {
+  100% {
+    transform: translate(20px);
+  }
+}
+
+.cloud img:nth-child(1) {
+  /*第一朵云*/
+  margin-left: -250px;
+  /*往左移250px*/
+  top: 20px;
+  /*距上方20px*/
+  animation: cloud 1s infinite alternate linear;
+  /*alternate往返移动 linear匀速*/
+}
+
+.cloud img:nth-child(2) {
+  /*第二朵云*/
+  margin-left: 400px;
+  /*往右移250px*/
+  top: 100px;
+  animation: cloud 1s infinite alternate linear 0.4s;
+  /*0.4s是延迟播放，让云移动的步伐不完全一致，更好看*/
+}
+
+.cloud img:nth-child(3) {
+  margin-left: -550px;
+  top: 200px;
+  animation: cloud 1s infinite alternate linear 0.6s;
+}
+
+/*气球*/
+@keyframes ballon {
+  100% {
+    transform: translateY(30px);
+  }
+}
+
+.ballon img {
+  position: absolute;
+  left: 450px;
+  top: 200px;
+  animation: ballon 2s infinite alternate linear;
+}
+
+/*最下方的4个小悬浮文字*/
+
+.small_text img {
+  position: absolute;
+  top: 700px;
+  left: 50%;
+}
+
+@keyframes small_text {
+  100% {
+    transform: translateY(20px);
+  }
+}
+
+.small_text img:nth-child(1) {
+  margin-left: -530px;
+  animation: small_text 1s infinite alternate;
+}
+
+
+.small_text img:nth-child(2) {
+  margin-left: -230px;
+  animation: small_text 1s infinite alternate 0.25s;
+
+}
+
+.small_text img:nth-child(3) {
+  margin-left: 70px;
+  animation: small_text 1s infinite alternate 0.5s;
+
+}
+
+.small_text img:nth-child(4) {
+  margin-left: 370px;
+  animation: small_text 1s infinite alternate 0.75s;
+}
+
+/* 文字 */
+.text img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /*设置页面居中*/
+  animation: text 1s;
+}
+
+/* 默认 → 小 → 大 → 小 → 默认 因为有5个状态，所以使用百分比*/
+@keyframes text {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    /*如果直接transform: scale(1);因为层叠，所以前面的页面居中transform: translate(-50%, -50%);就会被覆盖而失效*/
+  }
+
+  20% {
+    transform: translate(-50%, -50%) scale(0.1);
+  }
+
+  40% {
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+
+  70% {
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

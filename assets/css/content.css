@@ -60,6 +60,12 @@ article p {
     padding: 0 !important;
 }
 
+/* 上下文字 */
+article sub,
+article sup {
+    font-size: 12px !important;
+}
+
 /* 标签 */
 article h1,
 article h2,

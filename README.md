@@ -47,6 +47,7 @@
 │   │   ├── fetch.js 框架自带
 │   │   ├── jquery.min.js jquery源码
 │   │   ├── lazyload.js 图片懒加载
+│   │   ├── load_img.js 页面加载动画显示图片已加载数量
 │   │   ├── scrollspy.js 笔记页目录和回到顶部按钮
 │   │   ├── site.js 所在页导航栏标签变灰，用于标识现在正处于哪页中
 │   │   ├── spinner.js 页面加载动画

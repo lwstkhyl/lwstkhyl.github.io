@@ -11,6 +11,19 @@
     backdrop-filter: blur(10px);
 }
 
+.loader-bg .img_load {
+    z-index: 9999;
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    margin-left: -52.5px;
+    font-size: 18px;
+    color: #fff;
+    /* 字体 */
+    font-family: -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif !important;
+    font-feature-settings: normal !important;
+}
+
 .banter-loader {
     z-index: 9999;
     position: absolute;

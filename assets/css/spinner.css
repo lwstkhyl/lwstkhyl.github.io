@@ -24,6 +24,19 @@
     font-feature-settings: normal !important;
 }
 
+.toc .loader-bg {
+    backdrop-filter: none;
+    height: 80%;
+    width: 20%;
+    left: 0px;
+    top: 10%;
+}
+
+.toc .loader-bg .img_load {
+    width: 100%;
+    top: 40%;
+}
+
 .banter-loader {
     z-index: 9999;
     position: absolute;

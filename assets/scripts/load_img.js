@@ -48,8 +48,5 @@ $(document).ready(function () {
             if (loader) loader.style.display = "none"; //隐藏动画
             clearInterval(timer); //停止定时器
         }
-        // if (loaded_img_num === img_list_length) //加载完毕就停止定时器
-        //     clearInterval(timer);
-
     }, 500);
 }); 

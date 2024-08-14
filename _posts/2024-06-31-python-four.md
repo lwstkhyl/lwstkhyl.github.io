@@ -4,7 +4,7 @@ title: 数据分析01--NumPy
 category: python
 subcategory: python-database
 ---
-NumPy包的基本使用，包括ndarray数组、矩阵操作、文件操作等
+NumPy基础，包括ndarray数组、矩阵操作、文件操作等
 
 <!-- more -->
 

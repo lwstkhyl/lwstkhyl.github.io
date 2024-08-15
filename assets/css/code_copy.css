@@ -44,3 +44,8 @@
 .code-copy:hover {
     opacity: 1 !important;
 }
+
+/* 去掉普通文本框的复制按钮 */
+.language-plaintext .code-copy {
+    display: none;
+}

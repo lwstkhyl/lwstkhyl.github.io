@@ -59,7 +59,7 @@ $(document).ready(function () {
                     clearInterval(timer);
                     setTimeout(add_event, 0); //待元素加载完毕后添加hover事件
                 }
-            }, 500);
+            }, 100);
         }
         else {
             $(window).on("load", () => setTimeout(add_event, 0));

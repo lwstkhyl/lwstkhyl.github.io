@@ -1,0 +1,47 @@
+---
+introduce: ""
+---
+
+<h4>【个人空间】lwstkhyl的午夜碎碎念</h4>
+
+<ul class="blog">
+    {% for blog in site.posts %} {% if blog.category == "talk_at_night" %}
+    <li>
+        <div class="title-date">
+            <a href="{{ blog.url }}" class="title">{{ blog.title }}</a>
+            <p class="date">-----发布于{{ blog.date | date: "%Y-%m-%d" }}</p>
+        </div>
+        {{ blog.excerpt }}
+    </li>
+    {% endif %} {% endfor %}
+</ul>
+
+<style>
+    .page .container .typeset ul.blog li div.title-date p {
+        display: none !important;
+    }
+
+    .page .container .typeset ul.blog li div.title-date a,
+    .page .container .typeset ul.blog li div.title-date li::marker {
+        font-size: 1.1rem !important;
+    }
+
+    .page .container .typeset ul.blog li {
+        margin-bottom: 0rem !important;
+    }
+
+    .page .container .typeset,
+    .container .typeset ul li,
+    .container .typeset a,
+    .container .typeset p {
+        font-size: 1rem !important;
+    }
+
+    .page .container .typeset .introduce {
+        display: none !important;
+    }
+
+    .page .container .typeset .introduce~h1 {
+        display: none !important;
+    }
+</style>

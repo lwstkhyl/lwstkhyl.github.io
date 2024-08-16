@@ -54,7 +54,7 @@ $(document).ready(function () {
             });
         }
         if ($("a.logo img")[0])
-            $("a.logo img").on("onload", () => setTimeout(add_event, 0)); //待元素加载完毕后添加hover事件
+            $("a.logo img").on("load", () => setTimeout(add_event, 0)); //待元素加载完毕后添加hover事件
         else {
             $(window).on("load", () => setTimeout(add_event, 0));
         }

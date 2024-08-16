@@ -53,8 +53,12 @@ $(document).ready(function () {
                 }
             });
         }
-        $(window).on("load", () => setTimeout(add_event, 0)); //待元素加载完毕后添加hover事件
-        $(document).ready(() => setTimeout(add_event, 200)); //待元素加载完毕后添加hover事件
+        if ($("a.logo img")[0])
+            $("a.logo img").on("onload", () => setTimeout(add_event, 0)); //待元素加载完毕后添加hover事件
+        else {
+            $(window).on("load", () => setTimeout(add_event, 0));
+        }
+        // $(document).ready(() => setTimeout(add_event, 200)); //待元素加载完毕后添加hover事件
         //页面尺寸变化时更新top/left
         window.addEventListener('resize', debounce(update_resize_func, 100));
         //点击后更改样式

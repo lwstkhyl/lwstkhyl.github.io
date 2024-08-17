@@ -18,6 +18,7 @@
 ├── _layouts 网页模板，由_includes中的各组分拼接而来
 │   ├── default.html 基础模板，是其它各模板的基础框架
 │   ├── mypost.html 各笔记使用的模板
+│   ├── talk_at_night.html 个人空间使用的模板
 │   ├── page.html 网站其它页面使用的模板
 │   └── ...
 ├── _posts 笔记的md形式，用于生成网页版笔记
@@ -62,27 +63,28 @@
 ├── _config.yml 项目配置文件
 ├── .gitignore git忽略的文件，通常无需更改
 ├── 404.md 网址无法加载/网址不存在时显示的页面
-├── elements.md Alembic样式展示，之后会移除
+├── elements.md Alembic样式展示
 ├── Gemfile系列 框架运行的配置文件，只需在第一次运行错误时更改
 ├── HTML-CSSbase.html CSS基础教程笔记总展示页面
-├── HTML-HTML.html HTML笔记总展示页面
-├── HTML-other.html HTML与CSS的其它内容总展示页面
-├── HTML.html 所有HTML与CSS笔记总展示页面
+├── HTML-HTML.html HTML笔记
+├── HTML-other.html HTML与CSS的其它内容
+├── HTML.html 所有HTML与CSS笔记
 ├── index.md 网站首页
-├── JS-jQuery.html jQuery与ECharts笔记总展示页面
-├── JS-JSbase.html JS基础教程笔记总展示页面
-├── JS-other.html JS的其它内容总展示页面
-├── JS.html 所有JS笔记总展示页面
-├── python-database.html 数据分析基础教程笔记总展示页面
-├── python-other.html python的其它内容总展示页面
-├── python-pythonbase.html python基础教程笔记总展示页面
-├── python.html 所有python笔记总展示页面
-├── r-bioinfolesson.html b站生信课程笔记总展示页面
-├── r-other.html R与生信的其它内容总展示页面
-├── r-rbase.html R基础教程笔记总展示页面
-├── r.html 所有R与生信笔记总展示页面
+├── JS-jQuery.html jQuery与ECharts笔记
+├── JS-JSbase.html JS基础教程笔记
+├── JS-other.html JS的其它内容
+├── JS.html 所有JS笔记
+├── my_echarts.html 个人创作的echarts图表应用（还未完成）
+├── python-database.html 数据分析基础教程笔记
+├── python-other.html python的其它内容
+├── python-pythonbase.html python基础教程笔记
+├── python.html 所有python笔记
+├── r-bioinfolesson.html b站生信课程笔记
+├── r-other.html R与生信的其它内容
+├── r-rbase.html R基础教程笔记
+├── r.html 所有R与生信笔记
 ├── README.md GitHub的readme
-├── test.html 新增功能（还未完成）
+├── talk_at_night.html 个人空间
 └── 其它都是框架自带文件，无需更改
 ```
 

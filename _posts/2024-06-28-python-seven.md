@@ -1,6 +1,6 @@
 ---
 layout: mypost
-title: 数据分析03--Pandas文件读取和绘图
+title: 数据分析04--Pandas文件读取和绘图
 category: python
 subcategory: python-database
 ---

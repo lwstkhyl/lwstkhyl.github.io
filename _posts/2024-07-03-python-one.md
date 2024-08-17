@@ -1,10 +1,10 @@
 ---
 layout: mypost
-title: python基础
+title: python基础01
 category: python
 subcategory: python-pythonbase
 ---
-python基础--基本数据类型
+python基础第一部分，包括基本数据类型、if与循环、列表、字典、元组、集合、字符串等
 
 <!-- more -->
 

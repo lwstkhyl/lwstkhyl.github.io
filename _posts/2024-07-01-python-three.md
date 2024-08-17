@@ -1,10 +1,10 @@
 ---
 layout: mypost
-title: python基础
+title: python基础03
 category: python
 subcategory: python-pythonbase
 ---
-python基础--一些进阶内容
+python基础第三部分，包括正则表达式、闭包、装饰器等
 
 <!-- more -->
 

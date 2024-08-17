@@ -1,10 +1,10 @@
 ---
 layout: mypost
-title: python基础
+title: python基础02
 category: python
 subcategory: python-pythonbase
 ---
-python基础--函数和类
+python基础第二部分，包括函数、类、类型注解、异常捕获、模块与包、文件等
 
 <!-- more -->
 

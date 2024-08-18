@@ -1,0 +1,48 @@
+/* 清除默认内外边框 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 斜体标签不倾斜 */
+em,
+i {
+    font-style: normal;
+}
+
+/* 标题不加粗 */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 400;
+}
+
+/* 清除列表默认样式 */
+li {
+    list-style: none;
+}
+
+/* 清除图片边框和底侧空白间隙 */
+img {
+    border: 0;
+    vertical-align: middle;
+}
+
+/* 鼠标经过按钮时变为pointer */
+button {
+    cursor: pointer;
+}
+
+/* 清除a下划线 */
+a {
+    color: #666;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #e33333;
+}

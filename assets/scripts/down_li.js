@@ -53,16 +53,16 @@ $(document).ready(function () {
                 }
             });
         }
-        if ($("a.logo img")[0]) {
+        if ($("a.logo img")[0]) { //如果有头像框就等待它加载完成后添加hover事件
             let timer = setInterval(function () {
                 if ($("a.logo img")[0].complete) {
                     clearInterval(timer);
-                    setTimeout(add_event, 0); //待元素加载完毕后添加hover事件
+                    setTimeout(add_event, 0);
                 }
             }, 100);
         }
-        else {
-            $(window).on("load", () => setTimeout(add_event, 0));
+        else { //没有就直接添加
+            setTimeout(add_event, 200);
         }
         // $(document).ready(() => setTimeout(add_event, 200)); //待元素加载完毕后添加hover事件
         //页面尺寸变化时更新top/left

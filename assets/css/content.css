@@ -5,6 +5,7 @@
 
 /* 头像框 */
 .page header.header .container .logo a.logo img {
+    display: none !important;
     max-height: 2.8rem !important;
 }
 

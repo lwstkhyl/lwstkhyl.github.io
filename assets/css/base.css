@@ -47,7 +47,7 @@ header.header .container a {
 
 /* 头像框 */
 header.header .container .logo a.logo img {
-    background-color: #fff;
+    /* background-color: #fff; */
     max-height: 4rem !important;
 }
 

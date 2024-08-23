@@ -1,4 +1,4 @@
-/* 去掉链接、按钮等点击后出现的边框以及下划线 */
+/* 去掉链接、按钮等点击后出现的边框、下划线，以及自带的白色字体阴影 */
 a,
 a:focus,
 a:hover:focus,
@@ -15,11 +15,25 @@ select:hover:focus {
     outline: none !important;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
     background-image: none !important;
+    text-shadow: none !important;
 }
 
 a.no-hover:focus,
 a.no-hover:hover:focus {
     color: #05bf85 !important;
+}
+
+/* 网页背景图片 */
+body {
+    /* 小屏 */
+    --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlM9g.jpg);
+}
+
+@media screen and (min-width: 40em) {
+    body {
+        /* 大屏 */
+        --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlu4S.png);
+    }
 }
 
 /* header */
@@ -34,19 +48,26 @@ header.header {
     color: green;
 }
 
-/* 导航栏模糊 */
+/* 导航栏及下拉子菜单 */
 header.header {
-    background-image: radial-gradient(transparent 1px, #fff);
-    background-size: 4px 4px;
-    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.7) !important;
 }
 
 header.header .container a {
     padding: 0 0.5rem !important;
 }
 
+ul.sub_nav {
+    background: rgba(255, 255, 255, 0.7) !important;
+}
+
+ul.sub_nav li.sub_nav {}
+
+ul.sub_nav li.sub_nav a.sub_nav {}
+
 /* 头像框 */
 header.header .container .logo a.logo img {
+    display: none;
     /* background-color: #fff; */
     max-height: 4rem !important;
 }
@@ -75,6 +96,11 @@ body {
 }
 
 /* 使底边栏固定在页面最底部↑ */
+
+/* footer */
+footer.footer {
+    background: rgba(0, 0, 0, 0.7) !important;
+}
 
 /* footer部分small标签 */
 footer.footer .container small.small,

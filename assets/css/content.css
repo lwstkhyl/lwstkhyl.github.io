@@ -3,6 +3,16 @@
     padding: 0.3rem 0 !important;
 }
 
+/* 网页背景图片 */
+body {
+    --bgi: none;
+    background: #fff;
+}
+
+ul.sub_nav {
+    background: #fff !important;
+}
+
 /* 头像框 */
 .page header.header .container .logo a.logo img {
     display: none !important;
@@ -28,6 +38,19 @@
 
 .page header.header .container li.current a:hover {
     color: green;
+}
+
+/* 导航栏模糊 */
+header.header {
+    background: none !important;
+    background-image: radial-gradient(transparent 1px, #fff) !important;
+    background-size: 4px 4px !important;
+    backdrop-filter: blur(6px) !important;
+}
+
+/* footer */
+footer.footer {
+    background: #000 !important;
 }
 
 /* 博客标题中small标签 */

@@ -26,13 +26,15 @@ a.no-hover:hover:focus {
 /* 网页背景图片 */
 body {
     /* 小屏 */
-    --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlM9g.jpg);
+    /* --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlM9g.jpg); */
+    --bgi: url(https://s21.ax1x.com/2024/08/24/pAFJ3TI.jpg);
 }
 
 @media screen and (min-width: 40em) {
     body {
         /* 大屏 */
         --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlu4S.png);
+        /* --bgi: url(https://s21.ax1x.com/2024/08/24/pAFGOwn.png); */
     }
 }
 
@@ -60,10 +62,6 @@ header.header .container a {
 ul.sub_nav {
     background: rgba(255, 255, 255, 0.7) !important;
 }
-
-ul.sub_nav li.sub_nav {}
-
-ul.sub_nav li.sub_nav a.sub_nav {}
 
 /* 头像框 */
 header.header .container .logo a.logo img {

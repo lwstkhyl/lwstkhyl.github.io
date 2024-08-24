@@ -123,34 +123,34 @@ navigation_header:
   - title: JS
     url: /JS/
     sub_navigation:
-      - title: JS基础教程
+      - title: JS基础
         url: /JS-JSbase/
-      - title: jQuery与ECharts基础教程
+      - title: jQuery与ECharts基础
         url: /JS-jQuery/
       - title: 其它
         url: /JS-other/
   - title: HTML-CSS
     url: /HTML/
     sub_navigation:
-      - title: HTML基础教程
+      - title: HTML基础
         url: /HTML-HTML/
-      - title: CSS基础教程
+      - title: CSS基础
         url: /HTML-CSSbase/
       - title: 其它
         url: /HTML-other/
   - title: python
     url: /python/
     sub_navigation:
-      - title: python基础教程
+      - title: python基础
         url: /python-pythonbase/
-      - title: 数据分析基础教程
+      - title: 数据分析基础
         url: /python-database/
       - title: 其它
         url: /python-other/
   - title: R与生信
     url: /r/
     sub_navigation:
-      - title: R基础教程
+      - title: R基础
         url: /r-rbase/
       - title: b站生信课程
         url: /r-bioinfolesson/

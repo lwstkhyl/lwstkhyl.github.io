@@ -18,25 +18,71 @@ select:hover:focus {
     text-shadow: none !important;
 }
 
+/* 按钮点击后不变色 */
+button.button--nav:focus {
+    color: #05bf85;
+}
+
+button.button--nav:focus:hover {
+    color: green;
+}
+
+/* a标签点击后不变色 */
 a.no-hover:focus,
 a.no-hover:hover:focus {
     color: #05bf85 !important;
 }
 
-/* 网页背景图片 */
+/* 网页背景图片↓ */
+/* 页面遮罩 */
+.page {
+    background: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* footer */
+footer.footer {
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* 小屏 */
 body {
-    /* 小屏 */
     /* --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlM9g.jpg); */
     --bgi: url(https://s21.ax1x.com/2024/08/24/pAFJ3TI.jpg);
 }
 
+/* 导航栏及下拉子菜单 */
+header.header {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+
+ul.sub_nav {
+    background: rgba(255, 255, 255, 1) !important;
+}
+
+/* 大屏 */
 @media screen and (min-width: 40em) {
     body {
-        /* 大屏 */
         --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlu4S.png);
         /* --bgi: url(https://s21.ax1x.com/2024/08/24/pAFGOwn.png); */
     }
+
+    /* 页面遮罩 */
+    .page {
+        background: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    /* 导航栏及下拉子菜单 */
+    header.header {
+        background: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    ul.sub_nav {
+        background: rgba(255, 255, 255, 0.7) !important;
+    }
 }
+
+/* 网页背景图片↑ */
 
 /* header */
 header.header {
@@ -46,21 +92,12 @@ header.header {
     z-index: 1000;
 }
 
-.page header.header .container li.item--current a:hover {
-    color: green;
-}
-
-/* 导航栏及下拉子菜单 */
-header.header {
-    background: rgba(255, 255, 255, 0.7) !important;
-}
-
 header.header .container a {
     padding: 0 0.5rem !important;
 }
 
-ul.sub_nav {
-    background: rgba(255, 255, 255, 0.7) !important;
+.page header.header .container li.item--current a:hover {
+    color: green;
 }
 
 /* 头像框 */
@@ -68,10 +105,6 @@ header.header .container .logo a.logo img {
     display: none;
     /* background-color: #fff; */
     max-height: 4rem !important;
-}
-
-.page {
-    z-index: 500;
 }
 
 /* 使底边栏固定在页面最底部↓ */
@@ -87,6 +120,7 @@ body {
 
 .page {
     flex: 1;
+    z-index: 500;
 }
 
 .footer {
@@ -94,11 +128,6 @@ body {
 }
 
 /* 使底边栏固定在页面最底部↑ */
-
-/* footer */
-footer.footer {
-    background: rgba(0, 0, 0, 0.7) !important;
-}
 
 /* footer部分small标签 */
 footer.footer .container small.small,

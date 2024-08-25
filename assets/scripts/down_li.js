@@ -9,6 +9,11 @@ const debounce = (fn, delay) => {
         }, delay);
     }
 };
+function is_mobile() { //是不是移动设备
+    if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+        return true;
+    }
+}
 $(document).ready(function () {
     const down_ul = $("nav ul.sub_nav"); //获取全部的下拉菜单ul
     if (!down_ul) return; //如果没有就退出
@@ -30,28 +35,47 @@ $(document).ready(function () {
         const change_zindex_mouseon2_func = () => change_zindex_mouseon2($(dom), down_a, $(parent), parent_a); //鼠标进入父级li时改变z-index
         const add_event = () => { //为下拉菜单初始化位置，并添加hover事件
             update_position_resize_func();
-            $(parent).hover(() => { //鼠标移入就显示
-                if ($("button.button--nav").css("display") === "none") {
-                    change_zindex_mouseon1_func();
-                    down_point.css("transform", "rotate(0)");
-                    $(dom).stop().slideDown("normal", "swing", change_zindex_mouseon2_func);
-                }
-                else {
-                    change_zindex_mouseon_func();
-                    down_point.css("transform", "rotate(0)");
-                    $(dom).stop().slideDown("normal", "swing");
-                }
-            }, () => { //鼠标移出时隐藏
-                if ($("button.button--nav").css("display") === "none") {
-                    down_point.css("transform", "rotate(-90deg)");
-                    change_zindex_mouseout_func();
-                    $(dom).stop().slideUp("normal", "swing");
-                }
-                else {
+            if (!is_mobile()) {
+                $(parent).hover(() => { //鼠标移入就显示
+                    if ($("button.button--nav").css("display") === "none") {
+                        change_zindex_mouseon1_func();
+                        down_point.css("transform", "rotate(0)");
+                        $(dom).stop().slideDown("normal", "swing", change_zindex_mouseon2_func);
+                    }
+                    else {
+                        change_zindex_mouseon_func();
+                        down_point.css("transform", "rotate(0)");
+                        $(dom).stop().slideDown("normal", "swing");
+                    }
+                }, () => { //鼠标移出时隐藏
+                    if ($("button.button--nav").css("display") === "none") {
+                        down_point.css("transform", "rotate(-90deg)");
+                        change_zindex_mouseout_func();
+                        $(dom).stop().slideUp("normal", "swing");
+                    }
+                    else {
+                        down_point.css("transform", "rotate(-90deg)");
+                        $(dom).stop().slideUp("normal", "swing", change_zindex_mouseout_func);
+                    }
+                });
+            }
+            else {
+                parent.addEventListener('touchstart', () => { //如果是窄屏，使用移动端事件进行切换
+                    if ($(dom).css('display') !== 'none') { //如果显示就隐藏
+                        down_point.css("transform", "rotate(-90deg)");
+                        $(dom).stop().slideUp("normal", "swing", change_zindex_mouseout_func);
+                    }
+                    else { //如果隐藏就显示
+                        change_zindex_mouseon_func();
+                        down_point.css("transform", "rotate(0)");
+                        $(dom).stop().slideDown("normal", "swing");
+                    }
+                });
+                parent.addEventListener('mouseleave', () => { //移开时隐藏
                     down_point.css("transform", "rotate(-90deg)");
                     $(dom).stop().slideUp("normal", "swing", change_zindex_mouseout_func);
-                }
-            });
+                });
+            }
         }
         if ($("a.logo img")[0]) { //如果有头像框就等待它加载完成后添加hover事件
             let timer = setInterval(function () {

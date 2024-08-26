@@ -71,7 +71,12 @@ small time {
     font-feature-settings: normal !important;
 }
 
-small.small span.label a.title:active {
+small.small span.label a.title:focus {
+    color: #05bf85 !important;
+}
+
+small.small span.label a.title:active,
+small.small span.label a.title:focus:hover {
     color: green !important;
 }
 

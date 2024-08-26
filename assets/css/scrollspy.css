@@ -37,8 +37,20 @@
     opacity: 0.6 !important;
 }
 
-.toc .current {
-    color: red;
+.toc a,
+.toc a:focus,
+.toc a:active {
+    color: #05bf85 !important;
+}
+
+.toc a:hover,
+.toc a:focus:hover {
+    color: green !important;
+}
+
+.toc a.current,
+.toc a.current:hover {
+    color: red !important;
 }
 
 /* 滚动条样式 */

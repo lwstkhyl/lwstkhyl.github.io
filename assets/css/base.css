@@ -28,17 +28,16 @@ button.button--nav:focus:hover {
 }
 
 /* a标签点击后不变色 */
-a.no-hover:focus,
-a.no-hover:hover:focus {
+.article a:focus,
+.article a:active {
     color: #05bf85 !important;
 }
 
-/* 网页背景图片↓ */
-/* 页面遮罩 */
-.page {
-    background: rgba(255, 255, 255, 0.7) !important;
+.article a:focus:hover {
+    color: green !important;
 }
 
+/* 网页背景图片↓ */
 /* footer */
 footer.footer {
     background: rgba(0, 0, 0, 0.7) !important;
@@ -48,6 +47,11 @@ footer.footer {
 body {
     /* --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlM9g.jpg); */
     --bgi: url(https://s21.ax1x.com/2024/08/24/pAFJ3TI.jpg);
+}
+
+/* 页面遮罩 */
+.page {
+    background: rgba(255, 255, 255, 0.7) !important;
 }
 
 /* 导航栏及下拉子菜单 */
@@ -78,7 +82,7 @@ ul.sub_nav {
     }
 
     ul.sub_nav {
-        background: rgba(255, 255, 255, 0.7) !important;
+        background: rgba(255, 255, 255, 0.9) !important;
     }
 }
 

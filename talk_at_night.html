@@ -2,9 +2,10 @@
 introduce: ""
 ---
 
-<h4>【个人空间】lwstkhyl的午夜碎碎念</h4>
+<h4 class="talk-info">【个人空间】lwstkhyl的午夜碎碎念</h4>
+<p class="talk-info">——献给我的家人、朋友们，以及所有想了解我的陌生人</p>
 
-<ul class="blog">
+<ul class="blog talk-blog">
     {% for blog in site.posts %} {% if blog.category == "talk_at_night" %}
     <li>
         <div class="title-date">
@@ -51,5 +52,25 @@ introduce: ""
 
     .page .container .typeset .introduce~h1 {
         display: none !important;
+    }
+
+    .page .container article.article {
+        position: relative;
+    }
+
+    .page .container h4.talk-info {
+        padding-top: 0.8rem !important;
+        margin-bottom: 0rem !important;
+    }
+
+    .page .container p.talk-info {
+        display: inline-block;
+        position: absolute;
+        right: 0;
+        padding-top: 0rem !important;
+    }
+
+    .page .container ul.talk-blog {
+        padding-top: 1.8rem !important;
     }
 </style>

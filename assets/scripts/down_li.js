@@ -85,15 +85,22 @@ $(document).ready(function () {
                     if ($("button.button--nav").css("display") === "none") { //宽屏
                         mouse_on_pc();
                         down_point.css("transform", "rotate(0)");
-                        $(dom).stop().slideDown("normal", "swing");
+                        $(dom).stop().slideDown("fast", "swing", () => {
+                            $(dom).css("z-index", "1002");
+                            down_li.css("z-index", "1002");
+                            down_a.css("z-index", "1002");
+                        });
                     }
                     else { //窄屏
                         mouse_on_mobile();
                         down_point.css("transform", "rotate(0)");
-                        $(dom).stop().slideDown("normal", "swing");
+                        $(dom).stop().slideDown("fast", "swing");
                     }
                 });
                 $(parent).mouseleave(() => { //鼠标移出时隐藏
+                    $(dom).css("z-index", "1000");
+                    down_li.css("z-index", "1000");
+                    down_a.css("z-index", "1000");
                     down_point.css("transform", "rotate(-90deg)");
                     $(dom).stop().slideUp("fast", "swing", reset_zindex);
                 });
@@ -107,7 +114,7 @@ $(document).ready(function () {
                     else { //如果隐藏就显示
                         mouse_on_mobile();
                         down_point.css("transform", "rotate(0)");
-                        $(dom).stop().slideDown("normal", "swing");
+                        $(dom).stop().slideDown("fast", "swing");
                     }
                 });
                 parent.addEventListener('mouseleave', () => { //移开时隐藏

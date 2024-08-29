@@ -120,24 +120,26 @@ favicons: # Favicons are also used in the manifest file. Syntax is 'size: path'
 navigation_header:
   - title: Home
     url: /
-  - title: JS
-    url: /JS/
-    sub_navigation:
-      - title: JS基础
-        url: /JS-JSbase/
-      - title: jQuery与ECharts基础
-        url: /JS-jQuery/
-      - title: 其它
-        url: /JS-other/
-  - title: HTML-CSS
+  - title: HTML-CSS-JS
     url: /HTML/
     sub_navigation:
       - title: HTML基础
         url: /HTML-HTML/
       - title: CSS基础
         url: /HTML-CSSbase/
+      - title: JS基础
+        url: /JS-JSbase/
       - title: 其它
         url: /HTML-other/
+  - title: JS进阶
+    url: /JS/
+    sub_navigation:
+      - title: jQuery与ECharts基础
+        url: /JS-jQuery/
+      - title: Node.js
+        url: /JS-NodeJS/
+      - title: 其它
+        url: /JS-other/
   - title: python
     url: /python/
     sub_navigation:

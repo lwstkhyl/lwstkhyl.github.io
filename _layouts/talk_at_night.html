@@ -54,13 +54,14 @@ layout: default
         margin-top: 0 !important;
     }
 
-    /* 首行缩进 */
     .page .container article.article p {
+        /* 首行缩进 */
         text-indent: 2em;
+        margin-bottom: 8px !important;
     }
 
     .page .container article.article h4 {
-        margin-top: 0 !important;
+        margin-top: 16px !important;
     }
 </style>
 <script>
@@ -68,7 +69,7 @@ layout: default
     $(document).ready(function () {
         //目录
         const h4 = $(".page .container article.article h4").eq(0);
-        h4.css('cssText', "margin-top: 16px !important;");
+        h4.css('cssText', "margin-top: 8px !important;");
         const h1 = $(".page .container article.article h1").eq(0);
         const text = h1.text();
         const new_h3 = $(`<h3 id='diyigeh3'>${text}</h3>`);

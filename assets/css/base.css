@@ -44,6 +44,10 @@ footer.footer {
 }
 
 /* 小屏 */
+button.button--nav {
+    display: inline-block;
+}
+
 body {
     /* --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlM9g.jpg); */
     --bgi: url(https://s21.ax1x.com/2024/08/24/pAFJ3TI.jpg);
@@ -66,6 +70,10 @@ ul.sub_nav {
 
 /* 大屏 */
 @media screen and (min-width: 40em) {
+    button.button--nav {
+        display: none;
+    }
+
     body {
         --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlu4S.png);
         /* --bgi: url(https://s21.ax1x.com/2024/08/24/pAFGOwn.png); */

@@ -39,17 +39,13 @@
   // Get list and button
   const navList = document.querySelector('.header .list--nav')
   const button = document.querySelector('.header .button--nav')
-  // const ul = $('.header ul.list--nav');
-  // const li = $('.header nav.nav--header li.item--nav').eq(0);
   // Hide nav and apply toggle
+  const width = $("body").css("--bgi") !== 'none' ? 640 : 625; //导航栏按钮出现界限：笔记页625 其它页640
   const collapseNav = () => {
-    // if (document.body.clientWidth < 640 || parseInt(ul.css("height")) >= 2 * parseInt(li.css("height"))) {
-    if (document.body.clientWidth < 625) {
+    if (document.body.clientWidth < width) {
       navList.style.setProperty('--listHeight', `-${navList.offsetHeight}px`)
-      button.style.display = "inline-block";
     } else {
       navList.removeAttribute('style')
-      button.style.display = "none";
     }
 
     button.onclick = () => {
@@ -60,12 +56,8 @@
         navList.style.setProperty('--listHeight', `-${navList.offsetHeight}px`)
       }
     }
-    // $(navList).css("opacity", 1);
   }
   collapseNav()
-  // $(navList).css("opacity", 0);
-  // setTimeout(collapseNav, 50);
-
   // Check on resize if to collapse nav
   window.addEventListener('resize', () => {
     collapseNav()

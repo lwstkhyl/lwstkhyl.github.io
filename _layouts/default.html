@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="../../../../../assets/css/base.css">
   <link rel="stylesheet" href="../../../../../assets/css/iconfont.css">
   <link rel="stylesheet" href="../../../../../assets/css/down_li.css">
+  <link rel="stylesheet" href="/assets/css/img_click.css">
   <script src="../../../../../assets/scripts/jquery.min.js" type="text/javascript"></script>
   <script src="../../../../../assets/scripts/down_li.js" type="text/javascript"></script>
   <script src="../../../../../assets/scripts/site.js" type="text/javascript"></script>
@@ -80,6 +81,12 @@
   {% if site.service_worker != false %}{% include site-sw.html %}{% endif %}
 
   {% include site-before-end.html %}
+
+  <div id="modal" class="modal" onclick="hideModal()">
+    <div class="modal-bg">
+      <img id="modal-image" class="modal-image">
+    </div>
+  </div>
 </body>
 <!-- 网页背景图片 -->
 <!-- 宽屏图片原链接：https://www.pixiv.net/artworks/106449882 -->
@@ -104,5 +111,6 @@
 <!-- 网页背景图片end -->
 <script src="../../../../../assets/scripts/change_a.js" type="text/javascript"></script>
 <script src="../../../../../assets/scripts/load_img.js" type="text/javascript"></script>
+<script src="/assets/scripts/img_click.js" type="text/javascript"></script>
 
 </html>

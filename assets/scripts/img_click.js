@@ -12,4 +12,7 @@ $(document).ready(function () {
     modal.on("click", () => {
         modal.fadeOut("fast");
     });
+    $(window).scroll(() => {
+        modal.click();
+    });
 });

@@ -57,7 +57,8 @@ $(document).ready(function () {
         if (div.scrollTop() > 0) flag = true; //有滚动条
         else flag = false;
         div.scrollTop(0);
-        return flag;
+        //return flag;
+        return true;
     }
     if (!have_scroll(toc)) { //如果没有滚动条，不显示两个单选框
         is_scroll1.prop('checked', false);

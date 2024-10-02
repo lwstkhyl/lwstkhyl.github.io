@@ -52,19 +52,18 @@ $(document).ready(function () {
     const is_scroll2 = $('#scrollspy-is-scroll2'); //内容是否随目录滚动
     //判断是否有滚动条，如果没有滚动条就不显示两个单选框
     function have_scroll(div) {
-        div.scrollTop(10);
-        let flag;
-        if (div.scrollTop() > 0) flag = true; //有滚动条
-        else flag = false;
-        div.scrollTop(0);
-        //return flag;
-        return true;
+        return toc[0].scrollHeight !== toc[0].clientHeight;
+        // return true;
     }
-    if (!have_scroll(toc)) { //如果没有滚动条，不显示两个单选框
-        is_scroll1.prop('checked', false);
-        is_scroll2.prop('checked', false);
-        is_scroll.css('display', 'none');
-    }
+    toc.on("mouseenter", () => {
+        if (!have_scroll(toc)) { //如果没有滚动条，不显示两个单选框
+            // is_scroll1.prop('checked', false);
+            // is_scroll2.prop('checked', false);
+            is_scroll.css('display', 'none');
+        } else {
+            is_scroll.css('display', 'block');
+        }
+    });
     //回到顶部按钮
     let backtotop = $('<div class="scrollspy-backtotop"><img src="https://s21.ax1x.com/2024/07/23/pkHtAhT.png" alt="回到顶部" title="回到顶部"></div>'); //制作回到顶部按钮
     if ($(document).scrollTop() >= h_list.eq(0).offset().top - nav_height && $(".scrollspy-backtotop").length == 0 && !isElementOverlapped(toc, $("article.article")))

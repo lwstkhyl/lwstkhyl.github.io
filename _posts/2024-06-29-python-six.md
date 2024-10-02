@@ -16,7 +16,7 @@ Pandas数据处理，包括层次化索引、缺失值处理、数据合并与�
 
 ### 层次化索引
 
-![层次化索引](../../../../../upload/md-image/python数据分析/层次化索引.png "层次化索引"){:width="400px" height="400px"}
+![层次化索引](/upload/md-image/python数据分析/层次化索引.png "层次化索引"){:width="400px" height="400px"}
 
 其中最外层的"期中"、"期末"以及"1班"、"2班"就是层次化索引
 
@@ -142,7 +142,7 @@ dtype: int32
 
     注意这种方式涉及到每层索引的依次组合，比较适用于：
 
-    ![层次化索引](../../../../../upload/md-image/python数据分析/层次化索引.png "层次化索引"){:width="400px" height="400px"}这种情况
+    ![层次化索引](/upload/md-image/python数据分析/层次化索引.png "层次化索引"){:width="400px" height="400px"}这种情况
 
 
 
@@ -2148,7 +2148,7 @@ print(df.sum(axis=1, level=0))
 
 - 协方差：两组数值中每对变量偏差的乘积的平均值
 
-  ![协方差](../../../../../upload/md-image/python数据分析/协方差.png "协方差"){:width="350px" height="350px"}
+  ![协方差](/upload/md-image/python数据分析/协方差.png "协方差"){:width="350px" height="350px"}
 
   当协方差>0时，则两组变量正相关；<0时负相关；=0时不相关
 
@@ -2158,7 +2158,7 @@ print(df.sum(axis=1, level=0))
 
 - 相关系数=`X与Y的协方差`/(`X的标准差`*`Y的标准差`)，范围在(-1,1)间
 
-  ![相关系数](../../../../../upload/md-image/python数据分析/相关系数.png "相关系数"){:width="250px" height="250px"}
+  ![相关系数](/upload/md-image/python数据分析/相关系数.png "相关系数"){:width="250px" height="250px"}
 
   \>0正相关，<0负相关，=0不相关
 

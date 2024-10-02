@@ -60,7 +60,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图3](../../../../../upload/md-image/python数据分析/matplotlib绘图3.png){:width="400px" height="400px"}
+![matplotlib绘图3](/upload/md-image/python数据分析/matplotlib绘图3.png){:width="400px" height="400px"}
 
 ```py
 x = np.linspace(0, 2*np.pi)
@@ -73,7 +73,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图4](../../../../../upload/md-image/python数据分析/matplotlib绘图4.png){:width="800px" height="800px"}
+![matplotlib绘图4](/upload/md-image/python数据分析/matplotlib绘图4.png){:width="800px" height="800px"}
 
 可以看到有两张图，第二张图中不继承第一张图的画布配置和绘图函数
 
@@ -131,7 +131,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图2](../../../../../upload/md-image/python数据分析/matplotlib绘图2.png){:width="400px" height="400px"}
+![matplotlib绘图2](/upload/md-image/python数据分析/matplotlib绘图2.png){:width="400px" height="400px"}
 
 #### 保存图片
 
@@ -172,11 +172,11 @@ fig.savefig(
 
 sinx.png：
 
-![matplotlib绘图25](../../../../../upload/md-image/python数据分析/matplotlib绘图25.png){:width="400px" height="400px"}
+![matplotlib绘图25](/upload/md-image/python数据分析/matplotlib绘图25.png){:width="400px" height="400px"}
 
 sinx_cosx.png：
 
-![matplotlib绘图26](../../../../../upload/md-image/python数据分析/matplotlib绘图26.png){:width="400px" height="400px"}
+![matplotlib绘图26](/upload/md-image/python数据分析/matplotlib绘图26.png){:width="400px" height="400px"}
 
 
 
@@ -218,7 +218,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图5](../../../../../upload/md-image/python数据分析/matplotlib绘图5.png){:width="600px" height="600px"}
+![matplotlib绘图5](/upload/md-image/python数据分析/matplotlib绘图5.png){:width="600px" height="600px"}
 
 注意：`ax1=plt.subplot(231)`实际是先把画布分成3x2个格子（每行都有3个格子，共2行），之后让`ax1`进入第一个格子
 
@@ -241,7 +241,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图6](../../../../../upload/md-image/python数据分析/matplotlib绘图6.png){:width="600px" height="600px"}
+![matplotlib绘图6](/upload/md-image/python数据分析/matplotlib绘图6.png){:width="600px" height="600px"}
 
 特殊情况：让第二行只画一个图，且占满全部的行
 
@@ -264,7 +264,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图7](../../../../../upload/md-image/python数据分析/matplotlib绘图7.png){:width="600px" height="600px"}
+![matplotlib绘图7](/upload/md-image/python数据分析/matplotlib绘图7.png){:width="600px" height="600px"}
 
 ##### subplots
 
@@ -305,7 +305,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图8](../../../../../upload/md-image/python数据分析/matplotlib绘图8.png){:width="400px" height="400px"}
+![matplotlib绘图8](/upload/md-image/python数据分析/matplotlib绘图8.png){:width="400px" height="400px"}
 
 #### 图形嵌套
 
@@ -325,7 +325,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图9](../../../../../upload/md-image/python数据分析/matplotlib绘图9.png){:width="400px" height="400px"}
+![matplotlib绘图9](/upload/md-image/python数据分析/matplotlib绘图9.png){:width="400px" height="400px"}
 
 ##### axes和add_axes
 
@@ -351,7 +351,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图10](../../../../../upload/md-image/python数据分析/matplotlib绘图10.png){:width="400px" height="400px"}
+![matplotlib绘图10](/upload/md-image/python数据分析/matplotlib绘图10.png){:width="400px" height="400px"}
 
 #### 双轴显示
 
@@ -383,7 +383,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图11](../../../../../upload/md-image/python数据分析/matplotlib绘图11.png){:width="400px" height="400px"}
+![matplotlib绘图11](/upload/md-image/python数据分析/matplotlib绘图11.png){:width="400px" height="400px"}
 
 ### 绘图函数参数--颜色和点线样式
 
@@ -403,7 +403,7 @@ plt.show()
     ```
 
 
-    ![matplotlib绘图1](../../../../../upload/md-image/python数据分析/matplotlib绘图1.png){:width="400px" height="400px"}
+    ![matplotlib绘图1](/upload/md-image/python数据分析/matplotlib绘图1.png){:width="400px" height="400px"}
 
     上面两个参数也合并到一起，如上面的`c='red', ls='--'`就可写成`'r--'`
 
@@ -413,11 +413,11 @@ plt.show()
     ```
 
 
-    ![matplotlib绘图2](../../../../../upload/md-image/python数据分析/matplotlib绘图2.png){:width="400px" height="400px"}
+    ![matplotlib绘图2](/upload/md-image/python数据分析/matplotlib绘图2.png){:width="400px" height="400px"}
 
 - `marker`标记，即数据点形状，[更多marker](https://www.cnblogs.com/Big-Big-Watermelon/p/14052165.html)
 
-    ![matplotlib绘图marker样式](../../../../../upload/md-image/python数据分析/matplotlib绘图marker样式.png){:width="800px" height="800px"}
+    ![matplotlib绘图marker样式](/upload/md-image/python数据分析/matplotlib绘图marker样式.png){:width="800px" height="800px"}
 
   - `markersize`数据点大小，取值为一个整数
 
@@ -453,7 +453,7 @@ plt.show()
     ```
 
 
-    ![matplotlib绘图14](../../../../../upload/md-image/python数据分析/matplotlib绘图14.png){:width="400px" height="400px"}
+    ![matplotlib绘图14](/upload/md-image/python数据分析/matplotlib绘图14.png){:width="400px" height="400px"}
 
 - `label=线名称`：标签，即给线命名，常配合`plt.legend()`使用以创建图例
 
@@ -466,7 +466,7 @@ plt.show()
     ```
 
 
-    ![matplotlib绘图13](../../../../../upload/md-image/python数据分析/matplotlib绘图13.png){:width="400px" height="400px"}
+    ![matplotlib绘图13](/upload/md-image/python数据分析/matplotlib绘图13.png){:width="400px" height="400px"}
 
 
 
@@ -512,7 +512,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图12](../../../../../upload/md-image/python数据分析/matplotlib绘图12.png){:width="400px" height="400px"}
+![matplotlib绘图12](/upload/md-image/python数据分析/matplotlib绘图12.png){:width="400px" height="400px"}
 
 #### 坐标轴刻度
 
@@ -527,7 +527,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图15](../../../../../upload/md-image/python数据分析/matplotlib绘图15.png){:width="400px" height="400px"}
+![matplotlib绘图15](/upload/md-image/python数据分析/matplotlib绘图15.png){:width="400px" height="400px"}
 
 其它参数：
 
@@ -560,7 +560,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图16](../../../../../upload/md-image/python数据分析/matplotlib绘图16.png){:width="400px" height="400px"}
+![matplotlib绘图16](/upload/md-image/python数据分析/matplotlib绘图16.png){:width="400px" height="400px"}
 
 #### 坐标轴范围与形状
 
@@ -585,7 +585,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图17](../../../../../upload/md-image/python数据分析/matplotlib绘图17.png){:width="400px" height="400px"}
+![matplotlib绘图17](/upload/md-image/python数据分析/matplotlib绘图17.png){:width="400px" height="400px"}
 
 
 
@@ -621,7 +621,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图18](../../../../../upload/md-image/python数据分析/matplotlib绘图18.png){:width="600px" height="600px"}
+![matplotlib绘图18](/upload/md-image/python数据分析/matplotlib绘图18.png){:width="600px" height="600px"}
 
 #### 标题
 
@@ -658,7 +658,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图19](../../../../../upload/md-image/python数据分析/matplotlib绘图19.png){:width="400px" height="400px"}
+![matplotlib绘图19](/upload/md-image/python数据分析/matplotlib绘图19.png){:width="400px" height="400px"}
 
 #### 网格线
 
@@ -688,7 +688,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图20](../../../../../upload/md-image/python数据分析/matplotlib绘图20.png){:width="400px" height="400px"}
+![matplotlib绘图20](/upload/md-image/python数据分析/matplotlib绘图20.png){:width="400px" height="400px"}
 
 #### 标签
 
@@ -716,7 +716,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图21](../../../../../upload/md-image/python数据分析/matplotlib绘图21.png){:width="400px" height="400px"}
+![matplotlib绘图21](/upload/md-image/python数据分析/matplotlib绘图21.png){:width="400px" height="400px"}
 
 #### 文本
 
@@ -740,7 +740,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图22](../../../../../upload/md-image/python数据分析/matplotlib绘图22.png){:width="400px" height="400px"}
+![matplotlib绘图22](/upload/md-image/python数据分析/matplotlib绘图22.png){:width="400px" height="400px"}
 
 一个更复杂的例子：标注折线图上每个点的坐标
 
@@ -763,7 +763,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图23](../../../../../upload/md-image/python数据分析/matplotlib绘图23.png){:width="400px" height="400px"}
+![matplotlib绘图23](/upload/md-image/python数据分析/matplotlib绘图23.png){:width="400px" height="400px"}
 
 #### 注释
 
@@ -814,7 +814,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图24](../../../../../upload/md-image/python数据分析/matplotlib绘图24.png){:width="400px" height="400px"}
+![matplotlib绘图24](/upload/md-image/python数据分析/matplotlib绘图24.png){:width="400px" height="400px"}
 
 ### 常用绘图函数
 
@@ -866,7 +866,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图27](../../../../../upload/md-image/python数据分析/matplotlib绘图27.png){:width="400px" height="400px"}
+![matplotlib绘图27](/upload/md-image/python数据分析/matplotlib绘图27.png){:width="400px" height="400px"}
 
 #### 柱状图
 
@@ -897,7 +897,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图28](../../../../../upload/md-image/python数据分析/matplotlib绘图28.png){:width="400px" height="400px"}
+![matplotlib绘图28](/upload/md-image/python数据分析/matplotlib绘图28.png){:width="400px" height="400px"}
 
 y轴上边的`1e6`表示y轴单位为10的6次方
 
@@ -936,7 +936,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图29](../../../../../upload/md-image/python数据分析/matplotlib绘图29.png){:width="400px" height="400px"}
+![matplotlib绘图29](/upload/md-image/python数据分析/matplotlib绘图29.png){:width="400px" height="400px"}
 
 
 
@@ -962,7 +962,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图30](../../../../../upload/md-image/python数据分析/matplotlib绘图30.png){:width="400px" height="400px"}
+![matplotlib绘图30](/upload/md-image/python数据分析/matplotlib绘图30.png){:width="400px" height="400px"}
 
 
 
@@ -1006,7 +1006,7 @@ dtype: int64
 ```
 
 
-![matplotlib绘图31](../../../../../upload/md-image/python数据分析/matplotlib绘图31.png){:width="400px" height="400px"}
+![matplotlib绘图31](/upload/md-image/python数据分析/matplotlib绘图31.png){:width="400px" height="400px"}
 
 可以看到2出现15次，4出现14次...，与直方图相对应（2的高度为15，4的高度为14...）
 
@@ -1027,7 +1027,7 @@ dtype: int64
   ```
 
 
-  ![matplotlib绘图32](../../../../../upload/md-image/python数据分析/matplotlib绘图32.png){:width="400px" height="400px"}
+  ![matplotlib绘图32](/upload/md-image/python数据分析/matplotlib绘图32.png){:width="400px" height="400px"}
 
 - 也可以是一个数组，每个元素为组的分界线，左闭右开区间
 
@@ -1038,7 +1038,7 @@ dtype: int64
   ```
 
 
-  ![matplotlib绘图33](../../../../../upload/md-image/python数据分析/matplotlib绘图33.png){:width="400px" height="400px"}
+  ![matplotlib绘图33](/upload/md-image/python数据分析/matplotlib绘图33.png){:width="400px" height="400px"}
 
 
 
@@ -1055,7 +1055,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图34](../../../../../upload/md-image/python数据分析/matplotlib绘图34.png){:width="400px" height="400px"}
+![matplotlib绘图34](/upload/md-image/python数据分析/matplotlib绘图34.png){:width="400px" height="400px"}
 
 
 
@@ -1079,7 +1079,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图35](../../../../../upload/md-image/python数据分析/matplotlib绘图35.png){:width="400px" height="400px"}
+![matplotlib绘图35](/upload/md-image/python数据分析/matplotlib绘图35.png){:width="400px" height="400px"}
 
 如果想在每个柱子上显示频数：[参考文章](https://blog.csdn.net/qq_38532494/article/details/114094714)
 
@@ -1104,13 +1104,13 @@ plt.show()
 ```
 
 
-![matplotlib绘图36](../../../../../upload/md-image/python数据分析/matplotlib绘图36.png){:width="400px" height="400px"}
+![matplotlib绘图36](/upload/md-image/python数据分析/matplotlib绘图36.png){:width="400px" height="400px"}
 
 #### 箱型图
 
 显示出一组数据的最大最小值、中位数、上下四分位数
 
-![matplotlib绘图37](../../../../../upload/md-image/python数据分析/matplotlib绘图37.png){:width="400px" height="400px"}
+![matplotlib绘图37](/upload/md-image/python数据分析/matplotlib绘图37.png){:width="400px" height="400px"}
 
 相关概念：
 
@@ -1135,7 +1135,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图38](../../../../../upload/md-image/python数据分析/matplotlib绘图38.png){:width="400px" height="400px"}
+![matplotlib绘图38](/upload/md-image/python数据分析/matplotlib绘图38.png){:width="400px" height="400px"}
 
 
 
@@ -1154,7 +1154,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图39](../../../../../upload/md-image/python数据分析/matplotlib绘图39.png){:width="400px" height="400px"}
+![matplotlib绘图39](/upload/md-image/python数据分析/matplotlib绘图39.png){:width="400px" height="400px"}
 
 也可传入一个二维ndarray数组，每列画一个箱型图；还可以是一个df，每行画一个箱型图
 
@@ -1170,7 +1170,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图40](../../../../../upload/md-image/python数据分析/matplotlib绘图40.png){:width="400px" height="400px"}
+![matplotlib绘图40](/upload/md-image/python数据分析/matplotlib绘图40.png){:width="400px" height="400px"}
 
 #### 散点图
 
@@ -1186,7 +1186,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图41](../../../../../upload/md-image/python数据分析/matplotlib绘图41.png){:width="400px" height="400px"}
+![matplotlib绘图41](/upload/md-image/python数据分析/matplotlib绘图41.png){:width="400px" height="400px"}
 
 其它参数：
 
@@ -1210,7 +1210,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图42](../../../../../upload/md-image/python数据分析/matplotlib绘图42.png){:width="400px" height="400px"}
+![matplotlib绘图42](/upload/md-image/python数据分析/matplotlib绘图42.png){:width="400px" height="400px"}
 
 
 
@@ -1241,7 +1241,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图43](../../../../../upload/md-image/python数据分析/matplotlib绘图43.png){:width="400px" height="400px"}
+![matplotlib绘图43](/upload/md-image/python数据分析/matplotlib绘图43.png){:width="400px" height="400px"}
 
 
 
@@ -1262,7 +1262,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图44](../../../../../upload/md-image/python数据分析/matplotlib绘图44.png){:width="400px" height="400px"}
+![matplotlib绘图44](/upload/md-image/python数据分析/matplotlib绘图44.png){:width="400px" height="400px"}
 
 #### 饼图
 
@@ -1277,7 +1277,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图45](../../../../../upload/md-image/python数据分析/matplotlib绘图45.png){:width="400px" height="400px"}
+![matplotlib绘图45](/upload/md-image/python数据分析/matplotlib绘图45.png){:width="400px" height="400px"}
 
 如果每部分的占比想要写成"20.0%"有百分号的形式：`autopct='%.1f%%'`，注意'.1f'后是两个百分号
 
@@ -1320,11 +1320,11 @@ plt.show()
 ```
 
 
-![matplotlib绘图47](../../../../../upload/md-image/python数据分析/matplotlib绘图47.png){:width="400px" height="400px"}
+![matplotlib绘图47](/upload/md-image/python数据分析/matplotlib绘图47.png){:width="400px" height="400px"}
 
 各部分含义：
 
-![matplotlib绘图46](../../../../../upload/md-image/python数据分析/matplotlib绘图46.png){:width="400px" height="400px"}
+![matplotlib绘图46](/upload/md-image/python数据分析/matplotlib绘图46.png){:width="400px" height="400px"}
 
 
 
@@ -1355,7 +1355,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图48](../../../../../upload/md-image/python数据分析/matplotlib绘图48.png){:width="400px" height="400px"}
+![matplotlib绘图48](/upload/md-image/python数据分析/matplotlib绘图48.png){:width="400px" height="400px"}
 
 
 
@@ -1421,7 +1421,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图49](../../../../../upload/md-image/python数据分析/matplotlib绘图49.png){:width="800px" height="800px"}
+![matplotlib绘图49](/upload/md-image/python数据分析/matplotlib绘图49.png){:width="800px" height="800px"}
 
 #### 面积图
 
@@ -1437,7 +1437,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图50](../../../../../upload/md-image/python数据分析/matplotlib绘图50.png){:width="400px" height="400px"}
+![matplotlib绘图50](/upload/md-image/python数据分析/matplotlib绘图50.png){:width="400px" height="400px"}
 
 
 
@@ -1466,7 +1466,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图51](../../../../../upload/md-image/python数据分析/matplotlib绘图51.png){:width="400px" height="400px"}
+![matplotlib绘图51](/upload/md-image/python数据分析/matplotlib绘图51.png){:width="400px" height="400px"}
 
 #### 热力图
 
@@ -1497,7 +1497,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图52](../../../../../upload/md-image/python数据分析/matplotlib绘图52.png){:width="400px" height="400px"}
+![matplotlib绘图52](/upload/md-image/python数据分析/matplotlib绘图52.png){:width="400px" height="400px"}
 
 还可以为每个色块添加具体数据值显示
 
@@ -1525,7 +1525,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图53](../../../../../upload/md-image/python数据分析/matplotlib绘图53.png){:width="400px" height="400px"}
+![matplotlib绘图53](/upload/md-image/python数据分析/matplotlib绘图53.png){:width="400px" height="400px"}
 
 #### 极坐标图
 
@@ -1555,7 +1555,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图54](../../../../../upload/md-image/python数据分析/matplotlib绘图54.png){:width="400px" height="400px"}
+![matplotlib绘图54](/upload/md-image/python数据分析/matplotlib绘图54.png){:width="400px" height="400px"}
 
 扩展：使用二维数组给`color`参数赋值--数组每行的数据被传入`rgba()`颜色生成函数中，数组的一行对应着一种颜色。因为`rgba()`需要3或4个参数（第4个参数为透明度），所以该二维数组需要3或4列，如上面的`np.random.rand(n, 4)`也可以写成`np.random.rand(n, 3)`
 
@@ -1573,7 +1573,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图55](../../../../../upload/md-image/python数据分析/matplotlib绘图55.png){:width="400px" height="400px"}
+![matplotlib绘图55](/upload/md-image/python数据分析/matplotlib绘图55.png){:width="400px" height="400px"}
 
 可以看到虽然6个点都画出来了，但是首尾未闭合，不好看。改进方法：把x/y数据的第一个元素复制添加在结尾
 
@@ -1589,7 +1589,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图56](../../../../../upload/md-image/python数据分析/matplotlib绘图56.png){:width="400px" height="400px"}
+![matplotlib绘图56](/upload/md-image/python数据分析/matplotlib绘图56.png){:width="400px" height="400px"}
 
 因为雷达图本质是折线图，所以它的颜色和点线样式都与折线图相同
 
@@ -1609,7 +1609,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图57](../../../../../upload/md-image/python数据分析/matplotlib绘图57.png){:width="400px" height="400px"}
+![matplotlib绘图57](/upload/md-image/python数据分析/matplotlib绘图57.png){:width="400px" height="400px"}
 
 #### 等高线图
 
@@ -1691,7 +1691,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图58](../../../../../upload/md-image/python数据分析/matplotlib绘图58.png){:width="400px" height="400px"}
+![matplotlib绘图58](/upload/md-image/python数据分析/matplotlib绘图58.png){:width="400px" height="400px"}
 
 可以看到越靠近中心，距圆心距离（高度）越小，颜色越深
 
@@ -1734,7 +1734,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图59](../../../../../upload/md-image/python数据分析/matplotlib绘图59.png){:width="400px" height="400px"}
+![matplotlib绘图59](/upload/md-image/python数据分析/matplotlib绘图59.png){:width="400px" height="400px"}
 
 ##### 三维散点图
 
@@ -1752,7 +1752,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图60](../../../../../upload/md-image/python数据分析/matplotlib绘图60.png){:width="400px" height="400px"}
+![matplotlib绘图60](/upload/md-image/python数据分析/matplotlib绘图60.png){:width="400px" height="400px"}
 
 ##### 三维柱形图
 
@@ -1781,7 +1781,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图61](../../../../../upload/md-image/python数据分析/matplotlib绘图61.png){:width="400px" height="400px"}
+![matplotlib绘图61](/upload/md-image/python数据分析/matplotlib绘图61.png){:width="400px" height="400px"}
 
 ### 对已有图进行处理
 
@@ -1822,7 +1822,7 @@ plt.show()  # 展示图片
 ```
 
 
-![matplotlib绘图62](../../../../../upload/md-image/python数据分析/matplotlib绘图62.png){:width="400px" height="400px"}
+![matplotlib绘图62](/upload/md-image/python数据分析/matplotlib绘图62.png){:width="400px" height="400px"}
 
 
 
@@ -1841,7 +1841,7 @@ plt.show()  # 展示图片
     ```
 
 
-    ![matplotlib绘图63](../../../../../upload/md-image/python数据分析/matplotlib绘图63.png){:width="400px" height="400px"}
+    ![matplotlib绘图63](/upload/md-image/python数据分析/matplotlib绘图63.png){:width="400px" height="400px"}
 
     ```py
   img = plt.imread('data/plt/pandas.jpeg')
@@ -1850,7 +1850,7 @@ plt.show()  # 展示图片
     ```
 
 
-    ![matplotlib绘图64](../../../../../upload/md-image/python数据分析/matplotlib绘图64.png){:width="400px" height="400px"}
+    ![matplotlib绘图64](/upload/md-image/python数据分析/matplotlib绘图64.png){:width="400px" height="400px"}
 
     两者的区别在于`origin='lower'`是改变坐标轴原点位置（翻转了y轴），而`[::-1]`直接改变图片数组
 
@@ -1863,7 +1863,7 @@ plt.show()  # 展示图片
     ```
 
 
-    ![matplotlib绘图65](../../../../../upload/md-image/python数据分析/matplotlib绘图65.png){:width="400px" height="400px"}
+    ![matplotlib绘图65](/upload/md-image/python数据分析/matplotlib绘图65.png){:width="400px" height="400px"}
 
 - 截取图片：坐标系参考上面图片的坐标轴
 
@@ -1874,7 +1874,7 @@ plt.show()  # 展示图片
     ```
 
 
-    ![matplotlib绘图66](../../../../../upload/md-image/python数据分析/matplotlib绘图66.png){:width="400px" height="400px"}
+    ![matplotlib绘图66](/upload/md-image/python数据分析/matplotlib绘图66.png){:width="400px" height="400px"}
 
 
 
@@ -1891,7 +1891,7 @@ plt.imsave('data/plt/new_pandas.png', new_img)
 ```
 
 
-![matplotlib绘图67](../../../../../upload/md-image/python数据分析/matplotlib绘图67.png){:width="400px" height="400px"}
+![matplotlib绘图67](/upload/md-image/python数据分析/matplotlib绘图67.png){:width="400px" height="400px"}
 
 ### 综合案例
 
@@ -1948,7 +1948,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图68](../../../../../upload/md-image/python数据分析/matplotlib绘图68.png){:width="600px" height="600px"}
+![matplotlib绘图68](/upload/md-image/python数据分析/matplotlib绘图68.png){:width="600px" height="600px"}
 
 **任务2：画条形图体现每种出手方式的次数，画最多的前10种出手方式即可**
 
@@ -1963,7 +1963,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图69](../../../../../upload/md-image/python数据分析/matplotlib绘图69.png){:width="800px" height="800px"}
+![matplotlib绘图69](/upload/md-image/python数据分析/matplotlib绘图69.png){:width="800px" height="800px"}
 
 **任务3：用柱形图标识在每一节的出手次数**
 
@@ -1979,7 +1979,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图74](../../../../../upload/md-image/python数据分析/matplotlib绘图74.png){:width="400px" height="400px"}
+![matplotlib绘图74](/upload/md-image/python数据分析/matplotlib绘图74.png){:width="400px" height="400px"}
 
 **任务4：使用柱形图表示各种投篮方式的命中率**
 
@@ -2005,13 +2005,13 @@ plt.show()
 ```
 
 
-![matplotlib绘图70](../../../../../upload/md-image/python数据分析/matplotlib绘图70.png){:width="400px" height="400px"}
+![matplotlib绘图70](/upload/md-image/python数据分析/matplotlib绘图70.png){:width="400px" height="400px"}
 
 **任务5：标识投篮位置的区域**
 
 即在第一个图（投篮位置坐标）的基础上，用颜色标识每个点都属于哪个区域，同区域的点为同一种颜色，例如：
 
-![matplotlib绘图71](../../../../../upload/md-image/python数据分析/matplotlib绘图71.png){:width="400px" height="400px"}
+![matplotlib绘图71](/upload/md-image/python数据分析/matplotlib绘图71.png){:width="400px" height="400px"}
 
 要求分别使用`shot_zone_basic`、 `shot_zone_range`、`shot_zone_area`三列数据，画三个子图
 
@@ -2034,7 +2034,7 @@ plt.show()
 ```
 
 
-![matplotlib绘图72](../../../../../upload/md-image/python数据分析/matplotlib绘图72.png){:width="800px" height="800px"}
+![matplotlib绘图72](/upload/md-image/python数据分析/matplotlib绘图72.png){:width="800px" height="800px"}
 
 
 
@@ -2071,4 +2071,4 @@ plt.show()
 ```
 
 
-![matplotlib绘图73](../../../../../upload/md-image/python数据分析/matplotlib绘图73.png){:width="800px" height="800px"}
+![matplotlib绘图73](/upload/md-image/python数据分析/matplotlib绘图73.png){:width="800px" height="800px"}

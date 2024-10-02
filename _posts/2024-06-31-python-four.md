@@ -741,7 +741,7 @@ print(np.concatenate((n1,n2),axis=1)) #按列合并（左右合并）
 
 其它聚合函数：
 
-![聚合函数](../../../../../upload/md-image/python数据分析/其它聚合函数.png){:width="300px" height="300px"}
+![聚合函数](/upload/md-image/python数据分析/其它聚合函数.png){:width="300px" height="300px"}
 
 它们的用法都与sum类似，可以指定维度
 
@@ -823,7 +823,7 @@ print(a+b)
 
 - 两矩阵相乘：`np.dot(n1,n2)`其中n1的列数必须等于n2的行数
 
-  ![矩阵相乘](../../../../../upload/md-image/python数据分析/矩阵乘积.png){:width="800px" height="800px"}
+  ![矩阵相乘](/upload/md-image/python数据分析/矩阵乘积.png){:width="800px" height="800px"}
 
   ```
   [[1 2 3]

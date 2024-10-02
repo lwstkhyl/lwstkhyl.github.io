@@ -43,7 +43,7 @@ df.to_csv('data.csv')
 ```
 
 
-![to_csv](../../../../../upload/md-image/python数据分析/to_csv.png "to_csv"){:width="300px" height="300px"}
+![to_csv](/upload/md-image/python数据分析/to_csv.png "to_csv"){:width="300px" height="300px"}
 
 
 
@@ -109,7 +109,7 @@ df.to_excel('data.xlsx')
 ```
 
 
-![to_excel](../../../../../upload/md-image/python数据分析/to_excel.png "to_excel"){:width="300px" height="300px"}
+![to_excel](/upload/md-image/python数据分析/to_excel.png "to_excel"){:width="300px" height="300px"}
 
 
 
@@ -186,7 +186,7 @@ df.to_sql(
 ```
 
 
-![to_sql](../../../../../upload/md-image/python数据分析/to_sql.png "to_sql"){:width="150px" height="150px"}
+![to_sql](/upload/md-image/python数据分析/to_sql.png "to_sql"){:width="150px" height="150px"}
 
 
 
@@ -925,7 +925,7 @@ plt.show()
 ```
 
 
-![pandas绘图1](../../../../../upload/md-image/python数据分析/pandas绘图1.png){:width="400px" height="400px"}
+![pandas绘图1](/upload/md-image/python数据分析/pandas绘图1.png){:width="400px" height="400px"}
 
 例：正弦曲线
 
@@ -938,7 +938,7 @@ plt.show()
 ```
 
 
-![pandas绘图2](../../../../../upload/md-image/python数据分析/pandas绘图2.png){:width="400px" height="400px"}
+![pandas绘图2](/upload/md-image/python数据分析/pandas绘图2.png){:width="400px" height="400px"}
 
 因为这里给的x值足够多，所以看起来是曲线
 
@@ -973,7 +973,7 @@ plt.show()
 ```
 
 
-![pandas绘图3](../../../../../upload/md-image/python数据分析/pandas绘图3.png){:width="400px" height="400px"}
+![pandas绘图3](/upload/md-image/python数据分析/pandas绘图3.png){:width="400px" height="400px"}
 
 #### 条形图/柱状图
 
@@ -986,7 +986,7 @@ plt.show()
 ```
 
 
-![pandas绘图6](../../../../../upload/md-image/python数据分析/pandas绘图6.png){:width="400px" height="400px"}
+![pandas绘图6](/upload/md-image/python数据分析/pandas绘图6.png){:width="400px" height="400px"}
 
 
 
@@ -1003,7 +1003,7 @@ plt.show()
 ```
 
 
-![pandas绘图4](../../../../../upload/md-image/python数据分析/pandas绘图4.png){:width="400px" height="400px"}
+![pandas绘图4](/upload/md-image/python数据分析/pandas绘图4.png){:width="400px" height="400px"}
 
 在绘图函数中添加参数`stacked=True`可以使柱状图堆叠
 
@@ -1014,7 +1014,7 @@ plt.show()
 ```
 
 
-![pandas绘图5](../../../../../upload/md-image/python数据分析/pandas绘图5.png){:width="400px" height="400px"}
+![pandas绘图5](/upload/md-image/python数据分析/pandas绘图5.png){:width="400px" height="400px"}
 
 
 
@@ -1031,7 +1031,7 @@ plt.show()
 ```
 
 
-![pandas绘图7](../../../../../upload/md-image/python数据分析/pandas绘图7.png){:width="400px" height="400px"}
+![pandas绘图7](/upload/md-image/python数据分析/pandas绘图7.png){:width="400px" height="400px"}
 
 一般可以把水平的称为条形图，竖直的称为柱状图
 
@@ -1056,7 +1056,7 @@ plt.show()
 ```
 
 
-![pandas绘图9](../../../../../upload/md-image/python数据分析/pandas绘图9.png){:width="400px" height="400px"}
+![pandas绘图9](/upload/md-image/python数据分析/pandas绘图9.png){:width="400px" height="400px"}
 
 ```py
 s = pd.Series([1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5])
@@ -1065,7 +1065,7 @@ plt.show()
 ```
 
 
-![pandas绘图10](../../../../../upload/md-image/python数据分析/pandas绘图10.png){:width="400px" height="400px"}
+![pandas绘图10](/upload/md-image/python数据分析/pandas绘图10.png){:width="400px" height="400px"}
 
 ```py
 s = pd.Series([1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5])
@@ -1074,7 +1074,7 @@ plt.show()
 ```
 
 
-![pandas绘图11](../../../../../upload/md-image/python数据分析/pandas绘图11.png){:width="400px" height="400px"}
+![pandas绘图11](/upload/md-image/python数据分析/pandas绘图11.png){:width="400px" height="400px"}
 
 
 
@@ -1091,7 +1091,7 @@ plt.show()
 ```
 
 
-![pandas绘图16](../../../../../upload/md-image/python数据分析/pandas绘图16.png){:width="400px" height="400px"}
+![pandas绘图16](/upload/md-image/python数据分析/pandas绘图16.png){:width="400px" height="400px"}
 
 此参数可适用于各种原本用于series的画图函数
 
@@ -1112,7 +1112,7 @@ plt.show()
 ```
 
 
-![pandas绘图12](../../../../../upload/md-image/python数据分析/pandas绘图12.png){:width="400px" height="400px"}
+![pandas绘图12](/upload/md-image/python数据分析/pandas绘图12.png){:width="400px" height="400px"}
 
 可以看到是一条曲线，更精确显示每个值的概率和变化趋势
 
@@ -1126,7 +1126,7 @@ plt.show()
 ```
 
 
-![pandas绘图13](../../../../../upload/md-image/python数据分析/pandas绘图13.png){:width="400px" height="400px"}
+![pandas绘图13](/upload/md-image/python数据分析/pandas绘图13.png){:width="400px" height="400px"}
 
 #### 饼图
 
@@ -1141,7 +1141,7 @@ plt.show()
 ```
 
 
-![pandas绘图14](../../../../../upload/md-image/python数据分析/pandas绘图14.png){:width="400px" height="400px"}
+![pandas绘图14](/upload/md-image/python数据分析/pandas绘图14.png){:width="400px" height="400px"}
 
 可以看到数据的总和为1+3+4=8，A部分占比即为1/8、B部分占比即为3/8、C部分占比即为4/8
 
@@ -1154,7 +1154,7 @@ plt.show()
 ```
 
 
-![pandas绘图15](../../../../../upload/md-image/python数据分析/pandas绘图15.png){:width="400px" height="400px"}
+![pandas绘图15](/upload/md-image/python数据分析/pandas绘图15.png){:width="400px" height="400px"}
 
 更复杂的例子：
 
@@ -1165,7 +1165,7 @@ plt.show()
 ```
 
 
-![pandas绘图17](../../../../../upload/md-image/python数据分析/pandas绘图17.png){:width="400px" height="400px"}
+![pandas绘图17](/upload/md-image/python数据分析/pandas绘图17.png){:width="400px" height="400px"}
 
 #### 散点图
 
@@ -1180,7 +1180,7 @@ plt.show()
 ```
 
 
-![pandas绘图18](../../../../../upload/md-image/python数据分析/pandas绘图18.png){:width="400px" height="400px"}
+![pandas绘图18](/upload/md-image/python数据分析/pandas绘图18.png){:width="400px" height="400px"}
 
 #### 面积图
 
@@ -1197,7 +1197,7 @@ plt.show()
 ```
 
 
-![pandas绘图19](../../../../../upload/md-image/python数据分析/pandas绘图19.png){:width="400px" height="400px"}
+![pandas绘图19](/upload/md-image/python数据分析/pandas绘图19.png){:width="400px" height="400px"}
 
 ```py
 df = pd.DataFrame(data=np.random.rand(10, 4), columns=list('ABCD'))
@@ -1206,7 +1206,7 @@ plt.show()
 ```
 
 
-![pandas绘图20](../../../../../upload/md-image/python数据分析/pandas绘图20.png){:width="400px" height="400px"}
+![pandas绘图20](/upload/md-image/python数据分析/pandas绘图20.png){:width="400px" height="400px"}
 
 
 
@@ -1223,7 +1223,7 @@ plt.show()
 ```
 
 
-![pandas绘图21](../../../../../upload/md-image/python数据分析/pandas绘图21.png){:width="400px" height="400px"}
+![pandas绘图21](/upload/md-image/python数据分析/pandas绘图21.png){:width="400px" height="400px"}
 
 #### 箱型图
 
@@ -1239,7 +1239,7 @@ plt.show()
 ```
 
 
-![pandas绘图22](../../../../../upload/md-image/python数据分析/pandas绘图22.png){:width="600px" height="600px"}
+![pandas绘图22](/upload/md-image/python数据分析/pandas绘图22.png){:width="600px" height="600px"}
 
 
 
@@ -1249,7 +1249,7 @@ plt.show()
 
 箱型图中各部分含义：
 
-![pandas绘图23](../../../../../upload/md-image/python数据分析/pandas绘图23.png){:width="400px" height="400px"}
+![pandas绘图23](/upload/md-image/python数据分析/pandas绘图23.png){:width="400px" height="400px"}
 
 从上到下依次为：
 
@@ -1349,7 +1349,7 @@ print(tips)
 
 
 
-![pandas绘图8](../../../../../upload/md-image/python数据分析/pandas绘图8.png){:width="400px" height="400px"}
+![pandas绘图8](/upload/md-image/python数据分析/pandas绘图8.png){:width="400px" height="400px"}
 
 
 
@@ -1431,7 +1431,7 @@ dtype: object
     ```
 
 
-    ![pandas绘图24](../../../../../upload/md-image/python数据分析/pandas绘图24.png){:width="400px" height="400px"}
+    ![pandas绘图24](/upload/md-image/python数据分析/pandas绘图24.png){:width="400px" height="400px"}
 
 
 

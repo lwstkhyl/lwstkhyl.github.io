@@ -31,13 +31,14 @@ $(document).ready(function () {
             const text = `目录导航暂不可用，请等待图片加载完成(${loaded_img_num}/${img_list_length})...`;
             load_img.text(text); //更新内容
             change_position(load_img); //更新位置
-            $(cover).css("height", toc.height());
+            $(cover).css("height", toc.outerHeight(true));
             if (loaded_img_num === img_list_length) { //加载完毕就停止定时器
                 $(cover).fadeOut("normal", "swing", () => cover.style.display = "none"); //淡出方式隐藏遮罩层
                 clearInterval(timer); //停止定时器
             }
         }, 500);
     }
+    $(cover).css("height", toc.outerHeight(true));
     let timer = setInterval(function () { //每0.5s更新盒子内容
         const loaded_img_num = get_loaded_img_num(img_list);
         const text = `加载图片中(${loaded_img_num}/${img_list_length})...`;

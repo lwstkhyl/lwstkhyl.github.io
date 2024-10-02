@@ -24,6 +24,7 @@ $(document).ready(function () {
         if (loaded_img_num === img_list_length) return; //如果已加载完毕，就直接退出
         toc.append($(`<div class="loader-bg"><div class="img_load">目录导航暂不可用，请等待图片加载完成(${loaded_img_num}/${img_list_length})...</div></div>`)); //将遮罩层添加在目录中
         const cover = document.querySelector(".toc .loader-bg"); //遮罩层
+        $(cover).css("height", toc.outerHeight(true));
         const load_img = $(".toc .loader-bg .img_load"); //显示有多少图片已加载的盒子
         change_position(load_img); //更新位置
         let timer = setInterval(function () { //每0.5s更新盒子内容
@@ -38,7 +39,6 @@ $(document).ready(function () {
             }
         }, 500);
     }
-    $(cover).css("height", toc.outerHeight(true));
     let timer = setInterval(function () { //每0.5s更新盒子内容
         const loaded_img_num = get_loaded_img_num(img_list);
         const text = `加载图片中(${loaded_img_num}/${img_list_length})...`;

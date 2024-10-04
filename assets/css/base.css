@@ -50,7 +50,7 @@ button.button--nav {
 
 body {
     /* --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlM9g.jpg); */
-    --bgi: url(https://s21.ax1x.com/2024/08/24/pAFJ3TI.jpg);
+    --bgi: url(/upload/other/zhaipingbg.jpg);
 }
 
 /* 页面遮罩 */
@@ -75,7 +75,7 @@ ul.sub_nav {
     }
 
     body {
-        --bgi: url(https://s21.ax1x.com/2024/08/23/pAFlu4S.png);
+        --bgi: url(/upload/other/kuanpingbg.png);
         /* --bgi: url(https://s21.ax1x.com/2024/08/24/pAFGOwn.png); */
     }
 

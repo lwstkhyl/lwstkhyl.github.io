@@ -65,7 +65,7 @@ $(document).ready(function () {
         }
     });
     //回到顶部按钮
-    let backtotop = $('<div class="scrollspy-backtotop"><img src="https://s21.ax1x.com/2024/07/23/pkHtAhT.png" alt="回到顶部" title="回到顶部"></div>'); //制作回到顶部按钮
+    let backtotop = $('<div class="scrollspy-backtotop"><img src="/upload/other/backtotop.png" alt="回到顶部" title="回到顶部"></div>'); //制作回到顶部按钮
     if ($(document).scrollTop() >= h_list.eq(0).offset().top - nav_height && $(".scrollspy-backtotop").length == 0 && !isElementOverlapped(toc, $("article.article")))
         toc.after(backtotop); //添加
     function update_backtotop() { //更新回到顶部按钮

@@ -136,7 +136,7 @@ navigation_header:
     sub_navigation:
       - title: jQuery与ECharts基础
         url: /JS-jQuery/
-      - title: Node.js
+      - title: Node.js-AJAX-Promise-Axios
         url: /JS-NodeJS/
       - title: 其它
         url: /JS-other/

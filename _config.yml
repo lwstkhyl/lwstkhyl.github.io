@@ -158,6 +158,13 @@ navigation_header:
         url: /r-bioinfolesson/
       - title: 其它
         url: /r-other/
+  - title: 其它
+    url: /other/
+    sub_navigation:
+      - title: Linux-shell基础
+        url: /linux-shell-base/
+      - title: 其它
+        url: /other-other/
 
 navigation_footer:
   - title: Created by lwl

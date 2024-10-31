@@ -1,0 +1,15 @@
+---
+introduce: bioinfo-presentation
+---
+
+<ul class="blog">
+    {% for blog in site.posts %} {% if blog.subcategory == "other-other" %}
+    <li>
+        <div class="title-date">
+            <a href="{{ blog.url }}" class="title">{{ blog.title }}</a>
+            <p class="date">-----发布于{{ blog.date | date: "%Y-%m-%d" }}</p>
+        </div>
+        {{ blog.excerpt }}
+    </li>
+    {% endif %} {% endfor %}
+</ul>

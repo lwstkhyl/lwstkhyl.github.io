@@ -77,7 +77,10 @@
 ├── JS-NodeJS.html Node.js、AJAX、Promise、Axios笔记
 ├── JS-other.html JS的其它内容
 ├── JS.html 所有JS笔记
+├── linux-shell-base.html linux和shell笔记
 ├── my_echarts.html 个人创作的echarts图表应用（还未完成）
+├── other-other.html 其它内容的其它内容（一般为临时创建的笔记等）
+├── other.html 其它内容
 ├── python-database.html 数据分析基础教程笔记
 ├── python-other.html python的其它内容
 ├── python-pythonbase.html python基础教程笔记

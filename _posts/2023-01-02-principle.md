@@ -7,7 +7,11 @@ subcategory: other-other
 文章的研究过程和结论，每段代码的作用和结果介绍
 
 <!-- more -->
-
+<style>
+  header.header {
+    position: static;
+  }
+</style>
 来自nature文章[Improved prediction of immune checkpoint blockade efficacy across multiple cancer
 types](https://www.nature.com/articles/s41587-021-01070-8)
 

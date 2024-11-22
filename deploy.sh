@@ -1,6 +1,6 @@
 #!/bin/bash
 cd /home/wth/Desktop/lwstkhyl.github.io
-if [ $(git pull) = "Already up to date" ]; then
+if [ $(git pull) = "Already up to date." ]; then
     exit
 fi
 time=$(date "+%Y-%m-%d %H:%M:%S")

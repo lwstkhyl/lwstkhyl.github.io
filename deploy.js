@@ -13,22 +13,18 @@ function RunCmd(cmd, args, cb) {
         cb(result)
     });
 }
-function get_time(){
-	const date = new Date();
-	return date.toLocaleString(); 
-}
-function deploy(){
+
+function deploy() {
     var shpath = './autosync.sh';
-    console.log(`${get_time()}:deploy`);
     RunCmd('sh', [shpath], function (result) {
-		console.log(result);
+        console.log(result);
     });
 }
 
 http.createServer(function (req, res) {
     handler(req, res, function (err) {
         res.statusCode = 200;
-	deploy();
+        deploy();
         res.end('no such location');
     })
 }).listen(8888)

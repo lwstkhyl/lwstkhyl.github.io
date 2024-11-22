@@ -1,5 +1,0 @@
-先git branch -a查看有哪些分支，再git branch --set-upstream-to
-
-1757
-
-111

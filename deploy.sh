@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-source ~/.bash_profile
-source ~/.bashrc
-source /etc/profile
+# source ~/.bash_profile
+# source ~/.bashrc
+# source /etc/profile
+export JEKYLL_HOME=/home/wth/gems
+export PATH=$PATH:$JEKYLL_HOME/bin
 cd /home/wth/Desktop/lwstkhyl.github.io
 if [ "$(git pull)" = "Already up to date." ]; then
     exit
 fi
 time=$(date "+%Y-%m-%d %H:%M:%S")
 echo "${time}-----update" >> ./deploy.log
-/home/wth/gems/bin/jekyll b
+jekyll b
 if [ $? -eq 0 ]; then
     echo "_site update success" >> ./deploy.log
 else

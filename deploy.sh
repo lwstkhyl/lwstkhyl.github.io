@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /home/wth/Desktop/lwstkhyl/lwstkhyl.github.io
+cd /home/wth/Desktop/lwstkhyl.github.io
 time=$(date "+%Y-%m-%d %H:%M:%S")
 echo "${time}-----update" >> ./deploy.log
 jekyll b

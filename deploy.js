@@ -15,7 +15,7 @@ function RunCmd(cmd, args, cb) {
 }
 
 function deploy() {
-    var shpath = './autosync.sh';
+    var shpath = '/home/wth/Desktop/lwstkhyl/lwstkhyl.github.io/deploy.sh';
     RunCmd('sh', [shpath], function (result) {
         console.log(result);
     });

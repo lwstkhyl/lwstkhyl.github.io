@@ -1,11 +1,12 @@
 #!/bin/bash
+source ~/.bash_profile
 cd /home/wth/Desktop/lwstkhyl.github.io
 if [ "$(git pull)" = "Already up to date." ]; then
     exit
 fi
 time=$(date "+%Y-%m-%d %H:%M:%S")
 echo "${time}-----update" >> ./deploy.log
-/home/wth/gems/bin/jekyll b
+jekyll b
 echo "_site update success" >> ./deploy.log
 # sudo rm -rf /var/www/html/*
 # sudo cp -r ./_site/* /var/www/html

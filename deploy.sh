@@ -1,5 +1,5 @@
 #!/bin/bash
-source ~/.bash_profile
+source ~/.bashrc
 cd /home/wth/Desktop/lwstkhyl.github.io
 if [ "$(git pull)" = "Already up to date." ]; then
     exit

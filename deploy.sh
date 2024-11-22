@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+PATH="$PATH:/home/wth/gems/bin"
 # source ~/.bash_profile
 # source ~/.bashrc
 # source /etc/profile
-export JEKYLL_HOME=/home/wth/gems
-export PATH=$PATH:$JEKYLL_HOME/bin
+# export JEKYLL_HOME=/home/wth/gems
+# export PATH=$PATH:$JEKYLL_HOME/bin
 cd /home/wth/Desktop/lwstkhyl.github.io
 if [ "$(git pull)" = "Already up to date." ]; then
     exit

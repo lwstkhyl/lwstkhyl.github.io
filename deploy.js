@@ -19,7 +19,7 @@ function get_time(){
 }
 function deploy(){
     var shpath = './autosync.sh';
-    console.log(`{get_time()}:deploy`);
+    console.log(`${get_time()}:deploy`);
     RunCmd('sh', [shpath], function (result) {
 		console.log(result);
     });

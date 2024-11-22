@@ -1,5 +1,5 @@
 #!/bin/sh
-git pull --rebase server
+git pull
 echo "code sync success" >> ./deploy.log
 sh ./deploy.sh
 

@@ -1,27 +1,10 @@
-11/22/2024, 6:04:11 PM:deploy
-nts:491
-      throw er; // Unhandled 'error' event
-      ^
-
-Error: listen EADDRINUSE: address already in use :::8888
-    at Server.setupListenHandle [as _listen2] (node:net:1485:16)
-    at listenInCluster (node:net:1533:12)
-    at Server.listen (node:net:1621:7)
-    at Object.<anonymous> (/home/wth/Desktop/lwstkhyl.github.io/deploy.js:34:4)
-    at Module._compile (node:internal/modules/cjs/loader:1159:14)
-    at Module._extensions..js (node:internal/modules/cjs/loader:1213:10)
-    at Module.load (node:internal/modules/cjs/loader:1037:32)
-    at Module._load (node:internal/modules/cjs/loader:878:12)
-    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)
-    at node:internal/main/run_main_module:23:47
-Emitted 'error' event on Server instance at:
-    at emitErrorNT (node:net:1512:8)
-    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
-  code: 'EADDRINUSE',
-  errno: -98,
-  syscall: 'listen',
-  address: '::',
-  port: 8888
-}
-
-Node.js v18.12.1
+nohup: ignoring input
+11/22/2024, 6:36:49 PM:deploy
+11/22/2024, 6:39:16 PM:deploy
+code sync success
+_site update success
+file copy-paste success
+apache2 restart success
+_site update success
+file copy-paste success
+apache2 restart success

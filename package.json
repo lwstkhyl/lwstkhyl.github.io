@@ -1,0 +1,19 @@
+{
+  "name": "lwstkhyl.github.io",
+  "version": "1.0.0",
+  "description": "使用[Jekyll](https://jekyllrb.com/)的[Alembic](https://github.com/daviddarnes/alembic)模板",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lwstkhyl/lwstkhyl.github.io.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lwstkhyl/lwstkhyl.github.io/issues"
+  },
+  "homepage": "https://github.com/lwstkhyl/lwstkhyl.github.io#readme"
+}

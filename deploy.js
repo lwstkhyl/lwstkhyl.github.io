@@ -13,32 +13,27 @@ function RunCmd(cmd, args, cb) {
         cb(result)
     });
 }
+function get_time(){
+	const date = new Date();
+	return date.toLocaleString(); 
+}
+function deploy(){
+    var shpath = './autosync.sh';
+    console.log(`${get_time()}:deploy`);
+    RunCmd('sh', [shpath], function (result) {
+		console.log(result);
+    });
+}
 
 http.createServer(function (req, res) {
     handler(req, res, function (err) {
-        res.statusCode = 404;
+        res.statusCode = 200;
+	deploy();
         res.end('no such location');
     })
-}).listen(7777)
-
-handler.on('error', function (err) {
-    console.error('Error:', err.message);
-})
+}).listen(8888)
 
 handler.on('push', function (event) {
-    console.log('Received a push event for %s to %s',
-        event.payload.repository.name,
-        event.payload.ref);
-    var shpath = './deploy.sh';
-    RunCmd('sh', [shpath], function (result) {
-        console.log(result);
-    })
+    deploy();
 })
 
-handler.on('issues', function (event) {
-    console.log('Received an issue event for %s action=%s: #%d %s',
-        event.payload.repository.name,
-        event.payload.action,
-        event.payload.issue.number,
-        event.payload.issue.title);
-})

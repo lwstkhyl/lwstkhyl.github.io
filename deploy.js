@@ -27,7 +27,6 @@ function deploy() {
 let encoder = new TextEncoder();
 async function verifySignature(secret, header, payload) {
     let parts = header ? header.split("=") : "=".split("=");
-    console.log(secret, header, payload)
     let sigHex = parts[1];
     let algorithm = { name: "HMAC", hash: { name: 'SHA-256' } };
     let keyBytes = encoder.encode(secret);
@@ -71,24 +70,19 @@ const server = http.createServer(function (req, res) {
     req.on("end", () => {
         verifySignature(password, headers["x-hub-signature-256"], body).then((verify_res) => {
             if (verify_res) {
-                console.log("from github");
-                if (
-                    req.method === "post" &&
-                    headers["x-github-event"] === "push"
-                ) {
+                if (req.method.toLowerCase === "post" && headers["x-github-event"] === "push") {
                     console.log("github push");
+                    deploy();
+                } else {
+                    console.log("not github push");
                 }
             } else {
                 console.log("not from github");
             }
-            console.log("--------");
-            console.log(verify_res);
-            console.log("--------");
             res.statusCode = 200;
             res.setHeader("Content-Type", "text/plain");
-            res.end("success");
+            res.end("request receive");
         });
-
     });
 });
 

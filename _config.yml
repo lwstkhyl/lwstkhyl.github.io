@@ -22,6 +22,11 @@ exclude:
   - alembic-jekyll-theme.gemspec
   - .jekyll-cache
   - not_use_file
+  - deploy.js
+  - deploy.log
+  - deploy.sh
+  - package.json
+  - node_modules
 # 2. Installed Gems
 plugins:
   - jekyll-sitemap

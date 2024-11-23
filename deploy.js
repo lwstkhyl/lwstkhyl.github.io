@@ -55,7 +55,7 @@ const server = http.createServer(function (req, res) {
         verifySignature(password, headers["x-hub-signature-256"], body).then((verify_res) => {
             if (verify_res) {
                 console.log("github push");
-                exec(`sh ${shpath}/new_eploy.sh`, (error, stdout, stderr) => {
+                exec(`sh ${shpath}/new_deploy.sh`, (error, stdout, stderr) => {
                     if (error) {
                         console.error(`exec error: ${error}`);
                     }

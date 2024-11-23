@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const util = require('util');
 const { exec } = require('child_process');
 
-const shpath = '/home/wth/Desktop/lwstkhyl/lwstkhyl.github.io';
+const shpath = '/home/wth/Desktop/lwstkhyl.github.io';
 const hostname = "0.0.0.0";
 const port = 8888;
 const password = "wthlyhshpy";

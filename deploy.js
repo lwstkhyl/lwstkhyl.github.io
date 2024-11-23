@@ -1,7 +1,7 @@
 const http = require('http');
 const crypto = require('crypto');
 const util = require('util');
-const child_process = require('child_process');
+const { spawn } = require('child_process');
 
 const shpath = '/home/wth/Desktop/lwstkhyl/lwstkhyl.github.io';
 const hostname = "0.0.0.0";
@@ -55,7 +55,7 @@ const server = http.createServer(function (req, res) {
         verifySignature(password, headers["x-hub-signature-256"], body).then((verify_res) => {
             if (verify_res) {
                 console.log("github push");
-                child_process.exec(`sh ${shpath}/deploy.sh`);
+                const ls = spawn('sh', [`${shpath}/new_eploy.sh`]);
             } else {
                 console.log("not from github");
             }

@@ -8,11 +8,6 @@ const hostname = "0.0.0.0";
 const port = 8888;
 const password = "wthlyhshpy";
 
-const exec = util.promisify(child_process.exec);
-const deploy = async function () {
-    await exec(`sh ${shpath}/deploy.sh`, { cwd: shpath });
-}
-
 let encoder = new TextEncoder();
 async function verifySignature(secret, header, payload) {
     let parts = header ? header.split("=") : "=".split("=");
@@ -60,7 +55,7 @@ const server = http.createServer(function (req, res) {
         verifySignature(password, headers["x-hub-signature-256"], body).then((verify_res) => {
             if (verify_res) {
                 console.log("github push");
-                deploy();
+                child_process.exec(`sh ${shpath}/deploy.sh`);
             } else {
                 console.log("not from github");
             }

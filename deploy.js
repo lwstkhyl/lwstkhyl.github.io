@@ -1,27 +1,16 @@
 const http = require('http');
 const crypto = require('crypto');
+const util = require('util');
+const child_process = require('child_process');
 
-const shpath = '/home/wth/Desktop/lwstkhyl/lwstkhyl.github.io/deploy.sh';
+const shpath = '/home/wth/Desktop/lwstkhyl/lwstkhyl.github.io';
 const hostname = "0.0.0.0";
 const port = 8888;
 const password = "wthlyhshpy";
 
-function RunCmd(cmd, args, cb) {
-    const spawn = require('child_process').spawn;
-    const child = spawn(cmd, args);
-    let result = '';
-    child.stdout.on('data', function (data) {
-        result += data.toString();
-    });
-    child.stdout.on('end', function () {
-        cb(result)
-    });
-}
-
-function deploy() {
-    RunCmd('sh', [shpath], function (result) {
-        console.log(result);
-    });
+const exec = util.promisify(child_process.exec);
+const deploy = async function () {
+    await exec(`sh ${shpath}/deploy.sh`, { cwd: shpath });
 }
 
 let encoder = new TextEncoder();

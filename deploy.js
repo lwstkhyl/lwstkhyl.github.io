@@ -1,11 +1,13 @@
-var http = require('http')
-var createHandler = require('github-webhook-handler')
-var handler = createHandler({ path: '/webhook', secret: 'wthlyhshpy' })
+const http = require('http')
+
+const shpath = '/home/wth/Desktop/lwstkhyl/lwstkhyl.github.io/deploy.sh';
+const hostname = "0.0.0.0";
+const port = 8888;
 
 function RunCmd(cmd, args, cb) {
-    var spawn = require('child_process').spawn;
-    var child = spawn(cmd, args);
-    var result = '';
+    const spawn = require('child_process').spawn;
+    const child = spawn(cmd, args);
+    let result = '';
     child.stdout.on('data', function (data) {
         result += data.toString();
     });
@@ -15,21 +17,17 @@ function RunCmd(cmd, args, cb) {
 }
 
 function deploy() {
-    var shpath = '/home/wth/Desktop/lwstkhyl/lwstkhyl.github.io/deploy.sh';
     RunCmd('sh', [shpath], function (result) {
-        console.log(result);
+        // console.log(result);
     });
 }
 
-http.createServer(function (req, res) {
-    handler(req, res, function (err) {
-        res.statusCode = 200;
-        deploy();
-        res.end('no such location');
-    })
-}).listen(8888)
+const server = http.createServer(function (req, res) {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/plain");
+    res.end("success");
+}).listen(port);
 
-handler.on('push', function (event) {
-    deploy();
-})
-
+server.listen(port, hostname, () => {
+    // console.log("listen start");
+});

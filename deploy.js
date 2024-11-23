@@ -62,7 +62,6 @@ const server = http.createServer(function (req, res) {
                     console.log(`stdout: ${stdout}`);
                     console.log(`stderr: ${stderr}`);
                 });
-                const ls = spawn('sh', [``]);
             } else {
                 console.log("not from github");
             }

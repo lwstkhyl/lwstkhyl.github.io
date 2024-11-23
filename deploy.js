@@ -1,13 +1,19 @@
 const http = require('http');
 const crypto = require('crypto');
 const util = require('util');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 
 const shpath = '/home/wth/Desktop/lwstkhyl.github.io';
 const hostname = "0.0.0.0";
 const port = 8888;
 const password = "wthlyhshpy";
 
+function deploy() {
+    const ls = spawn('sh', [`${shpath}/new_deploy.sh`]);
+    ls.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`);
+    });
+}
 let encoder = new TextEncoder();
 async function verifySignature(secret, header, payload) {
     let parts = header ? header.split("=") : "=".split("=");
@@ -55,13 +61,7 @@ const server = http.createServer(function (req, res) {
         verifySignature(password, headers["x-hub-signature-256"], body).then((verify_res) => {
             if (verify_res) {
                 console.log("github push");
-                exec(`sh ${shpath}/new_deploy.sh`, (error, stdout, stderr) => {
-                    if (error) {
-                        console.error(`exec error: ${error}`);
-                    }
-                    console.log(`stdout: ${stdout}`);
-                    console.log(`stderr: ${stderr}`);
-                });
+                deploy();
             } else {
                 console.log("not from github");
             }

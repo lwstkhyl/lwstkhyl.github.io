@@ -70,12 +70,8 @@ const server = http.createServer(function (req, res) {
     req.on("end", () => {
         verifySignature(password, headers["x-hub-signature-256"], body).then((verify_res) => {
             if (verify_res) {
-                if (req.method.toLowerCase === "post" && headers["x-github-event"] === "push") {
-                    console.log("github push");
-                    deploy();
-                } else {
-                    console.log("not github push");
-                }
+                console.log("github push");
+                deploy();
             } else {
                 console.log("not from github");
             }

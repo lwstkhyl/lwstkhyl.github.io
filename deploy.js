@@ -26,6 +26,7 @@ function deploy() {
 
 let encoder = new TextEncoder();
 async function verifySignature(secret, header, payload) {
+    if (!header || !payload) return false;
     let parts = header.split("=");
     if (!parts) return false;
     let sigHex = parts[1];

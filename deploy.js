@@ -18,7 +18,7 @@ function RunCmd(cmd, args, cb) {
 
 function deploy() {
     RunCmd('sh', [shpath], function (result) {
-        // console.log(result);
+        console.log(result);
     });
 }
 
@@ -29,5 +29,5 @@ const server = http.createServer(function (req, res) {
 });
 
 server.listen(port, hostname, () => {
-    // console.log("listen start");
+    console.log("listen start");
 });

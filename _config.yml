@@ -25,6 +25,7 @@ exclude:
   - deploy.js
   - deploy.log
   - deploy.sh
+  - new_deploy.sh
   - package.json
   - node_modules
 # 2. Installed Gems

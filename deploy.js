@@ -1,7 +1,7 @@
 const http = require('http');
 const crypto = require('crypto');
 const util = require('util');
-const { spawn } = require('child_process');
+const shell = require('shelljs');
 
 const shpath = '/home/wth/Desktop/lwstkhyl.github.io';
 const hostname = "0.0.0.0";
@@ -9,11 +9,9 @@ const port = 8888;
 const password = "wthlyhshpy";
 
 function deploy() {
-    const ls = spawn('sh', [`${shpath}/new_deploy.sh`]);
-    ls.stdout.on('data', (data) => {
-        console.log(`stdout: ${data}`);
-    });
+    shell.exec(`bash ${shpath}/new_deploy.sh`);
 }
+
 let encoder = new TextEncoder();
 async function verifySignature(secret, header, payload) {
     let parts = header ? header.split("=") : "=".split("=");

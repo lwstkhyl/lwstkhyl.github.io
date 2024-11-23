@@ -74,10 +74,10 @@ const server = http.createServer(function (req, res) {
         console.log(chunk);
         console.log(headers["x-github-event"]);
         console.log(headers["X-Hub-Signature-256"]);
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "text/plain");
-        res.end("success");
     });
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/plain");
+    res.end("success");
 });
 
 server.listen(port, hostname, () => {

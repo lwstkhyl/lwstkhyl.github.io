@@ -9,7 +9,7 @@ const port = 8888;
 const password = "wthlyhshpy";
 
 function deploy() {
-    shell.exec(`gnome-terminal -t "deploy" -x bash -c "${shpath}/new_deploy.sh"`);
+    shell.exec(`gnome-terminal -t "deploy" -x 'bash -c "bash ${shpath}/new_deploy.sh"'`);
     // shell.exec(`bash ${shpath}/new_deploy.sh`);
 }
 

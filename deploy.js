@@ -1,5 +1,5 @@
 const http = require('http');
-const { join } = require('path');
+const crypto = require('crypto');
 
 const shpath = '/home/wth/Desktop/lwstkhyl/lwstkhyl.github.io/deploy.sh';
 const hostname = "0.0.0.0";
@@ -64,24 +64,28 @@ function hexToBytes(hex) {
 const server = http.createServer(function (req, res) {
     const headers = req.headers;
     let body = "";
+    let res;
     req.on("data", chunk => {
         body += chunk;
     });
     req.on("end", () => {
-        if (
-            req.method === "post" &&
-            headers["x-github-event"] === "push" &&
-            verifySignature(password, headers["X-Hub-Signature-256"], body)
-        ) {
+        verifySignature(password, headers["X-Hub-Signature-256"], body).then((resolve) => {
+            res = resolve;
+        });
+        if (res) {
             console.log("from github");
+            if (
+                req.method === "post" &&
+                headers["x-github-event"] === "push"
+            ) {
+                console.log("github push");
+            }
         } else {
             console.log("not from github");
         }
         console.log("--------");
-        console.log(verifySignature(password, headers["X-Hub-Signature-256"], body));
+        console.log(res);
         console.log("--------");
-        console.log(headers["x-github-event"]);
-        console.log(headers["x-hub-signature-256"]);
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/plain");
         res.end("success");

@@ -69,7 +69,7 @@ const server = http.createServer(function (req, res) {
         body += chunk;
     });
     req.on("end", () => {
-        verifySignature(password, headers["X-Hub-Signature-256"], body).then((verify_res) => {
+        verifySignature(password, headers["x-hub-signature-256"], body).then((verify_res) => {
             if (verify_res) {
                 console.log("from github");
                 if (

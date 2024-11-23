@@ -26,7 +26,7 @@ const server = http.createServer(function (req, res) {
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/plain");
     res.end("success");
-}).listen(port);
+});
 
 server.listen(port, hostname, () => {
     // console.log("listen start");

@@ -26,9 +26,7 @@ function deploy() {
 
 let encoder = new TextEncoder();
 async function verifySignature(secret, header, payload) {
-    if (!header || !payload) return false;
-    let parts = header.split("=");
-    if (!parts) return false;
+    let parts = header ? header.split("=") : "=".split("=");
     let sigHex = parts[1];
     let algorithm = { name: "HMAC", hash: { name: 'SHA-256' } };
     let keyBytes = encoder.encode(secret);

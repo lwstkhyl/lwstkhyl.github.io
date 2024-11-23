@@ -62,8 +62,12 @@ function hexToBytes(hex) {
 }
 
 const server = http.createServer(function (req, res) {
+    const headers = req.headers;
+    let body = "";
     req.on("data", chunk => {
-        const headers = req.headers;
+        body += chunk;
+    });
+    req.on("end", () => {
         if (
             req.method === "post" &&
             headers["x-github-event"] === "push" &&
@@ -71,13 +75,13 @@ const server = http.createServer(function (req, res) {
         ) {
             console.log("from github");
         }
-        console.log(chunk);
+        console.log(body);
         console.log(headers["x-github-event"]);
-        console.log(headers["X-Hub-Signature-256"]);
+        console.log(headers["x-hub-signature-256"]);
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/plain");
+        res.end("success");
     });
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/plain");
-    res.end("success");
 });
 
 server.listen(port, hostname, () => {

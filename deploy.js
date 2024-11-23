@@ -64,15 +64,15 @@ function hexToBytes(hex) {
 const server = http.createServer(function (req, res) {
     const headers = req.headers;
     let body = "";
-    let res;
+    let verify_res;
     req.on("data", chunk => {
         body += chunk;
     });
     req.on("end", () => {
         verifySignature(password, headers["X-Hub-Signature-256"], body).then((resolve) => {
-            res = resolve;
+            verify_res = resolve;
         });
-        if (res) {
+        if (verify_res) {
             console.log("from github");
             if (
                 req.method === "post" &&
@@ -84,7 +84,7 @@ const server = http.createServer(function (req, res) {
             console.log("not from github");
         }
         console.log("--------");
-        console.log(res);
+        console.log(verify_res);
         console.log("--------");
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/plain");

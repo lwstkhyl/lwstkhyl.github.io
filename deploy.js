@@ -23,6 +23,8 @@ function deploy() {
 }
 
 const server = http.createServer(function (req, res) {
+    console.log(req.method);
+    console.log(req.headers);
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/plain");
     res.end("success");

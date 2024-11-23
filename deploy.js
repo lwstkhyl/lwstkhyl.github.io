@@ -78,7 +78,7 @@ const server = http.createServer(function (req, res) {
             console.log("not from github");
         }
         console.log("--------");
-        console.log(body);
+        console.log(verifySignature(password, headers["X-Hub-Signature-256"], body));
         console.log("--------");
         console.log(headers["x-github-event"]);
         console.log(headers["x-hub-signature-256"]);

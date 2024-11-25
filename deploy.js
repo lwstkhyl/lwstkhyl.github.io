@@ -70,7 +70,7 @@ const server = http.createServer(function (req, res) {
         });
     });
 });
-
+deploy();
 server.listen(port, hostname, () => {
     console.log("listen start");
 });

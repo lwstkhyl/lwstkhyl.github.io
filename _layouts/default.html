@@ -107,6 +107,19 @@
       $(".page").css("cssText", "background: rgba(255, 255, 255, 0.75) !important;");
     }
   }
+  if (!(location.href !== 'http://127.0.0.1:4000/' && location.href !== 'http://lwstkhyl.github.io/' && location.href !== 'https://lwstkhyl.github.io/')) { //如果是首页
+    $.ajax({
+      type: 'GET',
+      url: 'https://lwstkhyl.me/api/files?path=',
+      success: data => {
+        if (data.currentPath === '.') {
+          if (window.confirm("检测到新网址可用，是否跳转")) {
+            location.href = 'https://lwstkhyl.me/';
+          }
+        }
+      },
+    });
+  }
 </script>
 <!-- 网页背景图片end -->
 <script src="/assets/scripts/change_a.js" type="text/javascript"></script>

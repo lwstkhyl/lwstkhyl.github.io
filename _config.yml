@@ -163,6 +163,8 @@ navigation_header:
         url: /r-rbase/
       - title: b站生信课程
         url: /r-bioinfolesson/
+      - title: 生信基础课程
+        url: /r-biobase/
       - title: 其它
         url: /r-other/
   - title: 其它

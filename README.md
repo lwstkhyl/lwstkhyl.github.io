@@ -85,6 +85,7 @@
 ├── python-other.html python的其它内容
 ├── python-pythonbase.html python基础教程笔记
 ├── python.html 所有python笔记
+├── r-biobase.html 生信基础课程笔记
 ├── r-bioinfolesson.html b站生信课程笔记
 ├── r-other.html R与生信的其它内容
 ├── r-rbase.html R基础教程笔记

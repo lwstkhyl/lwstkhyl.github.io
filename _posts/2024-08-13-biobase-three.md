@@ -1,6 +1,6 @@
 ---
 layout: mypost
-title: DNA 解码
+title: 基因组技术简介
 category: r
 subcategory: r-biobase
 ---

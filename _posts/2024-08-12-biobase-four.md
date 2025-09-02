@@ -1,6 +1,6 @@
 ---
 layout: mypost
-title: Genetics: The Fundamentals
+title: Genetics：The Fundamentals
 category: r
 subcategory: r-biobase
 ---

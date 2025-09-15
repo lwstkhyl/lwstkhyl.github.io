@@ -2,7 +2,7 @@
 layout: page
 ---
 
-**lwstkhyl的个人网站**
+<p style="font-size: 1.5rem !important;"><strong>lwstkhyl的个人网站</strong></p>
 
 - 基于<a href="(https://jekyllrb.com/" target="_blank">Jekyll</a>创建，使用<a href="https://github.com/daviddarnes/alembic" target="_blank">Alembic</a>主题，<a href="https://lwstkhyl.github.io/elements/" target="_blank">Alembic样式展示</a>
 - 创建于2024-06-29

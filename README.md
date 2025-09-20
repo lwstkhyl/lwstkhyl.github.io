@@ -76,6 +76,7 @@
 ├── JS-JSbase.html JS基础教程笔记
 ├── JS-NodeJS.html Node.js、AJAX、Promise、Axios笔记
 ├── JS-other.html JS的其它内容
+├── JS-Vue.html Vue教程笔记
 ├── JS.html 所有JS笔记
 ├── linux-shell-base.html linux和shell笔记
 ├── my_echarts.html 个人创作的echarts图表应用（还未完成）

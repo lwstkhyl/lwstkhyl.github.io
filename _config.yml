@@ -145,6 +145,8 @@ navigation_header:
         url: /JS-jQuery/
       - title: Node.js-AJAX-Promise-Axios
         url: /JS-NodeJS/
+      - title: Vue
+        url: /JS-Vue/
       - title: 其它
         url: /JS-other/
   - title: python

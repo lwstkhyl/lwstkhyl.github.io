@@ -10,6 +10,8 @@ subcategory: JS-Vue
 
 写在前面：此笔记来自b站课程[尚硅谷Vue2.0+Vue3.0全套教程](https://www.bilibili.com/video/BV1Zy4y1K7SH) / [资料下载](https://www.aliyundrive.com/s/B8sDe5u56BU/folder/61138e6e8582eecbe4c84546a1b2d58363d20bc0) / [我的练习文件（教程中的练习）](https://lwstkhyl.me/file?path=githubio%E7%AC%94%E8%AE%B0%E9%99%84%E5%B8%A6%E8%B5%84%E6%96%99%2Fvue)
 
+{% raw %}
+
 ### 简介
 
 #### 基本介绍
@@ -32,13 +34,13 @@ subcategory: JS-Vue
 
   例如：根据已知数据拼接HTML代码
 
-    ![简介1](/upload/md-image/vue/简介1.png){:width="500px" height="500px"}
+    ![简介1](/upload/md-image/vue/简介1.png){:width="800px" height="800px"}
 
 - **虚拟DOM**+**Diff算法**：尽量复用DOM节点
 
   比如原来有3个人的数据，就需要3个li来展示，当新增一个人时，原生JS就会重新构造4个li来渲染，即从数据直接构造**真实DOM(Real-DOM/True-DOM)**，而Vue在中间增加了一步**虚拟DOM(Virtual-DOM)**，它存储在内存中
 
-  ![简介2](/upload/md-image/vue/简介2.png){:width="400px" height="400px"}
+  ![简介2](/upload/md-image/vue/简介2.png){:width="800px" height="800px"}
 
   最后的结果：不变的节点无需重新构造。Diff算法就是用来比较哪些节点不变的
 
@@ -67,11 +69,11 @@ subcategory: JS-Vue
 ```
 
 
-![简介5](/upload/md-image/vue/简介5.png){:width="150px" height="100px"}
+![简介5](/upload/md-image/vue/简介5.png){:width="800px" height="800px"}
 
 在引入后，全局环境中就多了一个函数（或者说对象）`Vue`，类似于jq中的`$`
 
-![简介3](/upload/md-image/vue/简介3.png){:width="500px" height="500px"}
+![简介3](/upload/md-image/vue/简介3.png){:width="600px" height="600px"}
 
 
 
@@ -85,7 +87,7 @@ subcategory: JS-Vue
 
 - chrome：用网盘资料里的`05_其它`->`vue_dev_tools.crx`手动添加
 
-    ![简介4](/upload/md-image/vue/简介4.png){:width="500px" height="500px"}
+    ![简介4](/upload/md-image/vue/简介4.png){:width="800px" height="800px"}
 
     将crx文件直接拖到扩展程序界面中，就可弹出安装窗口
 
@@ -142,7 +144,7 @@ subcategory: JS-Vue
 ```
 
 
-![简介6](/upload/md-image/vue/简介6.png){:width="250px" height="250px"}
+![简介6](/upload/md-image/vue/简介6.png){:width="150px" height="150px"}
 
 **一些问题**：
 
@@ -160,7 +162,7 @@ subcategory: JS-Vue
 
 f12打开控制台
 
-![简介7](/upload/md-image/vue/简介7.png){:width="500px" height="500px"}
+![简介7](/upload/md-image/vue/简介7.png){:width="800px" height="800px"}
 
 点击data里的属性值可以更改它们，之后模板中用到该数据的地方都会随之改变
 
@@ -170,11 +172,11 @@ Vue.js多了一些便于理解的警告，例如在创建Vue实例时没写`new`
 
 - `Vue.js`：
 
-  ![简介8](/upload/md-image/vue/简介8.png){:width="250px" height="250px"}
+  ![简介8](/upload/md-image/vue/简介8.png){:width="600px" height="600px"}
 
 - `Vue.min.js`：
 
-  ![简介9](/upload/md-image/vue/简介9.png){:width="250px" height="250px"}
+  ![简介9](/upload/md-image/vue/简介9.png){:width="600px" height="600px"}
 
 ### 模板语法
 
@@ -208,7 +210,7 @@ Vue.js多了一些便于理解的警告，例如在创建Vue实例时没写`new`
 ```
 
 
-![简介10](/upload/md-image/vue/简介10.png){:width="300px" height="300px"}
+![简介10](/upload/md-image/vue/简介10.png){:width="600px" height="600px"}
 
 ```html
 <body>
@@ -232,7 +234,7 @@ Vue.js多了一些便于理解的警告，例如在创建Vue实例时没写`new`
 ```
 
 
-![简介11](/upload/md-image/vue/简介11.png){:width="250px" height="250px"}
+![简介11](/upload/md-image/vue/简介11.png){:width="350px" height="350px"}
 
 ### 数据绑定
 
@@ -275,7 +277,7 @@ Vue实例中name的值作为默认值，当修改输入框中的值时，name的
 ```
 
 
-![简介12](/upload/md-image/vue/简介12.png){:width="400px" height="400px"}
+![简介12](/upload/md-image/vue/简介12.png){:width="800px" height="800px"}
 
 ### el和data的两种写法
 
@@ -287,7 +289,7 @@ console.log(v);
 ```
 
 
-![简介13](/upload/md-image/vue/简介13.png){:width="500px" height="500px"}
+![简介13](/upload/md-image/vue/简介13.png){:width="800px" height="800px"}
 
 Vue实例对象的属性中，以`$`开头的是给人看的，以`_`开头的都是底层使用的
 
@@ -343,7 +345,7 @@ setTimeout(() => {
 
 - VM：视图模型(view model)，Vue实例对象，之后我们统一都用`vm`来指代创建出的Vue实例对象
 
-![简介14](/upload/md-image/vue/简介14.png){:width="500px" height="500px"}
+![简介14](/upload/md-image/vue/简介14.png){:width="800px" height="800px"}
 
 映射到实际代码中：
 
@@ -399,7 +401,7 @@ for (let i in p2) {
 ```
 
 
-![简介16](/upload/md-image/vue/简介16.png){:width="500px" height="500px"}
+![简介16](/upload/md-image/vue/简介16.png){:width="700px" height="700px"}
 
 可以看到p1的age属性颜色较淡，说明该属性是不可枚举的，而p2就是正常的颜色
 
@@ -445,7 +447,7 @@ console.log(p);
 
 点击一下`(...)`，就可以得到age的属性值
 
-![简介18](/upload/md-image/vue/简介18.png){:width="500px" height="500px"}
+![简介18](/upload/md-image/vue/简介18.png){:width="300px" height="300px"}
 
 **例：getter和setter结合实现双向绑定，即修改`number`时`age`改变，修改`age`时`number`也改变**
 
@@ -512,7 +514,7 @@ console.log(vm);
 ```
 
 
-![简介20](/upload/md-image/vue/简介20.png){:width="500px" height="500px"}
+![简介20](/upload/md-image/vue/简介20.png){:width="400px" height="400px"}
 
 观察到vm中的name和age都是`(...)`状态，说明它们应各有一个setter和getter。又根据name和age是在data中声明并赋值，说明`vm中name和age`实际上是`data中name和age`的代理。在vm中，`data中name和age`存储在`vm._data`中
 
@@ -624,7 +626,7 @@ console.log(vm._data.name); //此时页面中{{name}}也同步改变
 ```
 
 
-![事件1](/upload/md-image/vue/事件1.png){:width="300px" height="300px"}
+![事件1](/upload/md-image/vue/事件1.png){:width="800px" height="800px"}
 
 
 
@@ -673,7 +675,7 @@ console.log(vm._data.name); //此时页面中{{name}}也同步改变
 ```
 
 
-![事件2](/upload/md-image/vue/事件2.png){:width="30px" height="30px"}
+![事件2](/upload/md-image/vue/事件2.png){:width="800px" height="800px"}
 
 注：
 
@@ -1017,7 +1019,7 @@ new Vue({
     ```
 
 
-    ![计算属性1](/upload/md-image/vue/计算属性1.png){:width="500px" height="500px"}
+    ![计算属性1](/upload/md-image/vue/计算属性1.png){:width="300px" height="300px"}
 
     简写形式：
 
@@ -1454,7 +1456,7 @@ vm.$watch('要监视的属性', function(newVal, oldVal){});
 ```
 
 
-![渲染1](/upload/md-image/vue/渲染1.png){:width="500px" height="500px"}
+![渲染1](/upload/md-image/vue/渲染1.png){:width="300px" height="300px"}
 
 除了`v-if`，还有`v-else-if`和`v-else`，逻辑与正常的elseif相同
 
@@ -1488,7 +1490,7 @@ vm.$watch('要监视的属性', function(newVal, oldVal){});
 ```
 
 
-![渲染2](/upload/md-image/vue/渲染2.png){:width="300px" height="300px"}
+![渲染2](/upload/md-image/vue/渲染2.png){:width="200px" height="200px"}
 
 注意：`<template>`只能用`v-if`
 
@@ -1521,7 +1523,7 @@ vm.$watch('要监视的属性', function(newVal, oldVal){});
 ```
 
 
-![渲染3](/upload/md-image/vue/渲染3.png){:width="250px" height="250px"}
+![渲染3](/upload/md-image/vue/渲染3.png){:width="100px" height="100px"}
 
 扩展形式：`v-for="(数组元素变量, 索引号) in 数组变量"`，其中`索引号`从0开始，可作为`:key`的值
 
@@ -1563,7 +1565,7 @@ vm.$watch('要监视的属性', function(newVal, oldVal){});
     ```
 
 
-    ![渲染5](/upload/md-image/vue/渲染5.png){:width="250px" height="250px"}
+    ![渲染5](/upload/md-image/vue/渲染5.png){:width="150px" height="150px"}
 
 - 遍历指定次数（使用较少）：`v-for="(number, index) in 次数"`
 
@@ -1576,13 +1578,13 @@ vm.$watch('要监视的属性', function(newVal, oldVal){});
     ```
 
 
-    ![渲染6](/upload/md-image/vue/渲染6.png){:width="300px" height="300px"}
+    ![渲染6](/upload/md-image/vue/渲染6.png){:width="150px" height="150px"}
 
 ##### key的作用与原理
 
 **作用**：给节点进行标识，相当于主键。当数据发生变化时，Vue会使用key对新旧虚拟DOM进行比较，决定怎么生成真实DOM
 
-![渲染7](/upload/md-image/vue/渲染7.png){:width="500px" height="500px"}
+![渲染7](/upload/md-image/vue/渲染7.png){:width="800px" height="800px"}
 
 **对比过程（Diff算法）**：依次读取新虚拟DOM元素的key
 
@@ -1610,7 +1612,7 @@ vm.$watch('要监视的属性', function(newVal, oldVal){});
 
 如果使用数据标识id作为key就不会出现这种问题：
 
-![渲染8](/upload/md-image/vue/渲染8.png){:width="500px" height="500px"}
+![渲染8](/upload/md-image/vue/渲染8.png){:width="800px" height="800px"}
 
 - 只有`老刘-30`的文本和它的输入框是重新生成的，其它都是复用的
 
@@ -1784,7 +1786,7 @@ my_vm._data = new_data = obs;
 ```
 
 
-![监视数据变化的原理1](/upload/md-image/vue/监视数据变化的原理1.png){:width="600px" height="600px"}
+![监视数据变化的原理1](/upload/md-image/vue/监视数据变化的原理1.png){:width="400px" height="400px"}
 
 但这个与Vue中的还有很大差异，比如这个必须要`vm._data.属性`进行修改，而Vue中可以直接`vm.属性`；而且这个只能监测一层（如果属性值是一个对象就监视不到），Vue可以递归监测（深拷贝）
 
@@ -1885,7 +1887,7 @@ my_vm._data = new_data = obs;
 ```
 
 
-![监视数据变化的原理2](/upload/md-image/vue/监视数据变化的原理2.png){:width="250px" height="250px"}
+![监视数据变化的原理2](/upload/md-image/vue/监视数据变化的原理2.png){:width="200px" height="200px"}
 
 注：向数组里添加的对象也是响应式的
 
@@ -1963,7 +1965,7 @@ my_vm._data = new_data = obs;
 
 **例**：
 
-![收集表单数据1](/upload/md-image/vue/收集表单数据1.png){:width="500px" height="500px"}
+![收集表单数据1](/upload/md-image/vue/收集表单数据1.png){:width="300px" height="300px"}
 
 ```html
 <div id="root">
@@ -2017,7 +2019,7 @@ my_vm._data = new_data = obs;
 ```
 
 
-![收集表单数据2](/upload/md-image/vue/收集表单数据2.png){:width="600px" height="600px"}
+![收集表单数据2](/upload/md-image/vue/收集表单数据2.png){:width="500px" height="500px"}
 
 ### 过滤器
 
@@ -2103,7 +2105,7 @@ my_vm._data = new_data = obs;
     ```
 
 
-    ![过滤器1](/upload/md-image/vue/过滤器1.png){:width="250px" height="250px"}
+    ![过滤器1](/upload/md-image/vue/过滤器1.png){:width="350px" height="350px"}
 
 - 过滤器串联：
 
@@ -2240,7 +2242,7 @@ Vue.filter(过滤器名, function (val, arg) {
 ```
 
 
-![指令1](/upload/md-image/vue/指令1.png){:width="400px" height="400px"}
+![指令1](/upload/md-image/vue/指令1.png){:width="200px" height="200px"}
 
 #### 自定义指令
 
@@ -2263,7 +2265,7 @@ Vue.filter(过滤器名, function (val, arg) {
 
 binding对象：
 
-![指令2](/upload/md-image/vue/指令2.png){:width="500px" height="500px"}
+![指令2](/upload/md-image/vue/指令2.png){:width="800px" height="800px"}
 
 **什么时候调用**：
 
@@ -2304,7 +2306,7 @@ binding对象：
 ```
 
 
-![指令3](/upload/md-image/vue/指令3.png){:width="400px" height="400px"}
+![指令3](/upload/md-image/vue/指令3.png){:width="200px" height="200px"}
 
 ##### 对象式
 
@@ -2702,7 +2704,7 @@ Vue.component(组件名, 组件);
 ```
 
 
-![组件1](/upload/md-image/vue/组件1.png){:width="450px" height="450px"}
+![组件1](/upload/md-image/vue/组件1.png){:width="300px" height="300px"}
 
 
 
@@ -2799,7 +2801,7 @@ Vue.component(组件名, 组件);
 ```
 
 
-![组件2](/upload/md-image/vue/组件2.png){:width="450px" height="450px"}
+![组件2](/upload/md-image/vue/组件2.png){:width="350px" height="350px"}
 
 #### VueComponent
 
@@ -2839,7 +2841,7 @@ Vue.component(组件名, 组件);
 
 **`vm`/`vc`如何管理子组件**：`vm.$children`/`vc.$children`
 
-![组件3](/upload/md-image/vue/组件3.png){:width="400px" height="400px"}
+![组件3](/upload/md-image/vue/组件3.png){:width="800px" height="800px"}
 
 注意：**`vc`和`vm`的不能画等号**，vc是`new VueComponent`，而vm是`new Vue`，最重要的是vc的配置对象没有`el`，而vm能通过`el`指定为哪个容器服务
 
@@ -2861,7 +2863,7 @@ console.log(VueComponent.prototype.__proto__ === Vue.prototype); //true
 ```
 
 
-![组件4](/upload/md-image/vue/组件4.png){:width="500px" height="500px"}
+![组件4](/upload/md-image/vue/组件4.png){:width="800px" height="800px"}
 
 **为什么要有这个关系**：让vc可以访问到Vue原型上的属性方法
 
@@ -3047,3 +3049,5 @@ script标签中需要ES6的模块化写法，[参考文章](https://blog.csdn.ne
 
 
 注意：此时直接用浏览器打开index.html是会报错的，因为浏览器默认不支持import写法，必须在脚手架环境下运行
+
+{% endraw %}

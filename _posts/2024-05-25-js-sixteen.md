@@ -10,6 +10,8 @@ subcategory: JS-Vue
 
 写在前面：此笔记来自b站课程[尚硅谷Vue2.0+Vue3.0全套教程](https://www.bilibili.com/video/BV1Zy4y1K7SH) / [资料下载](https://www.aliyundrive.com/s/B8sDe5u56BU/folder/61138e6e8582eecbe4c84546a1b2d58363d20bc0) / [我的练习文件（教程中的练习）](https://lwstkhyl.me/file?path=githubio%E7%AC%94%E8%AE%B0%E9%99%84%E5%B8%A6%E8%B5%84%E6%96%99%2Fvue)
 
+{% raw %}
+
 ### VueCLI简介
 
 **Vue脚手架(Vue command line interface, Vue CLI)**：Vue官方提供的标准化开发工具（开发平台）
@@ -34,7 +36,7 @@ subcategory: JS-Vue
 
 #### 结构
 
-![VueCLI简介2](/upload/md-image/vue/VueCLI简介2.png){:width="500px" height="500px"}
+![VueCLI简介2](/upload/md-image/vue/VueCLI简介2.png){:width="200px" height="200px"}
 
 - `babel.config.js`：Babel控制文件，将ES6转为ES5，通常不需要手动写
 
@@ -237,7 +239,7 @@ module.exports = {
 ```
 
 
-![VueCLI简介3](/upload/md-image/vue/VueCLI简介3.png){:width="300px" height="300px"}
+![VueCLI简介3](/upload/md-image/vue/VueCLI简介3.png){:width="800px" height="800px"}
 
 #### props配置
 
@@ -323,7 +325,7 @@ module.exports = {
 ```
 
 
-![VueCLI简介4](/upload/md-image/vue/VueCLI简介4.png){:width="500px" height="500px"}
+![VueCLI简介4](/upload/md-image/vue/VueCLI简介4.png){:width="200px" height="200px"}
 
 一个问题：如果想让传入的age+1后展示，不能直接`{{age+1}}`（因为传入的age一定是字符串类型）
 
@@ -1073,7 +1075,7 @@ this.$nextTick(()=>input.focus()); //更推荐
 
 
 
-![过渡与动画1](/upload/md-image/vue/过渡与动画1.png){:width="450px" height="450px"}
+![过渡与动画1](/upload/md-image/vue/过渡与动画1.png){:width="600px" height="600px"}
 
 #### 第三方动画库
 
@@ -1422,3 +1424,5 @@ this.$http.get('url').then(v, r); //使用方法与axios相同，就是把`axios
     </ul>
 </template>
 ```
+
+{% endraw %}

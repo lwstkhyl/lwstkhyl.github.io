@@ -10,6 +10,8 @@ subcategory: JS-Vue
 
 写在前面：此笔记来自b站课程[尚硅谷Vue2.0+Vue3.0全套教程](https://www.bilibili.com/video/BV1Zy4y1K7SH) / [资料下载](https://www.aliyundrive.com/s/B8sDe5u56BU/folder/61138e6e8582eecbe4c84546a1b2d58363d20bc0) / [我的练习文件（教程中的练习）](https://lwstkhyl.me/file?path=githubio%E7%AC%94%E8%AE%B0%E9%99%84%E5%B8%A6%E8%B5%84%E6%96%99%2Fvue)
 
+{% raw %}
+
 ### 简介
 
 **比Vue2的优势**：
@@ -144,7 +146,7 @@ export default {
 ```
 
 
-![组合式API1](/upload/md-image/vue/组合式API1.png){:width="500px" height="500px"}
+![组合式API1](/upload/md-image/vue/组合式API1.png){:width="800px" height="800px"}
 
 **返回一个渲染函数**：就是Vue2中的render函数
 
@@ -220,11 +222,11 @@ export default {
 
 如果ref函数中传入的是一个基本类型的数据，则返回一个`RefImpl`(reference implement)实例对象（引用实现的实例对象，简称为“引用对象”/“ref对象”）
 
-![组合式API2](/upload/md-image/vue/组合式API2.png){:width="300px" height="300px"}
+![组合式API2](/upload/md-image/vue/组合式API2.png){:width="800px" height="800px"}
 
 ref也是用Object.defineProperty的getter/setter实现的响应式，所以`value`也是`(...)`的形式
 
-![组合式API3](/upload/md-image/vue/组合式API3.png){:width="450px" height="450px"}
+![组合式API3](/upload/md-image/vue/组合式API3.png){:width="800px" height="800px"}
 
 引用对象的原型对象就类似于`vm._data`，为了更方便的取出value，把value在引用对象中又放了一份
 
@@ -1055,13 +1057,7 @@ export default {
 
 #### Composition API的优势
 
-<div style="width:430px;height:340px;">
-
-    <img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6cc55165c0e34069a75fe36f8712eb80~tplv-k3u1fbpfcp-watermark.image"style="height:360px"/>
-
-</div>
-
-
+![CompositionAPI的优势](/upload/md-image/vue/CompositionAPI的优势.image){:width="800px" height="800px"}
 
 使用传统Options API中，新增或者修改一个需求，就需要分别在data/methods/computed里修改。而Composition API可以把同一功能/变量涉及到的所有函数都写到一起
 
@@ -1217,3 +1213,5 @@ Vue3将全局的API`Vue.xxx`调整到应用实`app`上
 - 需要一个自定义语法，打破大括号内表达式是JavaScript的假设
 
 - 建议用方法调用或计算属性去替换过滤器
+
+{% endraw %}

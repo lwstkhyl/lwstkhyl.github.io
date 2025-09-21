@@ -10,6 +10,8 @@ subcategory: JS-Vue
 
 写在前面：此笔记来自b站课程[尚硅谷Vue2.0+Vue3.0全套教程](https://www.bilibili.com/video/BV1Zy4y1K7SH) / [资料下载](https://www.aliyundrive.com/s/B8sDe5u56BU/folder/61138e6e8582eecbe4c84546a1b2d58363d20bc0) / [我的练习文件（教程中的练习）](https://lwstkhyl.me/file?path=githubio%E7%AC%94%E8%AE%B0%E9%99%84%E5%B8%A6%E8%B5%84%E6%96%99%2Fvue)
 
+{% raw %}
+
 ### Vuex
 
 #### 简介
@@ -18,9 +20,9 @@ subcategory: JS-Vue
 
 **多个组件需要共享数据：通过全局事件总线和vuex**
 
-![Vuex简介1](/upload/md-image/vue/Vuex简介1.png){:width="500px" height="500px"}
+![Vuex简介1](/upload/md-image/vue/Vuex简介1.png){:width="600px" height="600px"}
 
-![Vuex简介2](/upload/md-image/vue/Vuex简介2.png){:width="500px" height="500px"}
+![Vuex简介2](/upload/md-image/vue/Vuex简介2.png){:width="600px" height="600px"}
 
 **什么时候用Vuex**：共享状态
 
@@ -259,13 +261,13 @@ subcategory: JS-Vue
 
 **vuex开发者工具**：集成在Vue devtools中，无需额外安装
 
-![Vuex简介5](/upload/md-image/vue/Vuex简介5.png){:width="400px" height="400px"}
+![Vuex简介5](/upload/md-image/vue/Vuex简介5.png){:width="800px" height="800px"}
 
 - 展示的状态改变都是mutations中的，而不是actions
 
 
 
-![Vuex简介6](/upload/md-image/vue/Vuex简介6.png){:width="300px" height="300px"}
+![Vuex简介6](/upload/md-image/vue/Vuex简介6.png){:width="600px" height="600px"}
 
 **三个按钮**：
 
@@ -277,7 +279,7 @@ subcategory: JS-Vue
 
 
 
-![Vuex简介7](/upload/md-image/vue/Vuex简介7.png){:width="300px" height="300px"}
+![Vuex简介7](/upload/md-image/vue/Vuex简介7.png){:width="600px" height="600px"}
 
 **右上角的三个按钮**：
 
@@ -289,7 +291,7 @@ subcategory: JS-Vue
 
 
 
-![Vuex简介8](/upload/md-image/vue/Vuex简介8.png){:width="300px" height="300px"}
+![Vuex简介8](/upload/md-image/vue/Vuex简介8.png){:width="700px" height="700px"}
 
 **导入和导出按钮**：点击导出后会复制到剪贴版上，点击导入后粘贴即可
 
@@ -593,7 +595,7 @@ export default {
 
 
 
-![路由1](/upload/md-image/vue/路由1.png){:width="500px" height="500px"}
+![路由1](/upload/md-image/vue/路由1.png){:width="800px" height="800px"}
 
 - 左侧红框是导航区，选择某个标签时，右侧显示对应的内容（局部刷新），页面url改变，但导航区一直不变且页面不刷新
 
@@ -1041,7 +1043,7 @@ export default {
 
   如图，依次点击About/Home/News/Message链接，其中News/Message设置了replace属性，则此时后退，应返回About
 
-  ![路由5](/upload/md-image/vue/路由5.png){:width="500px" height="500px"}
+  ![路由5](/upload/md-image/vue/路由5.png){:width="800px" height="800px"}
 
 
 
@@ -1210,7 +1212,7 @@ export default router;
 
 to和from的属性值：（这里以从About跳转到Home为例）
 
-![路由6](/upload/md-image/vue/路由6.png){:width="500px" height="500px"}
+![路由6](/upload/md-image/vue/路由6.png){:width="600px" height="600px"}
 
 例：在本地存储中存一个`name`属性，只有其值为`"abc"`时才允许访问`News`页面
 
@@ -1349,7 +1351,7 @@ const router = new VueRouter({
 
 工作目录中输入`npm run build`，生成一个`dist`文件夹
 
-![项目上线1](/upload/md-image/vue/项目上线1.png){:width="400px" height="400px"}
+![项目上线1](/upload/md-image/vue/项目上线1.png){:width="200px" height="200px"}
 
 生成的`index.html`不能直接用浏览器打开，必须在服务器上部署，这里使用express框架
 
@@ -1359,7 +1361,7 @@ const router = new VueRouter({
 
 - 新建一个`server.js`用于启动服务器
 
-    ![项目上线2](/upload/md-image/vue/项目上线2.png){:width="400px" height="400px"}
+    ![项目上线2](/upload/md-image/vue/项目上线2.png){:width="200px" height="200px"}
 
   - **hash模式**：
 
@@ -1491,3 +1493,5 @@ const router = new VueRouter({
       </div>
   </template>
     ```
+
+{% endraw %}

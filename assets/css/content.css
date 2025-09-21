@@ -251,6 +251,11 @@ article .highlighter-rouge code span {
     font-feature-settings: normal !important;
 }
 
+/* 代码框内err不显示 */
+article .highlighter-rouge pre span.err {
+    background-color: transparent;
+}
+
 /* 设置代码框内滚动条在code框上 */
 article .highlighter-rouge pre {
     overflow-x: hidden !important;

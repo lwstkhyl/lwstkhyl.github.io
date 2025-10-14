@@ -150,7 +150,8 @@ article h5 {
 }
 
 /* 超链接 */
-article p a {
+article p a,
+article li a {
     color: #4EA1DB !important;
     background: none !important;
     font-weight: normal !important;
@@ -167,7 +168,8 @@ article p a {
     font-feature-settings: normal !important;
 }
 
-article p a:hover {
+article p a:hover,
+article li a:hover {
     color: #ca0c16 !important;
 }
 

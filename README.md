@@ -1,10 +1,10 @@
 使用[Jekyll](https://jekyllrb.com/)的[Alembic](https://github.com/daviddarnes/alembic)模板
 
-创建于2024-06-29，正在持续制作中
+创建于2024-06-29，主要存档各类学习笔记以及个人网站文字内容
 
+lwstkhyl的新网站：[lwstkhyl.me](https://lwstkhyl.me/)
 
 ---
-
 
 **项目结构**：
 
@@ -95,5 +95,3 @@
 ├── talk_at_night.html 个人空间
 └── 其它都是框架自带文件，无需更改
 ```
-
-[更多关于Jekyll的结构介绍](https://blog.csdn.net/qq_33919450/article/details/127886006)

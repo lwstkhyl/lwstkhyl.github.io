@@ -59,11 +59,167 @@ subcategory: other-other
 - 通过“**类病毒效应**”在宿主抗感染通路中影响相关基因表达
 - 部分HERV序列带有结构蛋白结合位点，重塑更大范围的染色质三维结构：形成新染色质边界，影响基因调控；改变染色质环的拓扑结构，影响异染色质传播
 
-#### 计算软件
-
-##### Repeatmasker
-**[Repeatmasker](https://www.repeatmasker.org/)**：重复序列检测，通过与参考数据库的相似性比对来准确识别或屏蔽基因组中的重复序列，属于同源预测注释的方式
-- [安装](https://blog.csdn.net/m0_65437087/article/details/148420035)
-
 ### 计算流程
 
+#### ENCODE数据+bowtie2比对+Telescope计数
+
+[参考论文Telescope: Characterization of the retrotranscriptome by accurate estimation of transposable element expression](https://journals.plos.org/ploscompbiol/article?id=10.1371%2Fjournal.pcbi.1006453)
+
+[相关数据和代码](https://github.com/lwstkhyl/hERV_calc/tree/main/TelescopeEncode)
+
+##### 序列下载与比对
+
+**配置环境**：
+```sh
+conda create -n telescope -c conda-forge -c bioconda \
+  python=3.10 telescope bowtie2 samtools sra-tools parallel-fastq-dump \
+  flexbar bedtools entrez-direct pigz -y
+conda activate telescope
+```
+**下载ENCODE数据**：以SRP014320中的H1-hESC细胞系为例
+```sh
+# 列出 SRP014320 的全部测序结果，并保存 CSV
+esearch -db sra -query SRP014320 | efetch -format runinfo > SRP014320_runinfo.csv
+# 以 H1-hESC 为例筛选
+grep -i 'H1' SRP014320_runinfo.csv > H1_runinfo.csv
+# 提取 SRR 列
+awk -F, 'NR>1 {print $1}' H1_runinfo.csv > SRR_H1.txt
+```
+为了节省磁盘空间，只取`SRR_H1.txt`的前两个数据`SRR521515`和`SRR521514`
+```sh
+# 并行下载并直接生成FASTQ
+parallel-fastq-dump --sra-id $(head -n1 SRR_H1.txt) --threads 8 --split-files --outdir fastq
+# 质控/剪接
+flexbar -r fastq/$(head -n1 SRR_H1.txt)_1.fastq -p fastq/$(head -n1 SRR_H1.txt)_2.fastq \
+        -t fastq/$(head -n1 SRR_H1.txt)_trim --adapter-trim-end RIGHT --min-read-length 30
+```
+- 生成一个fastq文件夹，主要包含4个文件，格式为`SRR521514_trim_1.fastq`和`SRR521514_trim_2.fastq`
+
+注：这里`$(head -n1 SRR_H1.txt)`是取txt里的第一行样本，没有设置循环，需要手动执行两次（下面类似）
+
+**下载人类参考基因组hg38**：
+```sh
+mkdir refs && cd refs
+wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/latest/hg38.fa.gz
+gunzip hg38.fa.gz
+bowtie2-build hg38.fa hg38
+cd ..
+```
+- 生成的refs文件夹即为hg38参考基因组
+
+**下载HERV注释**：直接用作者提供的HERV_rmsk.hg38.v2/genes.gtf
+```sh
+# 需要先下载git lfs
+sudo apt-get install git-lfs
+git lfs install
+git clone https://github.com/mlbendall/telescope_annotation_db
+# 根据人类参考基因组版本选择注释文件路径
+ANN=./telescope_annotation_db/builds/HERV_rmsk.hg38.v2/genes.gtf
+```
+注：后来仔细看了下GitHub仓库，好像应该用同路径下的transcripts.gtf作telescope的注释
+
+**比对到基因组**：使用论文参数运行时发现时间非常长，于是调整参数
+```sh
+SRR="SRR521515"
+bowtie2 -x refs/hg38 -1 fastq/${SRR}_trim_1.fastq -2 fastq/${SRR}_trim_2.fastq \
+  # --very-sensitive-local -k 100 --score-min L,0,1.6 -p 8 \  # 论文参数
+  --sensitive-local -k 20 --score-min L,0,1.6 -p 8 \  # 为节省时间调整后参数
+  2> ${SRR}.bowtie2.log | samtools view -bS - | samtools sort -o ${SRR}.sorted.bam
+SRR="SRR521514"
+bowtie2 -x refs/hg38 -1 fastq/${SRR}_trim_1.fastq -2 fastq/${SRR}_trim_2.fastq \
+  # --very-sensitive-local -k 100 --score-min L,0,1.6 -p 8 \  # 论文参数
+  --sensitive-local -k 20 --score-min L,0,1.6 -p 8 \  # 为节省时间调整后参数
+  2> ${SRR}.bowtie2.log | samtools view -bS - | samtools sort -o ${SRR}.sorted.bam
+```
+- 生成`SRR521515.sorted.bam`和`SRR521514.sorted.bam`
+
+观察这两个样本是否为同一个H1样本的技术重复：
+```sh
+# 分别拉取 runinfo（CSV），看关键列是否一致
+esearch -db sra -query SRR521514 | efetch -format runinfo > SRR521514.csv
+esearch -db sra -query SRR521515 | efetch -format runinfo > SRR521515.csv
+```
+查询`SRR521514.csv`和`SRR521515.csv`
+- 同一Experiment且同一BioSample：同一文库被多次上机，是技术重复，可合并作为一个样本来运行后续步骤
+- Experiment不同但BioSample相同：同一生物样本做了不同文库；通常也按技术重复处理，但合并前要确认LibraryStrategy/Layout/读长/建库是否一致；也可以分别运行，最后合并基因表达量
+- BioSample不同：不是同一样本（一般是生物学重复），不要合并
+
+这里发现Experiment和BioSample都相同，因此运行下面的合并命令
+```sh
+samtools merge H1_sample.merged.bam SRR521515.sorted.bam SRR521514.sorted.bam -@ 8
+```
+- 生成`merge H1_sample.merged.bam`——整合后的bam文件
+
+**telescope**：需要输入的BAM文件不能是坐标排序，必须`samtools sort -n`或`samtools collate`
+```sh
+samtools sort -o H1_sample.merged.sorted.bam H1_sample.merged.bam -@ 8
+samtools index H1_sample.merged.sorted.bam
+samtools collate -@ 8 -o H1_sample.collate.bam H1_sample.merged.sorted.bam
+```
+- 最后生成`H1_sample.collate.bam`——排序后的比对结果
+
+先检查telescope是否能正常运行
+```sh
+eval $(telescope test)
+```
+- 正常会生成一个`telescope-telescope_report.tsv`，我这里报错`AttributeError: module 'numpy' has no attribute 'int'.`，查询GitHub issue后发现是作者的源码有问题。把`/home/userName/miniconda3/envs/telescope_env/lib/python3.10/site-packages/telescope/utils/model.py`里面的`np.int`改成`int`即可
+
+```sh
+mkdir telescope_out
+telescope assign H1_sample.collate.bam ${ANN} \
+  --outdir telescope_out --exp_tag H1_sample \
+  --theta_prior 200000 --max_iter 200
+```
+
+![telescope_res](/upload/md-image/other/telescope_res.png){:width="800px" height="800px"}
+
+##### 步骤详解
+
+**ENCODE数据**：可以在ENCODE官网下载，也常常同步到NCBI SRA数据库
+- `SRP`：项目编号（例如"ENCODE Caltech RNA-seq"）
+- `SRX`：项目中某次实验的编号（标明建库类型、读长/平台等）
+- `SRS`：实验中某个样本的编号（例如"细胞系/细胞类型H1-hESC"）
+- `SRR`：对样本测序时某次上机/测序运行的编号，同一个SRX/SRS可能有多个SRR
+  - 技术重复：同一文库多次上机，可以合并BAM文件，当作同一个样本
+  - 生物学重复：不同个体/细胞培养批次的样本，分析时要作为独立样本，分别定量
+
+**bowtie2比对**：
+- 输入：将成对或单端的FASTQ（原始reads），Bowtie2索引（例如这里的人类参考基因组hg38）
+- 目的：为每条read找出在基因组中的匹配位置
+  - 对于hERV/TE，因为基因组上存在很多重复序列，所以很多reads有多个同样好的位置，因此用`-k 100`保留多重匹配（最多保留100条匹配记录）
+  - `--very-sensitive-local`/`--sensitive-local`：更宽松、允许局部匹配，能识别截断或带错配的TE片段
+  - `--score-min L,0,1.6`：放宽打分阈值，让低错配但多拷贝的reads不被扔掉
+- 输出：SAM文件（纯文本）
+  - `samtools view -bS -`：将SAM转换成BAM（二进制文件，省空间、读写快）
+  - `samtools sort`：按坐标（染色体/位置）排序，是很多软件常用的格式（能建索引、能快速随机访问、便于可视化）
+  - `samtools collate`/`samtools sort -n`：按read名称排序，不能建索引
+  - `samtools index`：给按坐标排序的BAM文件建索引，生成`.bai`文件，方便后续查看、统计
+  - `samtools merge`：把多次上机的技术重复合并成一个BAM，避免后面重复计算
+
+**Telescope计数**：
+- 输入：按read名称聚集的BAM文件、hERV注释GTF
+- 目的：把多重比对的读段匹配到具体的hERV位点
+  - 把唯一比对的reads直接记入对应位点，多重比对的reads用 EM/贝叶斯模型在候选位点间重分配，直到收敛
+  - 因为hERV/TE多拷贝/高相似度的特性，同一条read会有多条比对记录。而Telescope在重分配时需要一次性拿到这条read的所有候选位置，要求BAM里同一read的多条匹配记录挨在一起，而坐标排序会把这几条记录分散到整条染色体，telescope无法正确聚合
+  - `--theta_prior`：给“歧义分配”一个惩罚型先验，防止把噪声硬塞进错误位点
+  - `--max_iter`：迭代上限
+- 输出：每个hERV位点(Species-level)的表达数量
+- 优势：如果只计数唯一比对，可能会丢掉大量多重比对的读段。而telescope同时利用唯一与多重信息，用EM模型将读段按全局一致性重分配，更有利于比对species-level——能把同一家族不同基因座的表达区分开
+
+**Telescope结果表格**：
+- **`transcript`**：位点/转录单元ID（来自注释GTF文件的locus等属性）
+- **`final_count`**：最终分配给该位点的片段数（常用于后续进行差异表达等分析）
+- `final_conf`：高置信（后验≥阈值）的分配片段数
+- `final_prop`：该位点的最终比例参数π（样本内归一化的相对丰度）
+- `unique_count`：唯一比对到该位点的片段数（无需重分配的片段数）
+- `init_aligned`：初始化时“对这个位点有命中”的片段数（多重比对被重复计入时的情况）
+- `init_best/init_best_random/init_best_avg/init_prop`：不同初始策略下的计数或π，用来对比“EM之前”的起点与“EM之后”(final_*)的差异
+
+#### ERVmap
+
+
+
+#### Repeatmasker
+
+**[Repeatmasker](https://www.repeatmasker.org/)**：重复序列检测，通过与参考数据库的相似性比对来准确识别或屏蔽基因组中的重复序列，属于同源预测注释的方式
+- [安装](https://blog.csdn.net/m0_65437087/article/details/148420035)

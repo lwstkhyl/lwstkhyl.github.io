@@ -93,7 +93,8 @@ parallel-fastq-dump --sra-id $(head -n1 SRR_H1.txt) --threads 8 --split-files --
 flexbar -r fastq/$(head -n1 SRR_H1.txt)_1.fastq -p fastq/$(head -n1 SRR_H1.txt)_2.fastq \
         -t fastq/$(head -n1 SRR_H1.txt)_trim --adapter-trim-end RIGHT --min-read-length 30
 ```
-- 生成一个fastq文件夹，主要包含4个文件，格式为`SRR521514_trim_1.fastq`和`SRR521514_trim_2.fastq`
+- 下载的数据格式为`sampleX_1.fastq`+`sampleX_2.fastq`，说明是双端测序结果(paired-end sequencing)，经比对后输出到一个BAM中，BAM中每条记录带有配对标记
+- 最后生成一个fastq文件夹，主要包含4个文件，格式为`SRR521514_trim_1.fastq`和`SRR521514_trim_2.fastq`
 
 注：这里`$(head -n1 SRR_H1.txt)`是取txt里的第一行样本，没有设置循环，需要手动执行两次（下面类似）
 
@@ -277,4 +278,284 @@ docker run --rm -it \
 ```
 
 #### featureCounts+TEtranscripts
+
+##### 序列下载和比对、构建gtf文件
+
+[简洁版代码和具体运行结果](https://github.com/lwstkhyl/hERV_calc/tree/main/featureCounts%2BTEtranscripts)
+
+为了作差异分析，需要再找一个不同细胞系的数据：根据前面telescope的方法，从`SRP014320`这个项目里选"K562"这个细胞系里的`SRR521457`和`SRR521464`两个技术重复（LibraryLayout为paired的，碱基/spot数接近）
+
+**生成BAM比对文件（步骤同ERVmap）**：
+
+```sh
+threads=10
+# 下载序列
+mkdir fastq && cd fastq
+echo -e "SRR521514\nSRR521515" >> cell1.srr
+echo -e "SRR521457\nSRR521464" >> cell2.srr
+for SRR in $(cat cell1.srr cell2.srr); do
+    parallel-fastq-dump --sra-id ${SRR} --threads ${threads} --split-files
+done
+# 去接头、质控
+cat > adapters.fa <<EOF
+>TruSeq3-PE-Read1
+AGATCGGAAGAGCACACGTCTGAACTCCAGTCA
+>TruSeq3-PE-Read2
+AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
+EOF
+for SRR in $(cat cell1.srr cell2.srr); do
+    flexbar -r ${SRR}_1.fastq -p ${SRR}_2.fastq \
+    -t ${SRR}_trim \
+    -a adapters.fa \
+    -m 30 -n ${threads} \
+    2> ${SRR}_flexbar.log
+done
+cd ../
+# 构建bowtie2参考基因组
+mkdir refs && cd refs
+sudo apt-get install aria2
+aria2c -x 16 -s 16 https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/latest/hg38.fa.gz
+gunzip hg38.fa.gz
+bowtie2-build hg38.fa hg38
+cd ../
+# 比对到基因组（推荐使用--very-sensitive -k 100，这里为了节省时间空间只用-k 20）
+for SRR in $(cat fastq/cell1.srr fastq/cell2.srr); do
+    bowtie2 -x refs/hg38 -1 fastq/${SRR}_trim_1.fastq -2 fastq/${SRR}_trim_2.fastq \
+    -k 20 \
+    --no-mixed --no-discordant \
+    -p ${threads} \
+    2> fastq/${SRR}.bowtie2.log \
+    | samtools view -bS - \
+    | samtools sort -o fastq/${SRR}.sorted.bam
+    samtools index fastq/${SRR}.sorted.bam
+done
+# 合并技术重复
+samtools merge -@ ${threads} fastq/H1.merged.bam $(awk '{print "fastq/"$1".sorted.bam"}' fastq/cell1.srr)
+samtools sort -@ ${threads} -o fastq/H1.merged.sorted.bam fastq/H1.merged.bam
+samtools index fastq/H1.merged.sorted.bam
+samtools merge -@ ${threads} fastq/K562.merged.bam $(awk '{print "fastq/"$1".sorted.bam"}' fastq/cell2.srr)
+samtools sort -@ ${threads} -o fastq/K562.merged.sorted.bam fastq/K562.merged.bam
+samtools index fastq/K562.merged.sorted.bam
+```
+
+注：这里也可以用`samtools collate`排序，这样后面TEtranscripts时就不用`--sortByPos`参数，节省运行时间和空间
+
+bowtie2的比对参数设置：
+- `-k 100`：因为后续TEtranscripts的`--mode multi`和featureCounts的`-M -O --fraction`都会计入多重比对，所以在生成BAM是就要保留multi-mappers
+- `--sensitive`/`--very-sensitive(-local)`：没有硬性要求，保持前后分析一致即可，是“更容易收录边界/错配的读段——稍快/更严格”的问题
+- `--no-mixed`（丢弃“只配对的一端命中”的read-pair）/`--no-discordant`（丢弃“配对相互位置关系异常”的命中）：TEtranscripts官方文档给出的配对端约束建议，让BAM里里只保留“成对且合理”的配对端比对
+
+**生成hERV的gtf注释**：两种方法，稍后比较下结果
+
+```sh
+mkdir gtfs && cd gtfs
+wget -c https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/rmsk.txt.gz
+# Gene GTF（GENCODE GRCh38，CHR版）——TEtranscripts使用
+aria2c -x 16 -s 16 https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_38/gencode.v38.annotation.gtf.gz
+gunzip -f gencode.v38.annotation.gtf.gz
+# TE GTF（官方提供的GRCh38 GENCODE匹配版）——TEtranscripts和featureCounts使用
+# aria2c -x 16 -s 16 https://labshare.cshl.edu/shares/mhammelllab/www-data/TEtranscripts/TE_GTF/GRCh38_GENCODE_rmsk_TE.gtf.gz
+# gunzip -f GRCh38_GENCODE_rmsk_TE.gtf
+```
+
+本来是按上面的方法下载，但这个url现已404，使用[自制转座子GTF](https://www.jianshu.com/p/015a04ef8401)
+
+```sh
+zcat rmsk.txt.gz | awk 'BEGIN{OFS="\t"}{
+  chr=$6; start=$7+1; end=$8; strand=$10; repName=$11; repClass=$12; repFamily=$13;
+    fam=repName; gsub("[-_/].*","",fam);
+  if(repClass=="LTR" && repName ~ /^HERV/){
+    tid=repName"_"chr"_"start"_"end;
+    print chr,"hg38_rmsk","exon",start,end,".",strand,".",
+          "gene_id \""fam"\"; transcript_id \""tid"\"; family_id \""repFamily"\"; class_id \""repClass"\";";
+  }
+}' > hg38_hERV_family_1.gtf
+zcat rmsk.txt.gz | awk 'BEGIN{OFS="\t"}
+function herv_family(repName, repFamily,    fam){
+  # 1) 先用 repName 的显式 HERV 名
+  if (repName ~ /^HERVK/) return "HERVK"
+  if (repName ~ /^HERVH/) return "HERVH"
+  if (repName ~ /^HERVW|^HERV17/) return "HERVW"
+  if (repName ~ /^HERV9/) return "HERV9"
+  # 2) 再把常见 LTR 名映射到对应 HERV family
+  if (repName ~ /^LTR5(_Hs|A|B)?/) return "HERVK"   # LTR5/LTR5_Hs 属于 HERVK(HML-2)
+  if (repName ~ /^LTR7/)           return "HERVH"   # LTR7 系列属于 HERVH
+  if (repName ~ /^LTR17/)          return "HERVW"   # LTR17 系列属于 HERVW
+  if (repName ~ /^LTR12/)          return "HERV9"   # LTR12 系列多归于 HERV9
+  # 3) 其它情况：不归类（返回空字串 -> 这条记录将被丢弃）
+  return ""
+}
+{
+  # rmsk.txt.gz 的字段：... 6:chrom, 7:genoStart, 8:genoEnd, 10:strand, 11:repName, 12:repClass, 13:repFamily
+  chr=$6; start=$7+1; end=$8; strand=$10; repName=$11; repClass=$12; repFamily=$13;
+  # 只保留 LTR 类
+  if (repClass!="LTR") next;
+  fam=herv_family(repName, repFamily);
+  if (fam=="") next;  # 未能映射到 HERV 家族的忽略
+  # TEtranscripts 约定：feature 用 exon；基因/家族聚合用 gene_id；每个拷贝的唯一ID 用 transcript_id
+  # family_id 用更细的子家族（这里放 repName），class_id 放 LTR
+  tid=repName"_"chr"_"start"_"end;
+  print chr,"rmsk","exon",start,end,".",strand,".",
+        "gene_id \""fam"\"; transcript_id \""tid"\"; class_id \"LTR\"; family_id \""repName"\";";
+}' > hg38_hERV_family_2.gtf
+# 在基因组层面：统计family拷贝数&覆盖碱基 
+zcat rmsk.txt.gz | awk 'BEGIN{OFS="\t"}{
+  chr=$6; start=$7; end=$8; repName=$11; repClass=$12;
+  if(repClass=="LTR" && repName ~ /^HERV/){
+    fam=repName; gsub("[-_/].*","",fam);
+    len=end-start; CNT[fam]++; BP[fam]+=len;
+  }
+} END {print "family","copies","bp";
+        for(f in CNT) print f, CNT[f], BP[f];}' > hERV_family_copy_bp.tsv
+cd ../
+```
+从UCSC的RepeatMasker表`rmsk.txt.gz`里筛出hERV（`repClass==LTR`且`repName`以`HERV`开头），并构造一份GTF注释，把family写进`gene_id`；第二个gtf与第一个的区别是把LTR（`repName`没有以`HERV`开头但也属于hERV的）也映射到了对应HERV family。最终得到的`hg38_hERV_family_2.gtf`约是`_1.gtf`大小的两倍
+
+`hERV_family_copy_bp.tsv`：统计每个family的条目数copies与覆盖碱基bp
+![TEtranscripts多样本差异表达分析7](/upload/md-image/other/TEtranscripts多样本差异表达分析7.png){:width="400px" height="400px"}
+
+**单样本分析——使用featureCounts**：以H1细胞系的bam为例
+
+```sh
+conda install -c bioconda subread   # 安装featureCounts
+mkdir RM_FC && cd RM_FC
+featureCounts -a ../gtfs/hg38_hERV_family_1.gtf -t exon -g gene_id \
+  -o H1_gtf1_counts_familyLevel.txt \
+  -M -O --fraction -T ${threads} -p -B -C \
+  ../fastq/H1.merged.sorted.bam
+featureCounts -a ../gtfs/hg38_hERV_family_2.gtf -t exon -g gene_id \
+  -o H1_gtf2_counts_familyLevel.txt \
+  -M -O --fraction -T ${threads} -p -B -C \
+  ../fastq/H1.merged.sorted.bam
+cd ../
+```
+
+结果：
+- `xxx.txt`：样本在family-level上每个hERV家族的所在位点（染色体位置）和表达量
+  
+  ![TEtranscripts多样本差异表达分析5](/upload/md-image/other/TEtranscripts多样本差异表达分析5.png){:width="800px" height="800px"}
+
+- `xxx.txt.summary`：计数的统计结果
+  
+  ![TEtranscripts多样本差异表达分析6](/upload/md-image/other/TEtranscripts多样本差异表达分析6.png){:width="600px" height="600px"}
+
+---
+
+```sh
+# 安装TEtranscripts
+cd /home/lwl
+git clone https://github.com/mhammell-laboratory/TEtranscripts
+cd TEtranscripts
+python setup.py install
+TEtranscripts --version  # 输出：TEtranscripts 2.2.3
+# 安装DESeq2，参考文章：https://zhuanlan.zhihu.com/p/164886255
+conda create -n tetranscripts
+conda activate tetranscripts
+conda install r=3.6
+conda install r-xml
+conda install -c r r-data.table=1.12.2
+conda install -c bioconda bioconductor-deseq2=1.24.0
+R  # 打开R环境
+install.packages("BiocManager")
+BiocManager::install("GenomeInfoDb")  # 不设置镜像，需要挂梯子（国内镜像站没有旧版本BiocManager）
+library("DESeq2")  # 检查是否安装成功
+# CTRL+Z退出R环境
+```
+
+**单样本分析——使用TEcount**：以H1细胞系的bam为例
+
+```sh
+mkdir TE && cd TE
+mkdir H1_gtf1_TEcount
+TEcount --sortByPos --format BAM --mode multi \
+  -b ../fastq/H1.merged.sorted.bam \
+  --GTF ../gtfs/gencode.v38.annotation.gtf \
+  --TE  ../gtfs/hg38_hERV_family_1.gtf \
+  --stranded no \
+  --outdir H1_gtf1_TEcount \
+  2> H1_gtf2_TEcount.log
+mkdir H1_gtf1_TEcount
+TEcount --sortByPos --format BAM --mode multi \
+  -b ../fastq/H1.merged.sorted.bam \
+  --GTF ../gtfs/gencode.v38.annotation.gtf \
+  --TE  ../gtfs/hg38_hERV_family_2.gtf \
+  --stranded no \
+  --outdir H1_gtf2_TEcount \
+  2> H1_gtf2_TEcount.log
+```
+
+`TEtranscripts_out.cntTable`：每个基因的表达量
+
+![TEtranscripts多样本差异表达分析4](/upload/md-image/other/TEtranscripts多样本差异表达分析4.png){:width="400px" height="400px"}
+
+**多样本差异表达分析——使用TEtranscripts**：
+
+```sh
+mkdir H1_K562_gtf1
+TEtranscripts --sortByPos --format BAM --mode multi \
+  -t $(awk '{printf "../fastq/%s.sorted.bam ",$1}' ../fastq/cell1.srr) \
+  -c $(awk '{printf "../fastq/%s.sorted.bam ",$1}' ../fastq/cell2.srr) \
+  --GTF ../gtfs/gencode.v38.annotation.gtf \
+  --TE  ../gtfs/hg38_hERV_family_1.gtf \
+  --stranded no \
+  --project H1_K562_gtf1 --outdir H1_K562_gtf1 \
+  2> H1_K562_gtf1.log
+mkdir H1_K562_gtf2
+TEtranscripts --sortByPos --format BAM --mode multi \
+  -t $(awk '{printf "../fastq/%s.sorted.bam ",$1}' ../fastq/cell1.srr) \
+  -c $(awk '{printf "../fastq/%s.sorted.bam ",$1}' ../fastq/cell2.srr) \
+  --GTF ../gtfs/gencode.v38.annotation.gtf \
+  --TE  ../gtfs/hg38_hERV_family_2.gtf \
+  --stranded no \
+  --project H1_K562_gtf2 --outdir H1_K562_gtf2 \
+  2> H1_K562_gtf2.log
+```
+
+结果：
+
+- `xxx.cntTable`：各样本每个基因/HERV的表达量（HERV相关的结果都显示在表的最后一块，下同）
+
+  ![TEtranscripts多样本差异表达分析1](/upload/md-image/other/TEtranscripts多样本差异表达分析1.png){:width="800px" height="800px"}
+
+- `xxx_gene_TE_analysis.txt`：每个基因的差异表达分析结果
+
+  ![TEtranscripts多样本差异表达分析2](/upload/md-image/other/TEtranscripts多样本差异表达分析2.png){:width="800px" height="800px"}
+
+- `xxx_sigdiff_gene_TE.txt`：根据指定阈值筛选得到的差异基因（padj<0.05，|log2FC|>0）
+
+  ![TEtranscripts多样本差异表达分析3](/upload/md-image/other/TEtranscripts多样本差异表达分析3.png){:width="800px" height="800px"}
+
+  - `baseMean`：对所有样本做归一化后，该基因的平均表达量
+  - `log2FoldChange`：处理组-对照组的log2倍数变化
+  - `lfcSE`：log2FC的标准误(SE)
+  - `stat`：检验统计量（Wald检验时约为log2FC/SE）
+  - `pvalue`/`padj`：原始/FDR校正后p值
+
+##### 其它问题与后续分析
+
+在下载fastq数据时遇到的问题：
+- **发现有的样本(SRRxxx)非常大（10多个G），有的只有几个G**：测序深度不同导致reads数不同，在SRA的RunInfo里的spots/avgLength字段标识了这一信息。除此之外，读长越长fastq越大，有的fastq文件可能已经做过过滤/裁剪
+- **H1组的样本与K562组的样本大小不一样，是否会对最终结果有影响**：通常深度越高效果越好，低深度的样本可能会漏掉低表达的基因，影响差异分析结果。DESeq2等差异分析软件可以通过归一化等方式消除测序深度的影响
+  
+  注意：归一化能消除“测序量不同”这个偏差，但不能替代足够的测序深度，要确保两组样本的深度没有太大差别（比如一组2×5000万reads，另一组2×500万就不行，深度低的那组检测力会明显下降，方差估计更不稳）
+
+  如果不确定，可以直接用原始计数进行DESeq2，不要CPM/TPM等归一化处理后再做差异
+
+**下载的同一细胞系的不同样本是否合并**：可以合并，但TEtranscripts可以分析这种一组多样本的情况，而且这样的效果更好，所以就保留合并前的原始BAM文件，在TEtranscripts分析时进行“2 vs 2”的差异分析
+
+**构建hERV的gtf**：
+- `repClass=="LTR"`：只取LTR类的转座子，在rmsk表里，每条重复都有三元标签：repClass/repFamily/repName。其中repClass是大类（如LTR/LINE/SINE/DNA/Simple_repeat等），HERV属于LTR类反转座子
+- `repName~/^HERV/`：选出以HERV开头的LTR，因为HERV的条目本来就标成LTR类，所以有无`repClass=="LTR"`影响不大
+- hERV的env/gag/pol等基因在哪：rmsk不会按基因粒度注释，而是把前病毒结构分成`两端(LTR)`与内部区(internal)，内部区常以`-int`结尾，如`HERVK-int`,`HERVH-int`）。env/gag/pol都包含在这个内部区里
+
+**TEtranscripts需要的gtf注释有特殊要求**：
+- 使用`exon`作为feature
+- 属性里要包含`gene_id`、`transcript_id`，并建议加上`class_id`（如LTR）与`family_id`（更细的子家族/亚家族名）
+
+**小总结：三种计算hERV表达量的工具Telescope、featureCounts、TEtranscripts的特点以及优缺点**
+- Telescope：针对位点级(Species-level)hERV定量，使用EM/贝叶斯方法分析多重比对
+- featureCounts：通用计数器，family-level快速计数，多重比对用分数计数是近似（对高相似家族可能有偏差）
+- TEtranscripts：family/Subfamily-level快速计数计数与差异表达，使用EM分析多重比对
+
+---
 

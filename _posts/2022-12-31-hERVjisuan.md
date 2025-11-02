@@ -216,67 +216,6 @@ telescope assign H1_sample.collate.bam ${ANN} \
 - `init_aligned`：初始化时“对这个位点有命中”的片段数（多重比对被重复计入时的情况）
 - `init_best/init_best_random/init_best_avg/init_prop`：不同初始策略下的计数或π，用来对比“EM之前”的起点与“EM之后”(final_*)的差异
 
-#### ERVmap
-
-```sh
-mkdir ERVmap
-cd ERVmap
-mkdir input
-parallel-fastq-dump --sra-id SRR521514 --threads 8 --split-files --outdir input
-parallel-fastq-dump --sra-id SRR521515 --threads 8 --split-files --outdir input
-cat SRR521514_1.fastq SRR521515_1.fastq > H1_R1.fastq
-cat SRR521514_2.fastq SRR521515_2.fastq > H1_R2.fastq
-gzip H1_R1.fastq
-gzip H1_R2.fastq
-```
-
-```sh
-sudo apt-get update && sudo apt-get install -y docker.io
-sudo usermod -aG docker $USER  # 重启终端
-cd /etc/docker
-sudo nano daemon.json
-```
-```
-{ "registry-mirrors": ["https://docker.registry.cyou", 
-"https://docker-cf.registry.cyou", "https://dockercf.jsdelivr.fyi", 
-"https://docker.jsdelivr.fyi", "https://dockertest.jsdelivr.fyi", 
-"https://mirror.aliyuncs.com", "https://dockerproxy.com", 
-"https://mirror.baidubce.com", "https://docker.m.daocloud.io", 
-"https://docker.nju.edu.cn", 
-"https://docker.mirrors.sjtug.sjtu.edu.cn", 
-"https://docker.mirrors.ustc.edu.cn", "https://mirror.iscas.ac.cn", 
-"https://docker.rainbond.cc"]
-}
-```
-
-```sh
-docker pull eipm/ervmap
-```
-
-https://hub.docker.com/r/eipm/ervmap
-
-```sh
-wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.p14.genome.fa.gz
-wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.annotation.gtf.gz
-for gz in *.gz; do gunzip $gz; done
-STAR --runMode genomeGenerate \
-     --runThreadN 8 \
-     --genomeDir  ~/ervmap/ref/STAR_hg38 \
-     --genomeFastaFiles GRCh38.p14.genome.fa \
-     --sjdbGTFfile      gencode.v49.annotation.gtf \
-     --sjdbOverhang 99 \
-     --limitGenomeGenerateRAM 125000000000
-```
-
-```sh
-docker run --rm -it \
-  -v ~/ervmap/input:/work/input \
-  -v ~/ervmap/ref:/work/ref \
-  -v ~/ervmap/out:/work/output \
-  eipm/ervmap \
-  bash -lc "cd /opt/ERVmap && bash ERVmap_auto.sh /work/input"
-```
-
 #### featureCounts+TEtranscripts
 
 ##### 序列下载和比对、构建gtf文件
@@ -559,3 +498,73 @@ TEtranscripts --sortByPos --format BAM --mode multi \
 
 ---
 
+因为使用的gtf格式不同，gtf1最后生成的结果基因id格式为`HERVIP10FH:ERV1:LTR`，gtf2为`HERVK:HERVK9-int:LTR`，画图时gtf1就直接取`HERVIP10FH`作为每个点的标注，gtf2按`HERVK`作图例、`HERVK9-int`作为标注
+
+普通基因的点用蓝色标注，HERV的用彩色标注，阈值`padj>0.05`、`|log2FC|>1`，按padj排序前15的点标注了名称
+
+[画火山图的代码](https://github.com/lwstkhyl/hERV_calc/blob/main/featureCounts%2BTEtranscripts/plots/plot.py)
+
+![TEtranscripts多样本差异表达分析8](/upload/md-image/other/TEtranscripts多样本差异表达分析8.png){:width="600px" height="600px"}
+
+![TEtranscripts多样本差异表达分析9](/upload/md-image/other/TEtranscripts多样本差异表达分析9.png){:width="600px" height="600px"}
+
+#### ERVmap
+
+```sh
+mkdir ERVmap
+cd ERVmap
+mkdir input
+parallel-fastq-dump --sra-id SRR521514 --threads 8 --split-files --outdir input
+parallel-fastq-dump --sra-id SRR521515 --threads 8 --split-files --outdir input
+cat SRR521514_1.fastq SRR521515_1.fastq > H1_R1.fastq
+cat SRR521514_2.fastq SRR521515_2.fastq > H1_R2.fastq
+gzip H1_R1.fastq
+gzip H1_R2.fastq
+```
+
+```sh
+sudo apt-get update && sudo apt-get install -y docker.io
+sudo usermod -aG docker $USER  # 重启终端
+cd /etc/docker
+sudo nano daemon.json
+```
+```
+{ "registry-mirrors": ["https://docker.registry.cyou", 
+"https://docker-cf.registry.cyou", "https://dockercf.jsdelivr.fyi", 
+"https://docker.jsdelivr.fyi", "https://dockertest.jsdelivr.fyi", 
+"https://mirror.aliyuncs.com", "https://dockerproxy.com", 
+"https://mirror.baidubce.com", "https://docker.m.daocloud.io", 
+"https://docker.nju.edu.cn", 
+"https://docker.mirrors.sjtug.sjtu.edu.cn", 
+"https://docker.mirrors.ustc.edu.cn", "https://mirror.iscas.ac.cn", 
+"https://docker.rainbond.cc"]
+}
+```
+
+```sh
+docker pull eipm/ervmap
+```
+
+https://hub.docker.com/r/eipm/ervmap
+
+```sh
+wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.p14.genome.fa.gz
+wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.annotation.gtf.gz
+for gz in *.gz; do gunzip $gz; done
+STAR --runMode genomeGenerate \
+     --runThreadN 8 \
+     --genomeDir  ~/ervmap/ref/STAR_hg38 \
+     --genomeFastaFiles GRCh38.p14.genome.fa \
+     --sjdbGTFfile      gencode.v49.annotation.gtf \
+     --sjdbOverhang 99 \
+     --limitGenomeGenerateRAM 125000000000
+```
+
+```sh
+docker run --rm -it \
+  -v ~/ervmap/input:/work/input \
+  -v ~/ervmap/ref:/work/ref \
+  -v ~/ervmap/out:/work/output \
+  eipm/ervmap \
+  bash -lc "cd /opt/ERVmap && bash ERVmap_auto.sh /work/input"
+```

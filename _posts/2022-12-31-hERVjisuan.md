@@ -351,7 +351,7 @@ cd ../
 从UCSC的RepeatMasker表`rmsk.txt.gz`里筛出hERV（`repClass==LTR`且`repName`以`HERV`开头），并构造一份GTF注释，把family写进`gene_id`；第二个gtf与第一个的区别是把LTR（`repName`没有以`HERV`开头但也属于hERV的）也映射到了对应HERV family。最终得到的`hg38_hERV_family_2.gtf`约是`_1.gtf`大小的两倍
 
 `hERV_family_copy_bp.tsv`：统计每个family的条目数copies与覆盖碱基bp
-![TEtranscripts多样本差异表达分析7](/upload/md-image/other/TEtranscripts多样本差异表达分析7.png){:width="300px" height="300px"}
+![TEtranscripts多样本差异表达分析7](/upload/md-image/other/TEtranscripts多样本差异表达分析7.png){:width="200px" height="200px"}
 
 **单样本分析——使用featureCounts**：以H1细胞系的bam为例
 

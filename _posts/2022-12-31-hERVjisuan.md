@@ -70,6 +70,7 @@ subcategory: other-other
 ##### 序列下载与比对
 
 **配置环境**：
+
 ```sh
 conda create -n telescope -c conda-forge -c bioconda \
   python=3.10 telescope bowtie2 samtools sra-tools parallel-fastq-dump \
@@ -93,12 +94,14 @@ parallel-fastq-dump --sra-id $(head -n1 SRR_H1.txt) --threads 8 --split-files --
 flexbar -r fastq/$(head -n1 SRR_H1.txt)_1.fastq -p fastq/$(head -n1 SRR_H1.txt)_2.fastq \
         -t fastq/$(head -n1 SRR_H1.txt)_trim --adapter-trim-end RIGHT --min-read-length 30
 ```
+
 - 下载的数据格式为`sampleX_1.fastq`+`sampleX_2.fastq`，说明是双端测序结果(paired-end sequencing)，经比对后输出到一个BAM中，BAM中每条记录带有配对标记
 - 最后生成一个fastq文件夹，主要包含4个文件，格式为`SRR521514_trim_1.fastq`和`SRR521514_trim_2.fastq`
 
 注：这里`$(head -n1 SRR_H1.txt)`是取txt里的第一行样本，没有设置循环，需要手动执行两次（下面类似）
 
 **下载人类参考基因组hg38**：
+
 ```sh
 mkdir refs && cd refs
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/latest/hg38.fa.gz
@@ -106,9 +109,11 @@ gunzip hg38.fa.gz
 bowtie2-build hg38.fa hg38
 cd ..
 ```
+
 - 生成的refs文件夹即为hg38参考基因组
 
 **下载HERV注释**：直接用作者提供的HERV_rmsk.hg38.v2/genes.gtf
+
 ```sh
 # 需要先下载git lfs
 sudo apt-get install git-lfs
@@ -117,9 +122,11 @@ git clone https://github.com/mlbendall/telescope_annotation_db
 # 根据人类参考基因组版本选择注释文件路径
 ANN=./telescope_annotation_db/builds/HERV_rmsk.hg38.v2/genes.gtf
 ```
+
 注：后来仔细看了下GitHub仓库，好像应该用同路径下的transcripts.gtf作telescope的注释
 
 **比对到基因组**：使用论文参数运行时发现时间非常长，于是调整参数
+
 ```sh
 SRR="SRR521515"
 bowtie2 -x refs/hg38 -1 fastq/${SRR}_trim_1.fastq -2 fastq/${SRR}_trim_2.fastq \
@@ -132,23 +139,28 @@ bowtie2 -x refs/hg38 -1 fastq/${SRR}_trim_1.fastq -2 fastq/${SRR}_trim_2.fastq \
   --sensitive-local -k 20 --score-min L,0,1.6 -p 8 \  # 为节省时间调整后参数
   2> ${SRR}.bowtie2.log | samtools view -bS - | samtools sort -o ${SRR}.sorted.bam
 ```
+
 - 生成`SRR521515.sorted.bam`和`SRR521514.sorted.bam`
 
 观察这两个样本是否为同一个H1样本的技术重复：
+
 ```sh
 # 分别拉取 runinfo（CSV），看关键列是否一致
 esearch -db sra -query SRR521514 | efetch -format runinfo > SRR521514.csv
 esearch -db sra -query SRR521515 | efetch -format runinfo > SRR521515.csv
 ```
+
 查询`SRR521514.csv`和`SRR521515.csv`
 - 同一Experiment且同一BioSample：同一文库被多次上机，是技术重复，可合并作为一个样本来运行后续步骤
 - Experiment不同但BioSample相同：同一生物样本做了不同文库；通常也按技术重复处理，但合并前要确认LibraryStrategy/Layout/读长/建库是否一致；也可以分别运行，最后合并基因表达量
 - BioSample不同：不是同一样本（一般是生物学重复），不要合并
 
 这里发现Experiment和BioSample都相同，因此运行下面的合并命令
+
 ```sh
 samtools merge H1_sample.merged.bam SRR521515.sorted.bam SRR521514.sorted.bam -@ 8
 ```
+
 - 生成`merge H1_sample.merged.bam`——整合后的bam文件
 
 **telescope**：需要输入的BAM文件不能是坐标排序，必须`samtools sort -n`或`samtools collate`
@@ -157,12 +169,15 @@ samtools sort -o H1_sample.merged.sorted.bam H1_sample.merged.bam -@ 8
 samtools index H1_sample.merged.sorted.bam
 samtools collate -@ 8 -o H1_sample.collate.bam H1_sample.merged.sorted.bam
 ```
+
 - 最后生成`H1_sample.collate.bam`——排序后的比对结果
 
 先检查telescope是否能正常运行
+
 ```sh
 eval $(telescope test)
 ```
+
 - 正常会生成一个`telescope-telescope_report.tsv`，我这里报错`AttributeError: module 'numpy' has no attribute 'int'.`，查询GitHub issue后发现是作者的源码有问题。把`/home/userName/miniconda3/envs/telescope_env/lib/python3.10/site-packages/telescope/utils/model.py`里面的`np.int`改成`int`即可
 
 ```sh
@@ -348,10 +363,12 @@ zcat rmsk.txt.gz | awk 'BEGIN{OFS="\t"}{
         for(f in CNT) print f, CNT[f], BP[f];}' > hERV_family_copy_bp.tsv
 cd ../
 ```
+
 从UCSC的RepeatMasker表`rmsk.txt.gz`里筛出hERV（`repClass==LTR`且`repName`以`HERV`开头），并构造一份GTF注释，把family写进`gene_id`；第二个gtf与第一个的区别是把LTR（`repName`没有以`HERV`开头但也属于hERV的）也映射到了对应HERV family。最终得到的`hg38_hERV_family_2.gtf`约是`_1.gtf`大小的两倍
 
 `hERV_family_copy_bp.tsv`：统计每个family的条目数copies与覆盖碱基bp
-![TEtranscripts多样本差异表达分析7](/upload/md-image/other/TEtranscripts多样本差异表达分析7.png){:width="200px" height="200px"}
+
+![TEtranscripts多样本差异表达分析7](/upload/md-image/other/TEtranscripts多样本差异表达分析7.png){:width="250px" height="250px"}
 
 **单样本分析——使用featureCounts**：以H1细胞系的bam为例
 
@@ -510,61 +527,10 @@ TEtranscripts --sortByPos --format BAM --mode multi \
 
 #### ERVmap
 
-```sh
-mkdir ERVmap
-cd ERVmap
-mkdir input
-parallel-fastq-dump --sra-id SRR521514 --threads 8 --split-files --outdir input
-parallel-fastq-dump --sra-id SRR521515 --threads 8 --split-files --outdir input
-cat SRR521514_1.fastq SRR521515_1.fastq > H1_R1.fastq
-cat SRR521514_2.fastq SRR521515_2.fastq > H1_R2.fastq
-gzip H1_R1.fastq
-gzip H1_R2.fastq
-```
+[简洁版代码和具体运行结果](https://github.com/lwstkhyl/hERV_calc/tree/main/ERVmap)
 
-```sh
-sudo apt-get update && sudo apt-get install -y docker.io
-sudo usermod -aG docker $USER  # 重启终端
-cd /etc/docker
-sudo nano daemon.json
-```
-```
-{ "registry-mirrors": ["https://docker.registry.cyou", 
-"https://docker-cf.registry.cyou", "https://dockercf.jsdelivr.fyi", 
-"https://docker.jsdelivr.fyi", "https://dockertest.jsdelivr.fyi", 
-"https://mirror.aliyuncs.com", "https://dockerproxy.com", 
-"https://mirror.baidubce.com", "https://docker.m.daocloud.io", 
-"https://docker.nju.edu.cn", 
-"https://docker.mirrors.sjtug.sjtu.edu.cn", 
-"https://docker.mirrors.ustc.edu.cn", "https://mirror.iscas.ac.cn", 
-"https://docker.rainbond.cc"]
-}
-```
 
-```sh
-docker pull eipm/ervmap
-```
+#### TE_Transcript_Assembly
 
-https://hub.docker.com/r/eipm/ervmap
+[简洁版代码和具体运行结果](https://github.com/lwstkhyl/hERV_calc/tree/main/TE_Transcript_Assembly)
 
-```sh
-wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.p14.genome.fa.gz
-wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.annotation.gtf.gz
-for gz in *.gz; do gunzip $gz; done
-STAR --runMode genomeGenerate \
-     --runThreadN 8 \
-     --genomeDir  ~/ervmap/ref/STAR_hg38 \
-     --genomeFastaFiles GRCh38.p14.genome.fa \
-     --sjdbGTFfile      gencode.v49.annotation.gtf \
-     --sjdbOverhang 99 \
-     --limitGenomeGenerateRAM 125000000000
-```
-
-```sh
-docker run --rm -it \
-  -v ~/ervmap/input:/work/input \
-  -v ~/ervmap/ref:/work/ref \
-  -v ~/ervmap/out:/work/output \
-  eipm/ervmap \
-  bash -lc "cd /opt/ERVmap && bash ERVmap_auto.sh /work/input"
-```

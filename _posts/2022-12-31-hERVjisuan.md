@@ -5,9 +5,41 @@ category: other
 subcategory: other-other
 ---
 
-2025.10.17-2025.研究进展
+2025.10.17-2025.11.7研究进展
 
 <!-- more -->
+
+### 文献阅读
+
+[Polygenic burden of short tandem repeat expansions promotes risk for Alzheimer’s disease](https://www.nature.com/articles/s41467-025-56400-0)
+
+主题：短串联重复序列(STR, short tandem repeat)与AD发病风险之间的关系
+
+使用的数据：老年AD病例/对照->外周血基因组DNA->无PCR偏好的全基因组测序(WGS)->仅纳入欧洲血统的白人个体和测序深度30×～50×的样本，减少了技术假阳性和混杂因素
+
+研究方法：
+- 建立一个多态性STR位点库：在初始的895,826个位点目录上，选取欧洲裔样本，用gangSTR软件筛选出237,197个在群体中长度多态的STR位点，并与已知多态STR集合合并，得到312,731个独特多态STR
+- 用ExpansionHunter和gangSTR两款工具对受试者的WGS数据进行STR长度基因分型。为验证短读长测序对STR长度测定的准确性，使用4个样本的长读长测序(PacBio)结果进行对比，综合考虑准确性和灵敏度，后续主要采用ExpansionHunter的基因分型结果
+- 关联分析
+  - 单个STR长度与AD的关联：将每个位点的长度（取每人较长等位基因）作为连续变量，采用logistic回归检验其与AD发病的关联
+  - 基于阈值的扩增负担分析：将每个位点中超过特定长度阈值的等位基因定义为“扩增”(expansions)，比较AD病例与对照中携带该扩增的个体数量差异
+  - 使用DBSCAN密度聚类算法辨识群体中每个位点长度的异常高值，将这些异常长的等位基因定义为“STR扩增”（识别AD中罕见的长串联扩增），比较病例组与对照组的扩增总负荷差异，评估“高扩增负荷”者的AD患病相对风险
+- 功能富集分析：将AD相关的STR扩增位置与染色质状态、组蛋白修饰进行重叠富集检验，并考察AD扩增是否富集于特定转座子元件
+
+主要发现：
+- AD病例携带的STR扩增数量显著多于同龄健康对照，STR扩增负荷最高的人群患病风险显著升高（STR扩增累积效应）->累积的STR扩增对疾病风险有实质影响，全基因组多个微效应的重复扩增(Polygenic burden)共同提高AD易感性
+- 在单个位点层面，仅发现APOE基因附近的一个STR与AD显著相关，但APOE基因本身就是就是AD的强风险因素之一（此STR与APOE基因连锁），未发现其他STR位点在全基因组水平上达到显著关联（没有一种STR可以独立导致AD的遗传风险）
+- AD患者中特有的STR扩增高度富集在活跃的启动子区域（如海马组织的启动子相关染色质区域）。相比身体其他组织，这种富集在活跃启动子/增强子的趋势在大脑组织中最为明显
+- AD相关STR扩增显著富集于SVA转座子（神经元中特定基因的调控元件）->STR扩增可能通过影响转座子介导的基因调控来参与AD发生
+- AD相关的STR扩增临近的基因高度富集在神经生物学功能（神经元投射形态发生、轴突发育）->AD的STR扩增主要影响神经元结构和信号传递相关的基因
+- STR扩增负荷可能成为评估AD遗传风险的一个指标；虽然STR扩增本身很难作为治疗靶点，但其提示的关键通路（例如突触功能、神经发育通路）以及涉及的基因调控机制可能成为新疗法研发的切入点
+
+---
+
+[Structural variation in 1,019 diverse humans based on long-read sequencing](https://www.nature.com/articles/s41586-025-09290-7)
+
+
+
 
 ### 一些基础知识补充
 
@@ -366,6 +398,8 @@ cd ../
 
 从UCSC的RepeatMasker表`rmsk.txt.gz`里筛出hERV（`repClass==LTR`且`repName`以`HERV`开头），并构造一份GTF注释，把family写进`gene_id`；第二个gtf与第一个的区别是把LTR（`repName`没有以`HERV`开头但也属于hERV的）也映射到了对应HERV family。最终得到的`hg38_hERV_family_2.gtf`约是`_1.gtf`大小的两倍
 
+- 补充——是否可以用telescope的gtf：featureCounts可以，TEtranscripts理论可行，但官方的设计目的是统计家族级别（基因级别），而telescope的gtf是位点级的注释，而且telescope的gtf里没有classid和familyid，需要将geneid改成family、添加classid为"LTR"、添加familyid为repName/intModel，并将feature改成exon
+
 `hERV_family_copy_bp.tsv`：统计每个family的条目数copies与覆盖碱基bp
 
 ![TEtranscripts多样本差异表达分析7](/upload/md-image/other/TEtranscripts多样本差异表达分析7.png){:width="250px" height="250px"}
@@ -529,8 +563,15 @@ TEtranscripts --sortByPos --format BAM --mode multi \
 
 [简洁版代码和具体运行结果](https://github.com/lwstkhyl/hERV_calc/tree/main/ERVmap)
 
+也是位点级，但使用的gtf是作者整理后的近全长(proviral)HERV位点（不覆盖大量碎片化/solo LTR等位点），相比telescope，比对更严格（舍弃多重比对读段，在高重复环境下尽量减少误计），而telescope将多重比对读段重分配（在HERV/HERVH这类高重复家族里很关键）
+
 
 #### TE_Transcript_Assembly
 
 [简洁版代码和具体运行结果](https://github.com/lwstkhyl/hERV_calc/tree/main/TE_Transcript_Assembly)
+
+主要分析对象是**剪接位点(junction)**，把剪接事件和TE、基因外显子做整合统计（例如跨越各个剪接位点的读段数、每个外显子被TE覆盖的程度），最后把junction和外显子/TE交叠结果整合，统计每个junction对应的基因、类型（启动子/TSS一侧的边界、内部外显子边界、终止/TES一侧的边界）、两段关联TE的家族/类别、TE覆盖比例方向（与基因是同向还是反向）等。
+
+前面的分析是说“哪个TE家族/位点有表达”，这个分析可以具体到“该TE是否参与了外显子结构”，比如如果TE插入在5’剪接位点前作为新启动子，可能产生TE–基因嵌合转录本；插入在外显子的剪接位点间，会被拼接进成熟转录本，插入在3’剪接位点前作为新终止外显子，可能导致剪接提前终止。分析**哪个TE在什么基因的哪个位置发挥了结构作用**（TE如何影响宿主基因结构/调控）
+
 

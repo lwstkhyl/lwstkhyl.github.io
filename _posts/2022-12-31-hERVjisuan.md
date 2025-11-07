@@ -570,7 +570,7 @@ TEtranscripts --sortByPos --format BAM --mode multi \
 
   ![TEtranscripts多样本差异表达分析2](/upload/md-image/other/TEtranscripts多样本差异表达分析2.png){:width="800px" height="800px"}
 
-- `xxx_sigdiff_gene_TE.txt`：根据指定阈值筛选得到的差异基因（padj<0.05，|log2FC|>0）
+- `xxx_sigdiff_gene_TE.txt`：根据指定阈值筛选得到的差异基因（padj<0.05，\|log2FC\|>0）
 
   ![TEtranscripts多样本差异表达分析3](/upload/md-image/other/TEtranscripts多样本差异表达分析3.png){:width="800px" height="800px"}
 
@@ -595,7 +595,7 @@ TEtranscripts --sortByPos --format BAM --mode multi \
 **构建hERV的gtf**：
 - `repClass=="LTR"`：只取LTR类的转座子，在rmsk表里，每条重复都有三元标签：repClass/repFamily/repName。其中repClass是大类（如LTR/LINE/SINE/DNA/Simple_repeat等），HERV属于LTR类反转座子
 - `repName~/^HERV/`：选出以HERV开头的LTR，因为HERV的条目本来就标成LTR类，所以有无`repClass=="LTR"`影响不大
-- hERV的env/gag/pol等基因在哪：rmsk不会按基因粒度注释，而是把前病毒结构分成`两端(LTR)`与内部区(internal)，内部区常以`-int`结尾，如`HERVK-int`,`HERVH-int`）。env/gag/pol都包含在这个内部区里
+- hERV的env/gag/pol等基因在哪：rmsk不会按基因粒度注释，而是把前病毒结构分成`两端(LTR)`与`内部区(internal)`，内部区常以`-int`结尾，如`HERVK-int`,`HERVH-int`）。env/gag/pol都包含在这个内部区里
 
 **TEtranscripts需要的gtf注释有特殊要求**：
 - 使用`exon`作为feature
@@ -609,6 +609,14 @@ TEtranscripts --sortByPos --format BAM --mode multi \
 ---
 
 因为使用的gtf格式不同，gtf1最后生成的结果基因id格式为`HERVIP10FH:ERV1:LTR`，gtf2为`HERVK:HERVK9-int:LTR`，画图时gtf1就直接取`HERVIP10FH`作为每个点的标注，gtf2按`HERVK`作图例、`HERVK9-int`作为标注
+- `HERVIP10FH`是subfamily，对应RepeatMasker注释里的repName
+- `ERVL`是family，对应RepeatMasker注释里的repFamily
+- `LTR`是class
+- `LTR7`这种是生成gtf时，将LTR名归类到HERVx
+
+**在gtf1的结果中，既有HERVK的family，又有HERVIP10F这种subfamily**：有些repName（如HERVIP10F）没有映射到HERVK/HERVH/HERVW/HERV9，就被原样保留了
+
+**在telescope的统计结果中，得到的结果虽然是位点级别，能不能直接按家族合并，生成家族级别的统计结果**：理论可行，直接合并同一家族下的所有位点的`final_count`，将原始计数矩阵直接用DESeq2做差异分析。问题在于要准确定义“家族”的归并规则（比如是否把LTR和`-int`系列也并入相应家族）
 
 普通基因的点用蓝色标注，HERV的用彩色标注，阈值`padj>0.05`、`|log2FC|>1`，按padj排序前15的点标注了名称
 

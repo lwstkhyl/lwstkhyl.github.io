@@ -305,11 +305,12 @@ telescope assign H1_sample.collate.bam ${ANN} \
 
 **Telescope计数**：
 - 输入：按read名称聚集的BAM文件、hERV注释GTF
-- 目的：把多重比对的读段匹配到具体的hERV位点
-  - 把唯一比对的reads直接记入对应位点，多重比对的reads用 EM/贝叶斯模型在候选位点间重分配，直到收敛
+- 目的：把多重比对的读段匹配到最可能的单个hERV位点，如果置信度低则丢弃（不会同时给多个位点加分）
+  - 把唯一比对的reads直接记入对应位点，多重比对的reads用EM/贝叶斯模型在候选位点间重分配，直到收敛
   - 因为hERV/TE多拷贝/高相似度的特性，同一条read会有多条比对记录。而Telescope在重分配时需要一次性拿到这条read的所有候选位置，要求BAM里同一read的多条匹配记录挨在一起，而坐标排序会把这几条记录分散到整条染色体，telescope无法正确聚合
   - `--theta_prior`：给“歧义分配”一个惩罚型先验，防止把噪声硬塞进错误位点
   - `--max_iter`：迭代上限
+  - `--reassign_mode average`：一个读段在并列最佳的几个位点间均分到计数中
 - 输出：每个hERV位点(Species-level)的表达数量
 - 优势：如果只计数唯一比对，可能会丢掉大量多重比对的读段。而telescope同时利用唯一与多重信息，用EM模型将读段按全局一致性重分配，更有利于比对species-level——能把同一家族不同基因座的表达区分开
 

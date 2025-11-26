@@ -11,6 +11,8 @@ subcategory: other-other
 
 ### synapse网站数据
 
+#### try 1：没用计算节点
+
 直接读取会报错内存不够
 
 ```py
@@ -84,6 +86,10 @@ obj <- CreateSeuratObject(counts = counts, meta.data = cells)
 ![synapse网站数据4](/upload/md-image/other/synapse网站数据4.png){:width="600px" height="600px"}
 
 删掉的这层可能是原始计数矩阵（整数，没log、没归一化），因为是看用`X`那层生成的计数矩阵都是0~10的小数
+
+#### try 2：使用计算节点
+
+
 
 ### 单细胞分析
 

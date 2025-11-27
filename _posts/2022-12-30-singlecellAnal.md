@@ -89,7 +89,132 @@ obj <- CreateSeuratObject(counts = counts, meta.data = cells)
 
 #### try 2：使用计算节点
 
+**尝试使用STAR建索引**
+```sh
+#!/bin/bash
+#SBATCH -p DCU                 # 分区
+#SBATCH -A chenjq              # account
+#SBATCH -J STAR_test           # 作业名
+#SBATCH -n 32                   # 申请占用的CPU数，每个4G内存
+#SBATCH --mem=128G              # 显式说明申请多少内存
+#SBATCH -o my_dcu_job.%j.out   # 标准输出
+#SBATCH -e my_dcu_job.%j.err   # 标准错误输出
 
+module load miniconda3/base
+conda activate STAR_test
+STAR \
+  --runThreadN 8 \
+  --runMode genomeGenerate \
+  --genomeDir /public/home/wangtianhao/Desktop/STAR_ref/test \
+  --genomeFastaFiles /public/home/wangtianhao/Desktop/STAR_ref/GRCh38.p14.genome.fa \
+  --sjdbGTFfile /public/home/wangtianhao/Desktop/STAR_ref/gencode.v49.annotation.gtf
+```
+使用的`.fa`/`.gtf`文件大小约3.1G（解压后），实测如果仅申请32G内存的话会溢出
+
+![synapse网站数据5](/upload/md-image/other/synapse网站数据5.png){:width="400px" height="400px"}
+
+**读取h5ad文件**：
+
+```sh
+#!/bin/bash
+#SBATCH -p DCU                 # 分区
+#SBATCH -A chenjq              # account
+#SBATCH -J h5ad_to_Seurat           # 作业名
+#SBATCH -n 16                   # 申请占用的CPU数，每个4G内存
+#SBATCH --mem=400G              # 显式说明申请多少内存
+#SBATCH -o my_dcu_job.%j.out   # 标准输出
+#SBATCH -e my_dcu_job.%j.err   # 标准错误输出
+
+module load miniconda3/base
+conda activate h5ad
+python -u /public/home/wangtianhao/Desktop/synapseData/h5ad_to_Seurat.py
+```
+h5ad文件大小约30G，如果申请256G内存会溢出，后来发现生产的mtx矩阵就有100多G
+
+```py
+import os
+import scanpy as sc
+import scipy.sparse as sp
+from scipy.io import mmwrite
+
+def export_h5ad_to_seurat(h5ad_path, out_dir,):
+    os.makedirs(out_dir, exist_ok=True)
+    adata = sc.read_h5ad(h5ad_path)
+    X = adata.layers["UMIs"]
+    var = adata.var
+    if not sp.issparse(X):
+        X = sp.csc_matrix(X)
+    X_gc = X.T
+    mtx_path = os.path.join(out_dir, "counts.mtx")
+    mmwrite(mtx_path, X_gc)
+    features_path = os.path.join(out_dir, "features.tsv")
+    cells_path = os.path.join(out_dir, "cells.tsv")
+    var.index.to_series().to_csv(features_path, sep="\t", header=False, index=False)
+    adata.obs.index.to_series().to_csv(cells_path, sep="\t", header=False, index=False)
+    gene_meta_path = os.path.join(out_dir, "gene_metadata.csv")
+    cell_meta_path = os.path.join(out_dir, "cell_metadata.csv")
+    var.to_csv(gene_meta_path)
+    adata.obs.to_csv(cell_meta_path)
+
+export_h5ad_to_seurat(r"/public/home/wangtianhao/Desktop/synapseData/h5ad/a9/a9_copy.h5ad", r"/public/home/wangtianhao/Desktop/synapseData/h5ad/a9/")
+export_h5ad_to_seurat(r"/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg/mtg_copy.h5ad", r"/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg/")
+```
+
+![synapse网站数据6](/upload/md-image/other/synapse网站数据6.png){:width="350px" height="350px"}
+
+因为觉得生成的文件都太大（约120-130w细胞、3.6w基因），不好用R进行后续分析，于是抽了3000个细胞做了一个小的h5ad（参考Seurat官方演示的数据集pbmc3k也是3000个细胞）
+
+```sh
+# 为了方便直接用了上面的slurm格式，感觉其实这里就不需要400G内存了
+```
+
+```py
+import os
+import numpy as np
+import scanpy as sc
+import scipy.sparse as sp
+from scipy.io import mmwrite
+
+def make_seurat_test_dataset(h5ad_path, out_dir, n_cells=3000, random_state=0,):
+    os.makedirs(out_dir, exist_ok=True)
+    adata_b = sc.read_h5ad(h5ad_path, backed="r")
+    n_total = adata_b.n_obs
+    n_sample = min(n_cells, n_total)
+    rng = np.random.default_rng(random_state)
+    idx = rng.choice(n_total, size=n_sample, replace=False)
+    idx.sort()
+    adata_small = adata_b[idx].to_memory()
+    small_h5ad_path = os.path.join(out_dir, "test_subset.h5ad")
+    adata_small.write_h5ad(small_h5ad_path)
+    X = adata_small.layers["UMIs"]
+    var = adata_small.var
+    if not sp.issparse(X):
+        X = sp.csc_matrix(X)
+    X_gc = X.T
+    mtx_path = os.path.join(out_dir, "counts.mtx")
+    mmwrite(mtx_path, X_gc)
+    features_path = os.path.join(out_dir, "features.tsv")
+    cells_path = os.path.join(out_dir, "cells.tsv")
+    gene_meta_path = os.path.join(out_dir, "gene_metadata.csv")
+    cell_meta_path = os.path.join(out_dir, "cell_metadata.csv")
+    var.index.to_series().to_csv(features_path, sep="\t", header=False, index=False)
+    adata_small.obs.index.to_series().to_csv(cells_path, sep="\t", header=False, index=False)
+    var.to_csv(gene_meta_path)
+    adata_small.obs.to_csv(cell_meta_path)
+
+make_seurat_test_dataset(
+    h5ad_path="/public/home/wangtianhao/Desktop/synapseData/h5ad/a9/a9_copy.h5ad",
+    out_dir="/public/home/wangtianhao/Desktop/synapseData/h5ad/a9_small/",
+    n_cells=3000,
+)
+make_seurat_test_dataset(
+    h5ad_path="/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg/mtg_copy.h5ad",
+    out_dir="/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg_small/",
+    n_cells=3000,
+)
+```
+
+![synapse网站数据7](/upload/md-image/other/synapse网站数据7.png){:width="350px" height="350px"}
 
 ### 单细胞分析
 

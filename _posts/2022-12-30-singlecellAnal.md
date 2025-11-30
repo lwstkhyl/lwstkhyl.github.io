@@ -396,5 +396,600 @@ make_seurat_test_dataset(
   - **Unpaired integration**：一批细胞测RNA，另一批测ATAC。使用SCOT/UnionCom/GLUE等，目标是对齐两种模态的manifold，尽量减少信息损失
   - **Mosaic integration**：有的细胞测一部分模态，有的测另一部分，有的测全部如totalVI/MultiVI（对CITE-seq/multiome）建联合模型。使用Stabmap/Multigrate等可以把单模态和多模态数据一起映射到一个共享空间，并补全缺失模态
 
-#### Seurat实操
+以下以R包Seurat为例
 
+#### pbmc3k数据的分析
+
+```r
+library(Seurat)
+library(SeuratData)
+library(tidyverse)
+InstallData("pbmc3k")
+# 或直接下载http://seurat.nygenome.org/src/contrib/pbmc3k.SeuratData_3.1.4.tar.gz，之后本地安装install.packages("C:\\Users\\17185\\Downloads\\pbmc3k.SeuratData_3.1.4.tar.gz", repos = NULL, type = "source")
+InstallData("ifnb")
+# 或直接下载https://seurat.nygenome.org/src/contrib/ifnb.SeuratData_3.1.0.tar.gz，之后本地安装install.packages("C:\\Users\\17185\\Downloads\\Compressed\\ifnb.SeuratData_3.1.0.tar.gz", repos = NULL, type = "source")
+```
+
+##### 载入数据
+
+```r
+library(pbmc3k.SeuratData)
+data("pbmc3k")
+pbmc <- UpdateSeuratObject(object = pbmc3k)
+```
+
+认识Seurat对象：
+
+```r
+pbmc  # 有多少个细胞和features，以及当前的数据类型（RNA）
+slotNames(pbmc)  # 有哪些slot
+head(pbmc@meta.data)  # nCount_RNA和nFeature_RNA是后面质控要用的两个基础指标
+```
+
+常用的slot：
+- `@assays`：表达矩阵、归一化结果等
+- `@meta.data`：细胞的各种信息（行为细胞）
+- `@active.ident`：当前的“分组标签”（后来聚类就写在这）
+- `@reductions`：PCA/UMAP等降维结果
+
+##### 质控(QC)
+
+**加上线粒体比例**：`PercentageFeatureSet`
+- 标记“线粒体基因比例”，用来排除可能是坏掉/应激严重的细胞
+
+```r
+pbmc[["percent.mt"]] <- PercentageFeatureSet(
+  pbmc,
+  pattern = "^MT-"   # 人类线粒体基因以 MT- 开头
+)  # 在 meta.data 里新建一列叫 percent.mt
+head(pbmc@meta.data)
+```
+
+现在meta.data就有三列关键QC指标了：
+- `nFeature_RNA`：这个细胞检测到多少基因
+- `nCount_RNA`：这个细胞一共多少UMI
+- `percent.mt`：线粒体reads占百分之多少
+
+![gpt_practice1](/upload/md-image/other/gpt_practice1.png){:width="600px" height="600px"}
+
+**看QC图**：`VlnPlot`+`FeatureScatter`
+- 看看这些指标的分布，大致选过滤阈值
+
+```r
+# 小提琴图
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)  
+# 两个散点图
+FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")  
+FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+```
+
+`VlnPlot`：画小提琴图，每个点是一细胞
+- `features`：要画的列名（必须在meta.data或Assay中存在）
+- `group.by`：按什么分组画（还没聚类就默认一组）
+
+![gpt_practice2](/upload/md-image/other/gpt_practice2.png){:width="600px" height="600px"}
+
+`FeatureScatter`：x/y都是meta.data里的列名
+- 第一张：总UMI - 线粒体比例
+- 第二张：总UMI - 检测基因数
+
+![gpt_practice3](/upload/md-image/other/gpt_practice3.png){:width="500px" height="500px"}
+
+![gpt_practice4](/upload/md-image/other/gpt_practice4.png){:width="500px" height="500px"}
+
+- 右下角那种nCount很高但nFeature不升反降的点，往往是doublet/奇怪细胞
+- percent.mt特别高的一群，很可能是坏细胞
+
+**按阈值过滤**：`subset`
+- 把“很可疑”的细胞直接丢掉，减少后面噪音
+
+```r
+pbmc <- subset(
+  pbmc,
+  subset = nFeature_RNA > 200 &  # 阈值根据上面画的图确定
+           nFeature_RNA < 2500 &
+           percent.mt < 5
+)
+```
+
+##### 归一化/高变基因/标准化
+
+有两条路线：
+- 经典路线：`NormalizeData` → `FindVariableFeatures` → `ScaleData`
+- 推荐的新路线：一次性用`SCTransform`
+
+`NormalizeData`：把不同细胞的测序深度拉到同一量级
+- 不同细胞测到的reads/UMI总数不一样，直接比较counts不公平
+
+具体做法：
+- 每个细胞按总UMI做缩放（库大小归一化）
+- 对缩放后的数值取log1p（稳定方差）
+
+```r
+pbmc1 <- NormalizeData(
+  pbmc,
+  normalization.method = "LogNormalize",  # log(x/UMI*10^4 + 1)
+  scale.factor = 1e4,  # 把每个细胞的总表达量缩放到10^4左右
+  verbose = FALSE
+)  # pbmc1[["RNA"]]@data里存的就是log归一化后的表达矩阵
+```
+
+`FindVariableFeatures`：找信息量最大的那几千个基因
+- 几万个基因里，真正对区分细胞类型有帮助的只有几千个
+- 先把这些“高变基因(HVG)”选出来，后面PCA/聚类只用它们，减少噪声
+
+```r
+pbmc1 <- FindVariableFeatures(
+  pbmc1,
+  selection.method = "vst",  # 官方推荐的默认方法(variance-stabilizing transformation)
+  nfeatures = 2000  # 选多少个HVGs（通常2000–3000）
+)
+# 查看选出来的基因
+top10 <- head(VariableFeatures(pbmc1), 10)  # 返回HVGs的基因名向量（前10个）
+VariableFeaturePlot(pbmc1)  # 横轴=均值，纵轴=标准化后的离散度，红色点是HVG
+LabelPoints(VariableFeaturePlot(pbmc1), points = top10, repel = TRUE)  # 给指定的点加标签
+```
+
+![gpt_practice5](/upload/md-image/other/gpt_practice5.png){:width="500px" height="500px"}
+
+`ScaleData`：做Z-score标准化和协变量回归（可选）
+- 每个基因做标准化：让不同基因有可比性
+- （可选）对某些技术/生物因素做回归，比如线粒体比例、细胞周期
+
+```r
+pbmc1 <- ScaleData(
+  pbmc1,
+  features = VariableFeatures(pbmc1),  # 要scale的基因集合，通常只对HVG做就够了
+  vars.to.regress = c("percent.mt", "nCount_RNA"),  # 做一个简单线性回归，把这些变量对表达的线性影响减掉
+  verbose = FALSE
+)  # pbmc1[["RNA"]]@scale.data存的就是这个Z-score矩阵（行为基因，列为细胞）
+```
+
+---
+
+`SCTransform`：用一个负二项GLM模型，同时完成归一化+方差稳定+回归协变量，比上面三步更严谨。官方建议优先使用 `SCTransform`，尤其是样本多、噪音复杂时
+
+```r
+pbmc2 <- SCTransform(
+  pbmc,
+  vars.to.regress = "percent.mt",
+  verbose = FALSE
+)
+```
+
+注：`vars.to.regress`参数的设置
+- 本质上是把指定的变量（比如`nCount_RNA`、`percent.mt`）对该基因表达的线性影响减掉，这些变量是我们不想要的协变量，希望它没有线性影响
+- `nCount_RNA`是每个细胞的总UMI数，反映：技术因素（测序深度、捕获效率），也可能反映一些生物因素（细胞大小、活跃程度），在第一种方法中，因为已经做了`NormalizeData`，理论上已经按总counts做过一次“库大小归一化”了。如果在实践中，残余的深度效应仍然明显（比如UMAP上按nCount_RNA上色会出现梯度），就可以在`ScaleData`里回归nCount_RNA
+
+  `SCTransform`内部已经用负二项GLM建模了测序深度等因素，一般不需要（也不建议）再额外回归nCount_RNA/nFeature_RNA。可以在SCTransform里只回归一些你确实不希望作为主信号的生物/技术变量，比如percent.mt或细胞周期得分
+- `percent.mt`是线粒体reads占比。即使已经在QC阶段过滤掉特别极端的高mt细胞，剩下细胞里仍可能存在mt稍微偏高的那拨，在PCA里变成前几个PC。因此为了避免让线粒体比例主导聚类结果，通常会指定这个
+
+##### PCA
+
+`RunPCA`：把几千个HVG的维度压缩成几十个主成分
+```r
+pbmc3 <- RunPCA(
+  pbmc2,
+  features = VariableFeatures(pbmc2),  # 用于PCA的基因，一般就是HVG
+  npcs = 50,  # 要算多少个PC（常用50）
+  verbose = FALSE
+)
+```
+PCA结果存在`pbmc@reductions$pca`里，包含：
+- `@cell.embeddings`：每个细胞在PC1、PC2...上的坐标
+- `@feature.loadings`：每个基因在各PC上的载荷（贡献度）
+
+看PCA结果：`VizDimLoadings`、`DimPlot`、`DimHeatmap`、`ElbowPlot`
+
+```r
+VizDimLoadings(pbmc3, dims = 1:2, reduction = "pca")
+DimPlot(pbmc3, reduction = "pca")
+DimHeatmap(pbmc3, dims = 1:10, cells = 500, balanced = TRUE)
+ElbowPlot(pbmc3, ndims = 50)
+```
+- `VizDimLoadings`：看PC上贡献最大的基因（帮助理解每个PC在分什么）
+  ![gpt_practice6](/upload/md-image/other/gpt_practice6.png){:width="800px" height="800px"}
+- `DimPlot(..., reduction = "pca")`：画PC1-PC2的散点图
+  ![gpt_practice7](/upload/md-image/other/gpt_practice7.png){:width="800px" height="800px"}
+- `DimHeatmap`：看某几个PC对哪些细胞/基因区分度大
+  ![gpt_practice8](/upload/md-image/other/gpt_practice8.png){:width="800px" height="800px"}
+- `ElbowPlot`：选多少个PC用于后面的聚类
+  ![gpt_practice9](/upload/md-image/other/gpt_practice9.png){:width="800px" height="800px"}
+  - 横轴PC序号，纵轴每个PC的变异解释度
+  - 找“肘部(elbow)”的位置（即曲线的弯曲部位），一般10-20左右，看具体图而定
+
+##### 构图 & 聚类
+
+`FindNeighbors`：构建KNN图
+- 在PCA空间里找每个细胞的K个近邻，形成一个图，后面的聚类就在这个图上做
+
+```r
+pbmc4 <- FindNeighbors(
+  pbmc3,
+  dims = 1:10,   # 使用哪些PC（根据上面ElbowPlot）
+  k.param = 20   # 每个点找多少邻居，默认20，过小会太稀疏，过大会挤在一起
+)
+```
+图结构存到`pbmc@graphs`，一般至少有两个：
+- `RNA_snn`：shared nearest neighbor graph
+- `RNA_nn`：最近邻图
+
+`FindClusters`：在图上进行Louvain/Leiden，用图算法把细胞分成几个cluster
+
+```r
+pbmc4 <- FindClusters(
+  pbmc4,
+  resolution = 0.5,
+  algorithm = 1 # 默认1 = Louvain，4 = Leiden
+)
+```
+- `resolution`：控制cluster数量的关键参数，越大则cluster越多（细分更细）。常用0.4-0.8
+- `algorithm`：也可以试试Leiden，通常更稳定
+
+聚类结果写入：`pbmc@meta.data$seurat_clusters`、`pbmc@active.ident`
+
+##### 非线性降维与可视化
+
+`RunUMAP`或`RunTSNE`：把（10–50维的）PC空间压到2维，方便可视化，同时尽量把“相似的细胞堆在一起”
+- 现在更常用UMAP
+
+```r
+pbmc4 <- RunUMAP(
+  pbmc4,
+  dims = 1:10  # 和FindNeighbors一致
+)
+```
+
+`DimPlot`：展示聚类结果
+
+```r
+DimPlot(
+  pbmc4, 
+  reduction = "umap",  # 用哪个降维结果("umap"/"tsne"/"pca")
+  label = TRUE  # 在图上直接写cluster号，方便阅读
+)
+```
+
+![gpt_practice10](/upload/md-image/other/gpt_practice10.png){:width="600px" height="600px"}
+
+##### 找marker基因 & 细胞类型注释
+
+`FindAllMarkers`：每个cluster对其他所有细胞
+- 对每个cluster与其他细胞做差异表达，找“在本cluster高表达、在别处低”的标志基因
+
+```r
+pbmc4.markers <- FindAllMarkers(
+  pbmc4,
+  only.pos = TRUE,  # 只保留高表达的marker（不关心在本cluster低表达的基因）
+  min.pct = 0.25,  # 这个基因在某cluster里至少要在25%的细胞中表达
+  logfc.threshold = 0.25,  # logFC至少0.25
+  test.use = "wilcox"  # Wilcoxon秩和检验（scRNA里很常用的非参数方法）
+)
+head(pbmc4.markers)
+pbmc4.markers %>%  # 每个cluster的前几个marker
+  dplyr::group_by(cluster) %>%
+  dplyr::top_n(n = 5, wt = avg_log2FC)
+```
+
+![gpt_practice11](/upload/md-image/other/gpt_practice11.png){:width="800px" height="800px"}
+- `gene`：基因名
+- `cluster`：这是哪个cluster的marker
+- `avg_log2FC`：差异倍数
+- `pct.1`：在本cluster中表达细胞比例
+- `pct.2`：在其他细胞中表达比例
+- `p_val_adj`：多重校正后的p值
+
+**常见可视化**：VlnPlot/FeaturePlot/DotPlot/DoHeatmap
+
+如果我怀疑cluster 0是T细胞，又知道T细胞有一些标志基因(CD3D/CD3E)
+
+```r
+FeaturePlot(pbmc4, features = c("CD3D", "CD3E"))
+VlnPlot(pbmc4, features = c("CD3D"))
+DotPlot(pbmc4, features = c("CD3D", "MS4A1", "LYZ", "GNLY")) + RotatedAxis()
+```
+- `FeaturePlot`：在UMAP上画“这个基因在哪些细胞高表达”
+  ![gpt_practice12](/upload/md-image/other/gpt_practice12.png){:width="800px" height="800px"}
+- `VlnPlot`：按cluster看表达分布
+  ![gpt_practice13](/upload/md-image/other/gpt_practice13.png){:width="800px" height="800px"}
+- `DotPlot`：同时看多基因-多cluster：
+  ![gpt_practice14](/upload/md-image/other/gpt_practice14.png){:width="800px" height="800px"}
+  - 点的大小 = 表达细胞比例
+  - 颜色深浅 = 平均表达量
+
+做一个热图，看每个cluster的top markers
+
+```r
+top10 <- pbmc4.markers %>%
+  group_by(cluster) %>%
+  top_n(n = 10, wt = avg_log2FC)
+DoHeatmap(pbmc4, features = top10$gene) + NoLegend()
+```
+
+![gpt_practice15](/upload/md-image/other/gpt_practice15.png){:width="800px" height="800px"}
+
+**手动注释细胞类型**：给cluster命名
+```r
+new.cluster.ids <- c(
+  "Naive CD4 T", "Memory CD4 T", "CD14+ Mono", 
+  "B cell", "CD8 T", "NK", "DC", "Megakaryocytes",
+  "cell 9", "cell 10"
+)
+names(new.cluster.ids) <- levels(pbmc4)
+pbmc4 <- RenameIdents(pbmc4, new.cluster.ids)  # 重命名
+DimPlot(pbmc4, reduction = "umap", label = TRUE)
+```
+
+![gpt_practice16](/upload/md-image/other/gpt_practice16.png){:width="600px" height="600px"}
+
+#### ifnb数据的分析
+
+##### 载入数据
+
+```r
+library(ifnb.SeuratData)
+data("ifnb")
+ifnb <- UpdateSeuratObject(object = ifnb)
+unique(ifnb@meta.data$stim)
+```
+
+可以看到有两个样本——CTRL/STIM
+- CTRL：未刺激样本
+- STIM：IFN-β刺激样本
+
+##### 按样本拆分对象 & 各自做基础预处理
+
+先把Stim和CTRL拆开，各自做Normalize/HVG/Scale/PCA。后面再把它们整合到同一个低维空间，去掉batch/条件带来的技术差异
+
+```r
+ifnb.list <- SplitObject(ifnb, split.by = "stim")
+# 预处理
+for (i in 1:length(ifnb.list)) {
+  ifnb.list[[i]] <- NormalizeData(ifnb.list[[i]])
+  ifnb.list[[i]] <- FindVariableFeatures(ifnb.list[[i]], selection.method = "vst", nfeatures = 2000)
+  ifnb.list[[i]] <- ScaleData(ifnb.list[[i]])
+  ifnb.list[[i]] <- RunPCA(ifnb.list[[i]], features = VariableFeatures(ifnb.list[[i]]))
+}
+```
+- **为什么没做质控**：这套数据已经做过过滤了。如果是一般数据，也是先拆开再分别质控
+- **为什么要先拆开再预处理**：
+  - HVG要在各自样本内部选：如果混在一起选，容易被样本间差异/文库大小差异主导。例如某个基因如果只在STIM里表达，就会被认为是高变，但实际上是测序差异而不是细胞类型差异
+  
+  在每个样本中单独找HVG，后面再找“在至少两个样本中都变异较大”的基因，这样更合理
+  - 各自PCA，避免一个大样本完全主导方向：如果把把所有细胞拼一起PCA，大样本会压制小样本的结构，主成分很容易全是大样本内部的变化。分开后能平衡各样本的贡献
+
+##### 使用锚点做数据整合
+
+**找整合锚点(anchors)**：`FindIntegrationAnchors`
+- 在两个数据集里找到“相互对应”的细胞对，把这些细胞当成“桥”，来学习两者之间的转换关系
+
+**为什么要有这步**：我希望看到“同一种细胞类型在两个样本中能对齐到一起”，而且在UMAP上不会因为批次/技术导致“同一细胞类型被分到两个完全不同的块”
+- 在不整合的情况下，同一细胞类型可能会被分到两堆，一堆全是CTRL，一堆全是STIM
+- 整合后，两堆混成了一堆，可以在里面直接比较Stim-Ctrl的表达变化
+
+换句话说，需要找到一个对应关系——哪个STIM细胞，看起来就是某个CTRL细胞在另一个batch/条件下的版本
+
+```r
+# 选一批在两边都重要的基因用来对齐（默认3000个）
+features <- SelectIntegrationFeatures(object.list = ifnb.list, nfeatures = 3000)
+# 找锚点（锚定最近邻+校正）
+ifnb.anchors <- FindIntegrationAnchors(
+  object.list = ifnb.list,
+  anchor.features = features,
+  reduction = "rpca"  # 推荐，速度快，对大数据也友好
+)
+```
+
+anchors：可以把它想成“跨样本的互相最近邻”。先在每个样本内部做PCA，得到两个样本各自的PC空间；再把两个样本的PCA空间对齐坐标系(`reduction = "rpca"`)，即先对所有样本做一次“参考PCA”，再把各自的 PC 表达重新投到这个共享坐标系；在共享低维空间里，寻找互相最近的细胞对（对于每个CTRL细胞，在STIM中找K个最近邻），那些“你是我的最近邻，我也是你的最近邻”的细胞对，就是候选anchor；对候选anchors打分过滤（看它们的局部环境是否也相似）
+- 最终，每个anchor大致包含“来自样本A的某个细胞i，来自样本B的某个细胞j”，以及一些权重/分数（标明可信度）
+- 简单的说，一个anchor就是“认为这两个细胞本质上是同一个细胞类型/类似状态，只是技术和条件不同”
+
+**整合数据**：`IntegrateData`
+- 整合后的表达存到一个新的assay——`integrated`
+- 后面用于PCA/UMAP/聚类的都是这个integrated assay
+
+```r
+ifnb.integrated <- IntegrateData(anchorset = ifnb.anchors)
+DefaultAssay(ifnb.integrated) <- "integrated"
+ifnb.integrated
+```
+
+利用这些anchor来学习一个“从B样本映射到A样本”的校正函数，然后把所有B细胞都往这个方向拉，让两边的相同细胞类型对齐
+
+**在整合后的空间里做PCA/UMAP/聚类**（同前）
+
+```r
+ifnb.integrated <- ScaleData(ifnb.integrated, verbose = FALSE)
+ifnb.integrated <- RunPCA(ifnb.integrated, npcs = 30, verbose = FALSE)
+ifnb.integrated <- RunUMAP(ifnb.integrated, reduction = "pca", dims = 1:30)
+ifnb.integrated <- FindNeighbors(ifnb.integrated, reduction = "pca", dims = 1:30)
+ifnb.integrated <- FindClusters(ifnb.integrated, resolution = 0.4)
+```
+
+两个最重要的图：
+
+```r
+# 看cluster分布
+DimPlot(ifnb.integrated, reduction = "umap", label = TRUE)
+# 看Stim/CTRL在同一UMAP上的混合程度
+DimPlot(ifnb.integrated, reduction = "umap", group.by = "stim")
+```
+
+理想情况下：
+- cluster分布：每个cluster形状比较清晰
+  ![gpt_practice17](/upload/md-image/other/gpt_practice17.png){:width="600px" height="600px"}
+- 混合程度：大多数cluster里Stim和CTRL都有，而不是“某个cluster全是Stim，另一个全是CTRL”。这说明整合把batch/条件的技术差异对齐了，而保留了真正的细胞类型结构
+  ![gpt_practice18](/upload/md-image/other/gpt_practice18.png){:width="600px" height="600px"}
+  
+##### 在整合后空间里做细胞类型注释
+
+找marker & 按cluster注释（同前）
+```r
+DefaultAssay(ifnb.integrated) <- "RNA"   # 找marker建议用原始RNA，而不是integrated
+ifnb.markers <- FindAllMarkers(
+  ifnb.integrated,
+  only.pos = TRUE,
+  min.pct = 0.25,
+  logfc.threshold = 0.25
+)
+# 每个cluster取前5个marker
+top5 <- ifnb.markers %>%
+  group_by(cluster) %>%
+  top_n(5, wt = avg_log2FC)
+top5
+# 以免疫相关标志基因为例
+FeaturePlot(ifnb.integrated, features = c("MS4A1", "CD79A"))  # B cells
+FeaturePlot(ifnb.integrated, features = c("CD3D", "CD4", "CCR7"))  # CD4 T
+FeaturePlot(ifnb.integrated, features = c("NKG7", "GNLY"))  # NK / CD8 cytotoxic
+FeaturePlot(ifnb.integrated, features = c("LYZ"))  # Monocytes
+# 给 cluster 起名字
+new.cluster.ids <- c(
+  "Naive CD4 T", "Memory CD4 T", "CD14+ Mono", "B cell",
+  "CD8 T", "NK", "DC", "Megakaryocytes", rep("other", 7)
+)
+# RenameIdents（很重要），如果不写后面分组时会报错
+names(new.cluster.ids) <- levels(ifnb.integrated)
+ifnb.integrated <- RenameIdents(ifnb.integrated, new.cluster.ids)
+DimPlot(ifnb.integrated, reduction = "umap", label = TRUE)
+```
+
+![gpt_practice19](/upload/md-image/other/gpt_practice19.png){:width="600px" height="600px"}
+
+##### 在同一细胞类型中比较Stim-CTRL的差异表达
+
+ifnb数据的核心问题是：同一种细胞类型在IFN-β刺激前后，哪些基因/通路被激活
+
+**Seurat内置 + 细胞级DE**
+
+先只看"Naive CD4 T"这个细胞类型
+
+```r
+# 选出Naive CD4 T的细胞
+naive.cd4 <- subset(ifnb.integrated, idents = "Naive CD4 T")
+# 把stim列当作分组变量
+Idents(naive.cd4) <- naive.cd4$stim
+# CTRL vs STIM
+naive.cd4.DE <- FindMarkers(
+  naive.cd4,
+  ident.1 = "STIM",
+  ident.2 = "CTRL",
+  logfc.threshold = 0.25,
+  min.pct = 0.1
+)
+View(naive.cd4.DE)
+View(naive.cd4.DE %>%  # 刺激后上调最明显的基因
+  arrange(desc(avg_log2FC)) %>%
+  head(20))
+```
+
+![gpt_practice20](/upload/md-image/other/gpt_practice20.png){:width="400px" height="400px"}
+
+---
+
+**pseudobulk**：按照病人/样本ID，先把同一种细胞类型的表达加总成pseudobulk再用edgeR/DESeq2
+- 对每个（样本 × 细胞类型）组合，把细胞counts加总
+- 得到一个pseudo-bulk矩阵：基因为行，“样本 × 细胞类型”为列
+- 用edgeR/DESeq2做DE
+
+---
+
+一个小问题——既然要比较Stim-CTRL，为什么还要anchor+Integrate，而不是直接拿“原始数据”比？
+- 注意anchor+Integrate是为了了解不同样本间的技术偏移，消除批次效应
+- 在真正做差异表达时，我们实际上是先在integrated空间里聚类 & 注释，得到“Naive CD4 T”这一个群，再把这个群的细胞按Stim/Ctrl分两个组，比较同一细胞类型内两个样本的表达差别，这时使用的是原始表达(RNA assay)，不使用integrated里的表达值
+  - 因为它已经被校正了，可能存在“整合时把'某个基因在Stim整体表达偏高'当成批次效应来校正”
+  - 同时`FindMarkers`（无论使用 Wilcoxon/t-test/MAST哪种方法）都隐含假设：输入的是某种“真实的表达测量”——log-normalized counts或近似（对应RNA assay中的`@counts`-原始UMI count或`@data`-log-normalized处理），复杂校正后的值的p值和logFC就不那么严谨了
+- 如果两个样本的批次效应很小，其实可以也不整合，但通常批次效应都很强，不整合的话容易让cluster按照样本来源而不是细胞类型在UMAP上分块
+
+##### 看细胞组成变化：Stim-CTRL中各细胞类型比例
+
+这也是整合的好处之一：可以在同一空间里看Stim前后细胞类型的比例变化
+
+**用prop.table快速看比例**：
+
+```r
+tab <- table(ifnb.integrated$stim, Idents(ifnb.integrated))  # 取出meta.data里的stim和cell type
+prop.table(tab, margin = 1)  # 按行（每个条件）归一化
+```
+
+![gpt_practice21](/upload/md-image/other/gpt_practice21.png){:width="400px" height="400px"}
+
+**用ggplot做一个简单的堆叠条形图**：
+
+```r
+# 注意是不是严格的统计检验，只是直观可视化
+df.comp <- as.data.frame(tab)
+colnames(df.comp) <- c("stim", "celltype", "count")
+ggplot(df.comp, aes(x = stim, y = count, fill = celltype)) +
+  geom_bar(stat = "identity", position = "fill") +
+  ylab("Proportion") +
+  theme_classic()
+```
+
+![gpt_practice22](/upload/md-image/other/gpt_practice22.png){:width="600px" height="600px"}
+
+---
+
+总结：
+- 对每个样本独立做QC/预处理/PCA
+- 用anchors+IntegrateData在一个共同空间里对齐细胞类型，做聚类和可视化
+- 一旦celltype/cluster定好了，就回到RNA assay（或原始counts）上
+- 如果要做更严谨的DE（尤其多病人、多样本），进一步用pseudobulk+edgeR/DESeq2在样本层面建模
+
+##### 使用SCTransform整合工作流
+
+是Seurat官方推荐的方法，`SCTransform`对技术噪声建模更合理，整合效果通常比`LogNormalize`稳定
+
+```r
+# 1. 拆分对象
+ifnb.list <- SplitObject(ifnb, split.by = "stim")
+# 2. 每个对象分别SCTransform
+for (i in 1:length(ifnb.list)) {
+  ifnb.list[[i]] <- SCTransform(ifnb.list[[i]], verbose = FALSE)
+}
+# 3. 选整合特征 + 准备整合
+features <- SelectIntegrationFeatures(ifnb.list, nfeatures = 3000)
+ifnb.list <- PrepSCTIntegration(object.list = ifnb.list, anchor.features = features)
+# 4. 找anchors & 整合
+ifnb.anchors <- FindIntegrationAnchors(
+  object.list = ifnb.list,
+  normalization.method = "SCT",
+  anchor.features = features
+)
+ifnb.integrated.sct <- IntegrateData(
+  anchorset = ifnb.anchors,
+  normalization.method = "SCT"
+)
+# 5. 后面PCA/UMAP/聚类/DE的流程基本相同（此处省略部分）
+ifnb.integrated.sct <- ScaleData(ifnb.integrated.sct, verbose = FALSE)
+ifnb.integrated.sct <- RunPCA(ifnb.integrated.sct, npcs = 30, verbose = FALSE)
+ifnb.integrated.sct <- RunUMAP(ifnb.integrated.sct, reduction = "pca", dims = 1:30)
+ifnb.integrated.sct <- FindNeighbors(ifnb.integrated.sct, reduction = "pca", dims = 1:30)
+ifnb.integrated.sct <- FindClusters(ifnb.integrated.sct, resolution = 0.4)
+DimPlot(ifnb.integrated.sct, reduction = "umap", label = TRUE)
+DimPlot(ifnb.integrated.sct, reduction = "umap", group.by = "stim")
+```
+
+#### GSE233208
+
+**论文对snRNA数据的处理流程**：QC→整合（Harmony/scVI）→聚类→注释
+- 看细胞状态abundance随疾病变化（MiloR）
+- 各celltype/cellstate内做疾病vs对照DE（用MAST模型，带协变量）
+- 构建共表达网络（hdWGCNA），找模块（M1、M11等），看在不同疾病组/脑区里的变化
+- 用scDRS把ADGWAS基因集的信号映射到单细胞，看看哪些celltype/state富集AD遗传风险
+- 把snRNA的cellstates映射到Visium空间里（CellTrek），看这些cellstate/模块在大脑皮层层次、白质、斑块周围的分布
+- 再往上做cell–cellcommunication（CellChat）、amyloidhotspot分析等
+- 最后建立一个大规模人类+小鼠的snRNA+空间转录组图谱（Control/EarlyAD/LateAD/DSAD等）
+
+##### 单细胞分析部分
+
+GEO中的数据：人类snRNA-seq总共有≈58万个nuclei，主要细胞类型包括EX（兴奋性神经元）、INH（抑制性神经元）、MG（小胶质）、ASC（星形胶质）、ODC/OPC（少突及前体）、内皮、周细胞、成纤维细胞等
+- `GSE233208_Human_snRNA-Seq_ADDS_integrated.rds.gz`：人类snRNA-seq，已经整合好的Seurat对象
+- `GSE233208_Human_visium_ADDS_seurat_processed.rds.gz`：人类Visium空间转录组的Seurat对象
+- `GSE233208_5XFAD_seurat_processed_annotated.rds.gz`：小鼠5xFAD脑的数据
+
+
+
+
+##### 与hERV
+
+https://www.ncbi.nlm.nih.gov/Traces/study/?search=*snRNA*&query_key=2&WebEnv=MCID_692c40ff6310743ac6236f5e&f=organism_s%3An%3Ahomo%2520sapiens%3Blibrarysource_s%3An%3Atranscriptomic%2520single%2520cell%3Bassay_type_s%3An%3Arna-seq%3Bgroup_sam_ss%3An%3Ahuman_snrna-seq&o=acc_s%3Aa

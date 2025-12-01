@@ -216,6 +216,103 @@ make_seurat_test_dataset(
 
 ![synapse网站数据7](/upload/md-image/other/synapse网站数据7.png){:width="350px" height="350px"}
 
+#### final try：h5ad to rds
+
+因为上面生成的mtx有100多G，很吓人，所以看着能不能精简一下，因为在下面的GSE数据集中看到一个不过百M的rds格式文件读到R里后能有几个G大，就想着压缩成rds格式存储，在存储的时候使用了`LoadH5Seurat`函数，然后报错
+
+经过亲测以及问gpt，发现R无法读取过大的h5ad文件，和什么格式无关，只是单纯因为数据太大而超过R数组索引的上限，必须要在python中分析。gpt给出的思路是：大规模QC、整合、降维、聚类等在python中做完，把感兴趣的几个cluster/子集导出成较小的数据集在R中分析（Seurat的可视化、美化图形、差异分析等）
+
+最终从120w-130w细胞中抽取了2w个细胞作为较小的数据集
+
+```py
+# conda activate h5ad
+import os
+import numpy as np
+import scanpy as sc
+import scipy.sparse as sp
+from scipy.io import mmwrite
+print("pkgs loaded")
+
+def make_seurat_test_dataset(
+    h5ad_path,
+    out_dir,
+    n_cells=3000,  # 抽取的细胞数
+    random_state=0,
+):
+    os.makedirs(out_dir, exist_ok=True)
+    print(f"Reading big h5ad in backed mode: {h5ad_path}")
+    adata_b = sc.read_h5ad(h5ad_path, backed="r")
+    n_total = adata_b.n_obs
+    print(f"Total cells in dataset: {n_total}")
+    n_sample = min(n_cells, n_total)
+    print(f"Will sample {n_sample} cells as test dataset")
+    rng = np.random.default_rng(random_state)
+    idx = rng.choice(n_total, size=n_sample, replace=False)
+    idx.sort()
+    print("Subsetting and loading into memory ...")
+    adata_small = adata_b[idx].to_memory()
+    small_h5ad_path = os.path.join(out_dir, "test_subset.h5ad")
+    print("Writing small h5ad")
+    adata_small.write_h5ad(small_h5ad_path)
+    print(f"small h5ad: {small_h5ad_path}")
+
+make_seurat_test_dataset(
+    h5ad_path="/public/home/wangtianhao/Desktop/synapseData/h5ad/a9/SEAAD_A9_RNAseq_DREAM.2025-07-15_2.h5ad",
+    out_dir="/public/home/wangtianhao/Desktop/synapseData/h5ad/a9_small/",
+    n_cells=20000,
+)
+make_seurat_test_dataset(
+    h5ad_path="/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg/SEAAD_MTG_RNAseq_DREAM.2025-07-15.h5ad",
+    out_dir="/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg_small/",
+    n_cells=20000,
+)
+```
+因为我是先装的Seurat再装的SeuratDisk，发现第一次装的Seurat不能兼容任意版本的SeuratDisk，只能又开了一个环境装了SeuratDisk，再想装rhdf5时发现rhdf5不兼容这个版本的SeuratDisk，索性直接把rhdf5装在了之前的Seurat中
+
+```r
+# conda activate r_seurat
+library(rhdf5)
+h5ad_file <- "/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg_small/test_subset.h5ad"
+obs_list <- h5read(h5ad_file, "/obs")
+lens <- sapply(obs_list, length)  # 每个元素的长度
+n_cells    <- max(lens)  # 只取长度=细胞数的列
+cell_cols  <- names(lens)[lens == n_cells]
+obs <- as.data.frame(obs_list[cell_cols], stringsAsFactors = FALSE)
+rownames(obs) <- obs$exp_component_name
+save(obs, file = paste0(h5ad_file, ".obs.RData"))
+```
+
+```r
+# conda activate r-seuratdisk
+library(Seurat)
+library(SeuratDisk)
+h5ad_file <- "/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg_small/test_subset.h5ad"
+h5seurat_file = "/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg_small/test_subset.h5seurat"
+rds_file = "/public/home/wangtianhao/Desktop/synapseData/h5ad/mtg_small/mtg_small.rds"
+load(paste0(h5ad_file, ".obs.RData"))
+Convert(
+  h5ad_file,
+  dest = "h5seurat",
+  assay = "RNA",
+  overwrite = TRUE
+)
+obj <- LoadH5Seurat(
+  h5seurat_file,
+  meta.data = FALSE,
+  misc      = FALSE
+)
+rownames(obs) <- obs$exp_component_name
+obs <- obs[match(colnames(obj), rownames(obs)), , drop = FALSE]
+obj <- AddMetaData(obj, metadata = obs)
+saveRDS(
+  obj,
+  file = rds_file,
+  compress = "xz"
+)
+```
+
+![synapse网站数据8](/upload/md-image/other/synapse网站数据8.png){:width="800px" height="800px"}
+
 ### 单细胞分析
 
 #### 基本原理
@@ -987,9 +1084,170 @@ GEO中的数据：人类snRNA-seq总共有≈58万个nuclei，主要细胞类型
 - `GSE233208_Human_visium_ADDS_seurat_processed.rds.gz`：人类Visium空间转录组的Seurat对象
 - `GSE233208_5XFAD_seurat_processed_annotated.rds.gz`：小鼠5xFAD脑的数据
 
+因为rds文件名里有一个"integrated"，这说明作者已经把多个样本（多个病人、多个脑区、多个疾病组）使用他自己的pipeline（scVI/Harmony等）做过批次/样本整合，所以就不需要整合这步，只需基于这个整合好的对象做一些下游分析
+
+**预处理**：同前
+
+```{r}
+sn <- NormalizeData(sn)
+sn <- FindVariableFeatures(sn)
+sn <- ScaleData(sn)
+sn <- RunPCA(sn)
+sn <- FindNeighbors(sn, dims = 1:30)
+sn <- FindClusters(sn, resolution = 0.4)
+sn <- RunUMAP(sn, dims = 1:30)
+```
+
+注：这里的Normalize/PCA/UMAP，是在同一个统一空间里微调，而不是在“多个完全独立的原始样本之间”第一次对齐
+
+**初步可视化**：看细胞类型和疾病在UMAP上的分布
+
+```{r}
+# 按聚类看
+DimPlot(sn, reduction = "umap", label = TRUE)
+# 按细胞类型看
+DimPlot(sn, reduction = "umap", group.by = "cell_type", label = TRUE)
+# 按有无AD看（Diagnosis：Control/DSAD）
+DimPlot(sn, reduction = "umap", group.by = "Diagnosis")
+```
+
+![GSE233208_practice1](/upload/md-image/other/GSE233208_practice1.png){:width="600px" height="600px"}
+
+![GSE233208_practice2](/upload/md-image/other/GSE233208_practice2.png){:width="600px" height="600px"}
+
+看不同大类细胞类型的位置（EX、INH、MG、ASC、ODC等），再看Diagnosis上色，大致观察：
+- 是否有某些cluster主要来自DSAD（提示cell state变化）
+- 或者Control/DSAD均匀分布（提示更像“每种细胞类型里表达变化”，而不是“出现完全新的细胞类型”）
+
+这里看起来像是均匀分布的，并没有某种细胞类型都是DSAD组的
+
+**比较Control vs DSAD的细胞组成**
+
+这里直接ggplot画图了，原文中使用了MiloR做统计检验
+
+```{r}
+# 统计每个样本里各细胞类型的比例
+cell_comp <- sn@meta.data %>%
+  group_by(SampleID, Diagnosis, cell_type) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(SampleID) %>%
+  mutate(freq = n / sum(n))
+head(cell_comp)
+# 堆叠条形图：每个样本的细胞类型组成
+ggplot(cell_comp, aes(x = SampleID, y = freq, fill = cell_type)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Diagnosis, scales = "free_x") +
+  ylab("细胞类型占比") +
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_blank(), axis.ticks=element_blank())
+# 箱型图：每个细胞都画一张图，标识在两个样本中的占比
+ggplot(cell_comp, aes(x = Diagnosis, y = freq, fill = Diagnosis)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +
+  geom_jitter(width = 0.1, size = 0.5) +
+  facet_wrap(~ cell_type, scales = "free_y") +
+  theme_bw() + 
+  stat_compare_means(
+    method = "wilcox.test",
+    label = "p.signif"
+  )
+```
+
+![GSE233208_practice3](/upload/md-image/other/GSE233208_practice3.png){:width="800px" height="800px"}
+
+![GSE233208_practice4](/upload/md-image/other/GSE233208_practice4.png){:width="800px" height="800px"}
+
+**在某个细胞类型内做DSAD vs Control的差异表达**
+
+原文使用了MAST GLM模型，协变量包括测序批次、每个细胞的UMI数、PMI、性别等
+
+这里使用`FindMarkers(test.use = "MAST")`做一个简化版，根据上面粗略的检验结果，microglia(MG)这个细胞类型在两个样本中占比有显著不同，可能存在差异基因最多
+
+```{r}
+Idents(sn) <- "cell_type"  # 按细胞类型设定身份
+mg <- subset(sn, idents = "MG")  # 取出MG细胞
+Idents(mg) <- mg$Diagnosis  # mg中Diagnosis作分组变量
+mg_DE <- FindMarkers(
+  mg,
+  ident.1 = "DSAD",
+  ident.2 = "Control",  # DSAD相对Control的变化
+  test.use  = "MAST",  # 使用MAST模型
+  logfc.threshold = 0.25,
+  min.pct = 0.1,
+  latent.vars = c("nCount_RNA", "Batch", "PMI", "Sex")  # 协变量
+)
+mg_DE_top <- mg_DE %>% 
+  dplyr::filter(abs(avg_log2FC)>0.5)
+  arrange(p_val_adj) %>%
+  head(20)
+```
+
+![GSE233208_practice5](/upload/md-image/other/GSE233208_practice5.png){:width="450px" height="450px"}
+
+注：这里按p值排序，是想找“统计上最显著”的基因，通常是各种经典AD相关基因，便于快速对照论文结果（某个通路在这个细胞类型中最显著）
+- 如果是想找生物效应最强，或者是想做一个“top up/down”的基因表就用logFC排
+- 在更多的时候，是先按p和logFC设阈值（筛掉既不显著又很小的差异），再按logFC排，如下
+- 在单细胞分析中，易出现“假大logFC”的情况，比如在AD组中只有5个细胞表达某基因且都很高，正常组几乎全0，这样logFC就会很大，但在整个细胞类型层面影响很小。因此`FindMarkers`会设置`min.pct = 0.1`的过滤，要求至少10%的细胞表达
+
+```{r}
+mg_DE_up  <- mg_DE %>%  # 取显著上调的基因
+  dplyr::filter(p_val_adj < 0.001, avg_log2FC > 0.5) %>%
+  arrange(desc(avg_log2FC)) %>%
+  head(20)
+# 小提琴图：看某些基因在MG中DSAD vs Control的差异
+VlnPlot(mg, features = rownames(mg_DE_up)[1:6], group.by = "Diagnosis", pt.size = 0)
+# 在UMAP上（整个数据中）看这些基因表达在哪些细胞类型强
+FeaturePlot(sn, features = rownames(mg_DE_up)[1:4])
+```
+
+![GSE233208_practice6](/upload/md-image/other/GSE233208_practice6.png){:width="600px" height="600px"}
+
+![GSE233208_practice7](/upload/md-image/other/GSE233208_practice7.png){:width="600px" height="600px"}
+
+简单的GO/KEGG富集：
+
+```{r}
+library(clusterProfiler)
+library(org.Hs.eg.db)
+# 因为原来的阈值筛出来的基因太少，做GO富集结果很奇怪，这里就放宽了阈值
+mg_DE2 <- FindMarkers(
+  mg,
+  ident.1 = "DSAD",
+  ident.2 = "Control",
+  test.use  = "MAST",
+  logfc.threshold = 0.1,
+  min.pct = 0.1,
+  latent.vars = c("nCount_RNA", "Batch", "PMI", "Sex")
+)
+# 不按p值筛选，直接取前100个
+mg_DE_up <- mg_DE2 %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  arrange(desc(p_val_adj))
+mg_DE_up_gene <- as.character(rownames(mg_DE_up))[1:100]
+ego <- enrichGO(
+  gene = mg_DE_up_gene,
+  OrgDb = org.Hs.eg.db,
+  keyType = "SYMBOL",
+  ont = "BP",
+  pAdjustMethod = "BH",
+  pvalueCutoff = 0.05,
+  qvalueCutoff = 0.2,
+  minGSSize = 5
+)
+dotplot(ego, showCategory = 20) + 
+  theme_bw()
+```
+
+- 为什么常用`ont = BP`：想看AD中某个细胞类型发生了哪些“生物学改变”（炎症反应、小胶质活化、髓鞘形成/损伤、血管重构、突触剪枝），这些都属于“生物学过程(BP)”的范畴。"MF"是“这些蛋白本身是什么功能”（受体、激酶……），"CC"是“这些蛋白主要在哪儿”（突触、线粒体、核膜……）
+
+![GSE233208_practice8](/upload/md-image/other/GSE233208_practice8.png){:width="600px" height="600px"}
+
+
 
 
 
 ##### 与hERV
 
 https://www.ncbi.nlm.nih.gov/Traces/study/?search=*snRNA*&query_key=2&WebEnv=MCID_692c40ff6310743ac6236f5e&f=organism_s%3An%3Ahomo%2520sapiens%3Blibrarysource_s%3An%3Atranscriptomic%2520single%2520cell%3Bassay_type_s%3An%3Arna-seq%3Bgroup_sam_ss%3An%3Ahuman_snrna-seq&o=acc_s%3Aa
+
+

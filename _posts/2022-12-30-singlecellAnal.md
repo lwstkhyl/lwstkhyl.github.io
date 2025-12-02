@@ -1068,6 +1068,8 @@ DimPlot(ifnb.integrated.sct, reduction = "umap", group.by = "stim")
 
 #### GSE233208
 
+[遗传性和散发性阿尔茨海默病的空间和单核转录组学分析](https://www.nature.com/articles/s41588-024-01961-x)
+
 **论文对snRNA数据的处理流程**：QC→整合（Harmony/scVI）→聚类→注释
 - 看细胞状态abundance随疾病变化（MiloR）
 - 各celltype/cellstate内做疾病vs对照DE（用MAST模型，带协变量）
@@ -1080,15 +1082,30 @@ DimPlot(ifnb.integrated.sct, reduction = "umap", group.by = "stim")
 ##### 单细胞分析部分
 
 GEO中的数据：人类snRNA-seq总共有≈58万个nuclei，主要细胞类型包括EX（兴奋性神经元）、INH（抑制性神经元）、MG（小胶质）、ASC（星形胶质）、ODC/OPC（少突及前体）、内皮、周细胞、成纤维细胞等
-- `GSE233208_Human_snRNA-Seq_ADDS_integrated.rds.gz`：人类snRNA-seq，已经整合好的Seurat对象
-- `GSE233208_Human_visium_ADDS_seurat_processed.rds.gz`：人类Visium空间转录组的Seurat对象
-- `GSE233208_5XFAD_seurat_processed_annotated.rds.gz`：小鼠5xFAD脑的数据
+- 这里先使用`GSE233208_Human_snRNA-Seq_ADDS_integrated.rds.gz`：人类snRNA-seq，已经整合好的Seurat对象
+
+```r
+library(Seurat)
+library(tidyverse)
+library(ggpubr)
+# BiocManager::install("MAST")
+library(MAST)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+# 注：因为原rds很大，这里提取了大概1/4的细胞做试分析
+sn <- readRDS("C:\\Users\\17185\\Desktop\\hERV_calc\\GSE233208\\data\\GSE233208_human_snRNA_subset.rds")
+DefaultAssay(sn)  # "RNA"
+colnames(sn@meta.data)
+table(sn$Diagnosis)
+table(sn$cell_type)
+table(sn$SampleID)
+```
 
 因为rds文件名里有一个"integrated"，这说明作者已经把多个样本（多个病人、多个脑区、多个疾病组）使用他自己的pipeline（scVI/Harmony等）做过批次/样本整合，所以就不需要整合这步，只需基于这个整合好的对象做一些下游分析
 
 **预处理**：同前
 
-```{r}
+```r
 sn <- NormalizeData(sn)
 sn <- FindVariableFeatures(sn)
 sn <- ScaleData(sn)
@@ -1102,7 +1119,7 @@ sn <- RunUMAP(sn, dims = 1:30)
 
 **初步可视化**：看细胞类型和疾病在UMAP上的分布
 
-```{r}
+```r
 # 按聚类看
 DimPlot(sn, reduction = "umap", label = TRUE)
 # 按细胞类型看
@@ -1125,7 +1142,7 @@ DimPlot(sn, reduction = "umap", group.by = "Diagnosis")
 
 这里直接ggplot画图了，原文中使用了MiloR做统计检验
 
-```{r}
+```r
 # 统计每个样本里各细胞类型的比例
 cell_comp <- sn@meta.data %>%
   group_by(SampleID, Diagnosis, cell_type) %>%
@@ -1163,7 +1180,7 @@ ggplot(cell_comp, aes(x = Diagnosis, y = freq, fill = Diagnosis)) +
 
 这里使用`FindMarkers(test.use = "MAST")`做一个简化版，根据上面粗略的检验结果，microglia(MG)这个细胞类型在两个样本中占比有显著不同，可能存在差异基因最多
 
-```{r}
+```r
 Idents(sn) <- "cell_type"  # 按细胞类型设定身份
 mg <- subset(sn, idents = "MG")  # 取出MG细胞
 Idents(mg) <- mg$Diagnosis  # mg中Diagnosis作分组变量
@@ -1189,7 +1206,7 @@ mg_DE_top <- mg_DE %>%
 - 在更多的时候，是先按p和logFC设阈值（筛掉既不显著又很小的差异），再按logFC排，如下
 - 在单细胞分析中，易出现“假大logFC”的情况，比如在AD组中只有5个细胞表达某基因且都很高，正常组几乎全0，这样logFC就会很大，但在整个细胞类型层面影响很小。因此`FindMarkers`会设置`min.pct = 0.1`的过滤，要求至少10%的细胞表达
 
-```{r}
+```r
 mg_DE_up  <- mg_DE %>%  # 取显著上调的基因
   dplyr::filter(p_val_adj < 0.001, avg_log2FC > 0.5) %>%
   arrange(desc(avg_log2FC)) %>%
@@ -1206,9 +1223,7 @@ FeaturePlot(sn, features = rownames(mg_DE_up)[1:4])
 
 简单的GO/KEGG富集：
 
-```{r}
-library(clusterProfiler)
-library(org.Hs.eg.db)
+```r
 # 因为原来的阈值筛出来的基因太少，做GO富集结果很奇怪，这里就放宽了阈值
 mg_DE2 <- FindMarkers(
   mg,
@@ -1239,15 +1254,174 @@ dotplot(ego, showCategory = 20) +
 ```
 
 - 为什么常用`ont = BP`：想看AD中某个细胞类型发生了哪些“生物学改变”（炎症反应、小胶质活化、髓鞘形成/损伤、血管重构、突触剪枝），这些都属于“生物学过程(BP)”的范畴。"MF"是“这些蛋白本身是什么功能”（受体、激酶……），"CC"是“这些蛋白主要在哪儿”（突触、线粒体、核膜……）
+- 因为是抽样的细胞，每组细胞数量较少，所以分析得到的差异基因也比较少
 
 ![GSE233208_practice8](/upload/md-image/other/GSE233208_practice8.png){:width="600px" height="600px"}
 
+**在细胞类型内做亚群+差异丰度**
+- 不仅有MG这样的大类细胞类型，还有例如MG1、MG2这样的细胞状态(cell states)，作者用MiloR看这些状态再两组中是否富集
+- 论文中强调：很多变化不是“多了一种完全新的细胞类型”，而是某些特定状态”的细胞比例增多或减少
+- 在每个细胞类型内做子聚类 → 得到几个state → 比较每个state在Control vs DSAD中的富集情况
 
+在某个细胞类型内做子聚类：流程同前
+```r
+DefaultAssay(mg) <- "RNA"
+mg <- NormalizeData(mg)
+mg <- FindVariableFeatures(mg)
+mg <- ScaleData(mg)
+mg <- RunPCA(mg)
+mg <- FindNeighbors(mg, dims = 1:20)
+mg <- FindClusters(mg, resolution = 0.3)
+mg <- RunUMAP(mg, dims = 1:20)
+mg$MG_state <- Idents(mg)
+```
+给这些MG_state起名字：找各个state的的标志基因
+```r
+mg_state_markers <- FindAllMarkers(
+  mg,
+  only.pos = TRUE,
+  logfc.threshold = 0.1,
+  min.pct = 0.1
+)
+# 将每个聚类的标志基因写入一个df中
+mg_marker_gene_df <- data.frame()
+for(i in unique(mg_state_markers$cluster)){
+  marker_df <- mg_state_markers %>%
+    dplyr::filter(cluster == i, p_val_adj < 0.05, avg_log2FC > 1) %>%
+    dplyr::arrange(p_val_adj)
+  marker_gene <- paste(rownames(marker_df), collapse = ';')
+  mg_marker_gene_df <- rbind(mg_marker_gene_df, c(i, marker_gene))
+}
+colnames(mg_marker_gene_df) <- c("cluster", "marker_gene")
+write.csv(mg_marker_gene_df, 'mg_marker_gene.csv', col.names = T, row.names = F)
+```
 
+观察一下标志基因，经过GPT判断
+- cluster 2：稳态microglia（Homeostatic MG）——在健康状态/疾病早期维持脑内稳态的MG（CX3CR1、P2RY12高表达）
+- cluster 0：激活/疾病相关microglia（SPP1⁺/CD163⁺ DAM-like MG）——在AD/DSAD病灶附近被激活，负责任务包括吞噬Aβ/碎片、分泌炎症因子、重塑组织（SPP1、CD163、SLC2A3等基因高表达）
+- cluster 1：神经元，不是MG state（细胞骨架/突触后致密物/突触粘附分子/电压门控Ca²⁺通道相关）
+- cluster 3：T细胞，不是MG state（T cells/T+NK免疫标志基因）
 
+```r
+Idents(mg) <- "MG_state"
+mg_pure <- subset(mg, idents = c("0", "2"))
+new.state.ids <- c("MG_DAM", "MG_homeo")  # 激活/SPP1⁺ DAM-like MG --- 稳态P2RY12⁺ MG
+names(new.state.ids) <- levels(mg_pure)
+mg_pure <- RenameIdents(mg_pure, new.state.ids)
+mg_pure$MG_state2 <- Idents(mg_pure)
+# 按Diagnosis着色
+DimPlot(mg_pure, reduction = "umap", group.by = "Diagnosis")
+# 按MG_state着色
+DimPlot(mg_pure, reduction = "umap", group.by = "MG_state2", label = TRUE)
+# Diagnosis + MG_state交叉
+DimPlot(mg_pure, reduction = "umap", split.by = "Diagnosis", group.by = "MG_state2")
+```
+
+![GSE233208_practice9](/upload/md-image/other/GSE233208_practice9.png){:width="600px" height="600px"}
+
+**每个MG_state在Control vs DSAD中的丰度差异**：以样本为单位比较，而不是直接数细胞
+
+```r
+mg_state_comp <- mg_pure@meta.data %>%
+  group_by(SampleID, Diagnosis, MG_state2) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(SampleID) %>%
+  mutate(freq = n / sum(n))
+ggplot(mg_state_comp, aes(x = Diagnosis, y = freq, fill = Diagnosis)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +
+  geom_jitter(width = 0.1, size = 0.5, alpha = 0.6) +
+  facet_wrap(~ MG_state2, scales = "free_y") +
+  ylab("Proportion within microglia") +
+  theme_bw() + 
+  stat_compare_means(
+    method = "wilcox.test",
+    label = "p.signif"
+  )
+```
+
+![GSE233208_practice10](/upload/md-image/other/GSE233208_practice10.png){:width="600px" height="600px"}
+
+**某个“显著state”里面发生了什么/比较不同MG_state之间的marker和富集情况**：
+- 在AD样本中比例显著升高的MG_DAM这个状态内部，DSAD相比Control还多了哪些额外的表达变化，这些变化都富集了哪个通路
+  ```r
+  Idents(mg_pure) <- "MG_state2"
+  mg_dam <- subset(mg_pure, idents = "MG_DAM")
+  Idents(mg_dam) <- mg_dam$Diagnosis
+  mg_dam_DE <- FindMarkers(
+    mg_dam,
+    ident.1 = "DSAD",
+    ident.2 = "Control",
+    test.use = "MAST",
+    logfc.threshold = 0.1,
+    min.pct = 0.1,
+    latent.vars = c("nCount_RNA", "Batch", "PMI", "Sex")
+  )
+  # 由于差异基因很少，就不做后续分析了
+  ```
+- 在MG内比较MG_DAM和MG_homeo的差异基因，看MG_DAM这种状态在路径/功能上到底和MG_homeo有什么不同
+  ```r
+  mg_state_DE <- FindMarkers(
+    mg_pure,
+    ident.1 = "MG_DAM",
+    ident.2 = "MG_homeo",
+    test.use = "MAST",
+    logfc.threshold = 0.1,
+    min.pct = 0.1
+  )
+  mg_state_DE_up <- mg_state_DE %>%
+    dplyr::filter(avg_log2FC > 0, p_val_adj < 0.1) %>%
+    arrange(desc(p_val_adj))
+  ego <- enrichGO(
+    gene = rownames(mg_state_DE_up),
+    OrgDb = org.Hs.eg.db,
+    keyType = "SYMBOL",
+    ont = "BP",
+    pAdjustMethod = "BH",
+    pvalueCutoff = 0.05,
+    qvalueCutoff = 0.2,
+    minGSSize = 5
+  )
+  dotplot(ego, showCategory = 20) + 
+    theme_bw()
+  ```
+
+  ![GSE233208_practice11](/upload/md-image/other/GSE233208_practice11.png){:width="600px" height="600px"}
+
+---
+
+**补充：原文中使用的MiloR**——基于KNN neighbors，不依赖cluster边界，而是直接在连续的表达空间上做差异丰度测试，相比上面的简化版流程，对细胞分类划分的更细，更容易发现“哪个局部区段变化最大”（如果变化只发生在某个细胞类型/state里的一小部分，但cluster划分时把这一大部分都当成一个整体，就没法看出这一小部分细胞的变化，而Milo能避免过度依赖人工划的cluster边界）
+- 当样本量较大，或者单个细胞类型里有明显的连续轨迹（而不是几个清晰cluster）、变化可能发生在过度细胞(intermediate state)中，或者想严格考虑批次效应这些协变量的时候，就应用MiloR
+
+**补充：作者的注释**——其实作者已经在`sn@meta.data`对各类细胞进行注释了，不仅是前面使用过的"cell_type"，还有更细的"annotation"/"subtype"/"cell_identity"等，因此在找MG的state步骤中，实际上其实是不需要我们自己手动分类标明的
 
 ##### 与hERV
 
-https://www.ncbi.nlm.nih.gov/Traces/study/?search=*snRNA*&query_key=2&WebEnv=MCID_692c40ff6310743ac6236f5e&f=organism_s%3An%3Ahomo%2520sapiens%3Blibrarysource_s%3An%3Atranscriptomic%2520single%2520cell%3Bassay_type_s%3An%3Arna-seq%3Bgroup_sam_ss%3An%3Ahuman_snrna-seq&o=acc_s%3Aa
+先找到[GSE233208的说明](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE233208)
 
+![GSE233208_practice12](/upload/md-image/other/GSE233208_practice12.png){:width="600px" height="600px"}
 
+- 最上面的SOFT/MINiML：这个series（GSE233208）的说明、每个平台（GPL…）、每个样本（GSM…）的元数据，有些数据类型还会带表达矩阵（更多见于微阵列、bulk RNA-seq）。一般用于GEO2R等工具，或者想批量看元数据时解析用，对于目前的snRNA-seq项目来说用处不大
+- 最上面的Series Matrix：通常是把表达矩阵和样本注释打包成一个大表，多见于微阵列/bulk RNA-seq，但这个项目中作者已把单细胞/空间转录组数据整理成RDS/CSV形式放在Supplementary file
+- `GSE233208_5XFAD_8samples.csv.gz`：5XFAD小鼠那一部分的样本信息表（8个样本）
+- `GSE233208_5XFAD_seurat_processed_annotated.rds.gz`：小鼠5xFAD脑（AD模型）的数据，作者已经在R里做完预处理、聚类、注释，存成一个Seurat对象
+- `GSE233208_AD-DS_Cases.csv.gz`：人类DSAD/对照患者的病例信息表（年龄、性别、诊断等），后面做差异分析、分组（Control vs DSAD等）要用的meta表
+- `GSE233208_Human_snRNA-Seq_ADDS_integrated.rds.gz`：人类单核RNA-seq整合Seurat对象，包括29个前额叶皮质样本（DSAD/对照）的snRNA-seq，已经做完质控、归一化、整合、聚类、UMAP、细胞类型注释等
+- `GSE233208_Human_visium_ADDS_seurat_processed.rds.gz`：人类Visium空间转录组的Seurat对象，同样已经处理成Seurat对象，用于空间图谱、和snRNA整合等分析
+- `GSE233208_pilot_samples.csv.gz`：一些试验性pilot样本的meta表，规模很小，一般可以先忽略
+- `GSE233208_visium_5xFAD_*_sample_meta.csv.gz`：5XFAD小鼠Visium空间转录组的样本信息表（不同测序批次/日期）
+- `GSE233208_visium_human_*_sample_meta.csv.gz`：人类Visium空间转录组的样本信息表
+- 注意页面最下面的"Raw data are available in SRA"、"Processed data are available on Series record"，就是说原始读段在SRA上下载，处理好后的Seurat/RDS/CSV就在这个GEO Series页面
+
+点击页面最下方的"SRA Run Selector"，进入[PRJNA975472的SRA Run Selector界面](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA975472)，Assay Type选rna-seq，之后发现Organism只剩下人类，tissue和source_name只有prefrontal cortex，这时剩下的41条数据理论上就是我们想找的数据
+- 其实是没错的，因为根据文章和GEO说明，这个项目的snRNA-seq部分，就是对DSAD/对照患者的前额叶皮质(prefrontal cortex)做的单核RNA-seq，差异是在Diagnosis（AD/正常）、年龄、性别等临床信息以及不同细胞类型之间的表达差异上
+- diagnosis列全是NA：临床信息在`GSE233208_AD-DS_Cases.csv`中，不在SRA run中显示；而且这套snRNA-seq的每个run(SRR)都包括多个样本，这多个样本的diagnosis状况可能不同，所以只能存在那个csv表中
+
+选200G~300G的数据，不过这些数据理应包含足够的DSAD/正常样本，这个情况就只能跑完全套流程后再到Seurat对象中检查
+
+snRNA-seq和普通的RNA-seq的区别：snRNA-seq多了两个关键维度——cell barcode(CB)标识每条read属于哪个细胞，UMI(UB)用来去PCR重的标签，因此不能直接套用前面的bowtie2+Telescope。大概有两种思路
+- 找一个普通的基因gtf，再找一个针对hERV的gtf，合并，直接用STARsolo+cellranger或Parse Biosciences官方pipeline来计数，得到`matrix.mtx`/`features.tsv`/`barcodes.tsv`这三个文件，然后构建Seurat对象，后面分析时可以把这个大的Seurat对象拆成“基因(RNA)”和“hERV”两个assay，分别进行分析
+- 先用常规方法计数普通基因，再用STARsolo+Stellarscope（位点级）/scTE（家族级）计数hERV，最终得到两个计数矩阵和注释信息（需确保这两个矩阵的列名——barcode完全一致，行名就是各自的features——基因/hERV位点），用基因计数矩阵构建Seurat对象，然后再把hERV计数矩阵作为一个新的assay加上去
+
+主要目标：在某个细胞类型内，比较DSAD vs Control的hERV激活
+- 只用hERV？hERV+基因？先都做了再说
+- 12月完成fastq->计数矩阵，1~2月Seurat分析

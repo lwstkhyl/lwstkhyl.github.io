@@ -1418,10 +1418,13 @@ ggplot(mg_state_comp, aes(x = Diagnosis, y = freq, fill = Diagnosis)) +
 
 选200G~300G的数据，不过这些数据理应包含足够的DSAD/正常样本，这个情况就只能跑完全套流程后再到Seurat对象中检查
 
-snRNA-seq和普通的RNA-seq的区别：snRNA-seq多了两个关键维度——cell barcode(CB)标识每条read属于哪个细胞，UMI(UB)用来去PCR重的标签，因此不能直接套用前面的bowtie2+Telescope。大概有两种思路
+snRNA-seq和普通的RNA-seq的区别：snRNA-seq多了两个关键维度——cell barcode(CB)标识每条read属于哪个细胞，UMI(UB)标识每条reads来自哪个原始转录本分子，因此不能直接套用前面的bowtie2+Telescope。大概有两种思路
 - 找一个普通的基因gtf，再找一个针对hERV的gtf，合并，直接用STARsolo+cellranger或Parse Biosciences官方pipeline来计数，得到`matrix.mtx`/`features.tsv`/`barcodes.tsv`这三个文件，然后构建Seurat对象，后面分析时可以把这个大的Seurat对象拆成“基因(RNA)”和“hERV”两个assay，分别进行分析
 - 先用常规方法计数普通基因，再用STARsolo+Stellarscope（位点级）/scTE（家族级）计数hERV，最终得到两个计数矩阵和注释信息（需确保这两个矩阵的列名——barcode完全一致，行名就是各自的features——基因/hERV位点），用基因计数矩阵构建Seurat对象，然后再把hERV计数矩阵作为一个新的assay加上去
 
 主要目标：在某个细胞类型内，比较DSAD vs Control的hERV激活
 - 只用hERV？hERV+基因？先都做了再说
 - 12月完成fastq->计数矩阵，1~2月Seurat分析
+
+关于如何在细胞注释/细胞轨迹中观测hERV的重调变化：先用“正常基因”做好细胞注释和轨迹，再把hERV当成一个额外“分子特征”，往这些注释和轨迹上去“上色”和“切分”（？）
+

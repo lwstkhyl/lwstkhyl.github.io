@@ -62,7 +62,36 @@ cd qc
 multiqc .
 ```
 
-### STAR比对
+---
+
+自动下载：先建一个`SRR_Acc_List.txt`，里面放上要下载的SRR号（从SRA run界面的Accession List按钮下载）
+
+```sh
+cd /public/home/wangtianhao/Desktop/GSE233208/fastq
+module load miniconda3/base
+conda activate fastq-download
+for SRR in $(cat SRR_Acc_List.txt); do
+    parallel-fastq-dump --sra-id ${SRR} --tmpdir ./fastq_temp --threads 8 --split-files --gzip
+done
+```
+
+### GSE233208
+
+[GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE233208)
+
+点开其中一个样本的页面[GSM7412790](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM7412790)，可以看到是用什么测序技术测的，关键信息：
+
+```
+using Parse biosciences Evercode WT kit (v1)
+```
+
+进入[SRA run](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA975472)中，左面Assay Type选择RNA-Seq，下载41条数据
+
+相关论文[Spatial and single-nucleus transcriptomic analysis of genetic and sporadic forms of Alzheimer’s disease](https://www.nature.com/articles/s41588-024-01961-x)
+
+#### STAR比对
+
+##### try 1
 
 由于没找到官方提供的barcode whitelist，只能自己计算一下：统计推测的三段barcode中每种序列出现的频数，根据官方说法，可能有24/48/96个序列作为whitelist，观察生成的bc1_counts.txt，在96的地方有明显梯度，于是认为前96个序列位barcode
 
@@ -134,34 +163,327 @@ STAR \
   --outFilterMultimapScoreRange 5 
 ```
 
-### stellarscope计数
+结果虽然从条形码的角度对的上，但没有样本id也没什么用
 
+##### try 2
+
+[Analysis tools for split-seq](https://github.com/yjzhang/split-seq-pipeline)
+
+```sh
+# 安装
+git clone https://github.com/yjzhang/split-seq-pipelinec
+# git clone https://ghfast.top/https://github.com/yjzhang/split-seq-pipeline
+export PATH=$PATH:$HOME/split-seq-pipeline/
+
+# 配置环境
+module load miniconda3/base
+conda create -n split-seq \
+  python=3.8 \
+  samtools=1.9 \
+  numpy pysam pandas scipy matplotlib
+
+# 因为他用的旧版本STAR，只能用源码编译的方式安装
+cd ~
+wget https://github.com/alexdobin/STAR/archive/2.6.1c.tar.gz
+tar -xzf 2.6.1c.tar.gz
+cd STAR-2.6.1c
+cd source
+make STAR
+```
+
+要求必须使用他的方式重建STAR索引，自己建的会缺一个他统计的pkl文件
+
+```sh
+# 建索引
+module load miniconda3/base
+conda activate split-seq
+# 为了避免与其他版本STAR冲突，只在运行他这个pipeline的时候才把2.6.1的STAR加入环境变量
+export PATH=$PATH:$HOME/STAR-2.6.1c/bin/Linux_x86_64/
+split-seq mkref \
+  --genome hg38 \
+  --fasta /public/home/wangtianhao/Desktop/STAR_ref/GRCh38.p14.genome.fa \
+  --genes /public/home/wangtianhao/Desktop/STAR_ref/gencode.v49.annotation.gtf \
+  --output_dir /public/home/wangtianhao/Desktop/STAR_ref/hg38_split-seq/ \
+  --nthreads 16
+```
+
+之后就可以开始比对，经过实测他示例中的参数`--chemistry v2`应该是适配这套数据的
+
+```sh
+module load miniconda3/base
+conda activate split-seq
+export PATH=$PATH:$HOME/STAR-2.6.1c/bin/Linux_x86_64/
+mkdir -p /public/home/wangtianhao/Desktop/GSE233208/1205test/AD_S8_L004/
+split-seq all \
+  --fq1 /public/home/wangtianhao/Desktop/GSE233208/1205test/fastq/AD_S8_L004_R1.fastq.gz \
+  --fq2 /public/home/wangtianhao/Desktop/GSE233208/1205test/fastq/AD_S8_L004_R2.fastq.gz \
+  --output_dir /public/home/wangtianhao/Desktop/GSE233208/1205test/AD_S8_L004/ \
+  --chemistry v2 \
+  --genome_dir /public/home/wangtianhao/Desktop/STAR_ref/hg38_split-seq/ \
+  --nthreads 16 \
+  --sample '28' A1-A4 \
+  --sample '16' A5-A8 \
+  --sample '94' A9-A12 \
+  --sample '88' B1-B4 \
+  --sample '131' B5-B8 \
+  --sample '19' B9-B12 \
+  --sample '107' C1-C4 \
+  --sample '101' C5-C8 \
+  --sample '10' C9-C12 \
+  --sample '63' D1-D2 \
+  --sample '128' D3-D4 \
+  --sample '50' D5-D6 \
+  --sample '100' D7-D8 \
+  --sample 'humAD-87' D9-D10 \
+  --sample '20' D11-D12
+```
+
+在分析的末尾，作者的`split_seq/analysis.py`文件中的`generate_single_dge_report`报错`KeyError(f"{not_found} not in index")`，仔细一看是一段对`Fraction Reads in Cells`统计的代码出错，感觉这个数据不太重要，于是注释掉了该文件中所有类似统计的行（527-531、540-541、546、574、576-583
+
+#### 构建Seurat对象
+
+总体思路：关键普通基因使用STARsolo计数，hERV使用stellarscope计数，而最终我们是用普通基因先构建Seurat对象，再把stellarscope计数得到的矩阵作为一个assay挂载上去
+
+
+
+
+
+### GSE138852
+
+[GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852)
+
+点开其中一个样本的页面[GSM4120422](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM4120422)，可以看到是用什么测序技术测的（UMI和BC的位置和长度），关键信息：
+
+```
+I1 read: contains the sample index.
+R1 read: contains the cell barcode (first 16 nt) and UMI (next 10 nt).
+R2 read: contains the RNA sequence.
+Using the Grch38 (1.2.0) reference from 10x Genomics
+using the Chromium Single Cell 3′ Library & Gel Bead Kit v2 (10X Genomics, #PN-120237)
+```
+
+进入[SRA run](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA577618)中下载
+
+#### STAR比对
+
+因为下载下来得到的是`SRRxxx_1.fastq.gz`/`SRRxxx_2.fastq.gz`/`SRRxxx_3.fastq.gz`这样的文件，首先检测哪个是cDNA，哪个是UMI+barcode
+
+```sh
+zcat SRR10278808_1.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+zcat SRR10278808_2.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+zcat SRR10278808_3.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+```
+
+- `SRRxxx_1.fastq.gz`：8bp——index，对STAR计数不重要，可忽略
+- `SRRxxx_2.fastq.gz`：26bp——UMI+barcodes
+- `SRRxxx_3.fastq.gz`：116bp——cDNA
+
+whitelist从哪里下载：有时CellRanger的安装目录里就有，不过我没找到，直接到GitHub的开源项目中搜，比如[10X Cell Ranger whitelists](https://github.com/Lab-of-Adaptive-Immunity/cr_whitelists)，把两个txt解压即可。因为是v2版本，所以用`737K-august-2016.txt`
+
+```sh
+cd /public/home/wangtianhao/Desktop/GSE138852/
+module load miniconda3/base
+conda activate STAR
+mkdir -p star/res
+cd star
+# 注意以下命令执行时删掉#的行，否则只读到第一个#就不往下读了
+STAR \
+  --runMode alignReads \
+  --runThreadN 16 \
+  --genomeDir /public/home/wangtianhao/Desktop/STAR_ref/hg38/ \
+  --readFilesIn /public/home/wangtianhao/Desktop/GSE138852/fastq/SRR10278808_3.fastq.gz /public/home/wangtianhao/Desktop/GSE138852/fastq/SRR10278808_2.fastq.gz \
+  --readFilesCommand zcat \
+  --outFileNamePrefix res/SRR10278808_ \
+  # 条形码 \
+  --soloType CB_UMI_Simple \
+  --soloCBstart 1 \
+  --soloCBlen 16 \
+  --soloUMIstart 17 \
+  --soloUMIlen 10 \
+  --soloBarcodeReadLength 0 \
+  --soloCBwhitelist /public/home/wangtianhao/Desktop/STAR_ref/whitelist/737K-august-2016.txt \
+  # 计数/细胞筛选设置 \
+  --clipAdapterType CellRanger4 \
+  --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
+  --soloUMIfiltering MultiGeneUMI_CR \
+  --soloUMIdedup 1MM_CR \
+  # BAM输出和Tags（给Stellarscope用） \
+  --outSAMtype BAM SortedByCoordinate \
+  --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
+  # Stellarscope要求保留多重比对 \
+  --outSAMunmapped Within \
+  --outFilterScoreMin 30 \
+  --limitOutSJcollapsed 5000000 \
+  --outFilterMultimapNmax 500 \
+  --outFilterMultimapScoreRange 5
+```
+
+#### stellarscope计数
 
 ```sh
 module load miniconda3/base
 conda activate stellarscope
-
+cd /public/home/wangtianhao/Desktop/GSE138852/stellarscope/
+mkdir -p res
+# 按名称排序
+samtools view -@1 -u -F 4 -D CB:<(tail -n+1 /public/home/wangtianhao/Desktop/GSE138852/star/res/SRR10278808_Solo.out/Gene/filtered/barcodes.tsv) /public/home/wangtianhao/Desktop/GSE138852/star/res/SRR10278808_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./res/Aligned.sortedByCB.bam
+# 计数
+stellarscope assign \
+  --exp_tag SRR10278808 \
+  --outdir /public/home/wangtianhao/Desktop/GSE138852/stellarscope/res \
+  --nproc 16 \
+  --stranded_mode F \
+  --whitelist /public/home/wangtianhao/Desktop/GSE138852/star/res/SRR10278808_Solo.out/Gene/filtered/barcodes.tsv \
+  --pooling_mode individual \
+  --reassign_mode best_exclude \
+  --max_iter 500 \
+  --updated_sam \
+  /public/home/wangtianhao/Desktop/GSE138852/stellarscope/res/Aligned.sortedByCB.bam \
+  /public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
 ```
 
-
-### 构建Seurat对象
-
-关键的数据对齐：
-- 普通基因使用STARsolo计数，hERV使用stellarscope计数，而最终我们是用普通基因先构建Seurat对象，再把stellarscope计数得到的矩阵作为一个assay挂载上去，这两个矩阵的样本要对齐
-- 由于这个单细胞数据比较特殊，作者提供了一个单独的GSE233208_AD-DS_Cases.csv文件标明样本id、诊断组别、年龄性别等信息，这些信息需要与我们的Seurat对象组合
-- 每个SRR的数据是怎么合并的，列名（样本名）是什么
-
-
-### pipeline
-
-先建一个`SRR_Acc_List.txt`，里面放上要下载的SRR号
+#### 循环运行并构建Seurat对象
 
 ```sh
-cd /public/home/wangtianhao/Desktop/GSE233208/fastq
+genomeDir=/public/home/wangtianhao/Desktop/STAR_ref/hg38/
+whitelist=/public/home/wangtianhao/Desktop/STAR_ref/whitelist/737K-august-2016.txt
+hERV_gtf=/public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
+cd /public/home/GENE_proc/wth/GSE138852/
 module load miniconda3/base
-conda activate fastq-download
-for SRR in $(cat SRR_Acc_List.txt); do
-    parallel-fastq-dump --sra-id ${SRR} --tmpdir ./fastq_temp --threads 8 --split-files --gzip
+for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
+  conda activate STAR
+  mkdir -p star
+  STAR \
+    --runMode alignReads \
+    --runThreadN 16 \
+    --genomeDir ${genomeDir} \
+    --readFilesIn ./fastq/${SRR}_3.fastq.gz ./fastq/${SRR}_2.fastq.gz \
+    --readFilesCommand zcat \
+    --outFileNamePrefix star/${SRR}_ \
+    --soloType CB_UMI_Simple \
+    --soloCBstart 1 \
+    --soloCBlen 16 \
+    --soloUMIstart 17 \
+    --soloUMIlen 10 \
+    --soloBarcodeReadLength 0 \
+    --soloCBwhitelist ${whitelist} \
+    --clipAdapterType CellRanger4 \
+    --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
+    --soloUMIfiltering MultiGeneUMI_CR \
+    --soloUMIdedup 1MM_CR \
+    --outSAMtype BAM SortedByCoordinate \
+    --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
+    --outSAMunmapped Within \
+    --outFilterScoreMin 30 \
+    --limitOutSJcollapsed 5000000 \
+    --outFilterMultimapNmax 500 \
+    --outFilterMultimapScoreRange 5
+  conda deactivate
+  conda activate stellarscope
+  mkdir -p stellarscope/${SRR}
+  samtools view -@1 -u -F 4 -D CB:<(tail -n+1 ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv) ./star/${SRR}_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./stellarscope/${SRR}/Aligned.sortedByCB.bam
+  stellarscope assign \
+    --outdir ./stellarscope/${SRR} \
+    --nproc 16 \
+    --stranded_mode F \
+    --whitelist ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv \
+    --pooling_mode individual \
+    --reassign_mode best_exclude \
+    --max_iter 500 \
+    --updated_sam \
+    ./stellarscope/${SRR}/Aligned.sortedByCB.bam \
+    ${hERV_gtf}
+  conda deactivate
 done
 ```
 
+### GSE157827
+
+[GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE157827)
+
+点开其中一个样本的页面[GSM4775561](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM4775561)，可以看到是用什么测序技术测的（UMI和BC的位置和长度）
+
+进入[SRA run](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA662923)中下载
+
+关键信息：
+
+```
+using the Chromium Single Cell 3′ Library Kit v3 (1000078; 10x Genomics) 
+```
+
+在相关论文[Single-nucleus transcriptome analysis reveals dysregulation of angiogenic endothelial cells and neuroprotective glia in Alzheimer’s disease](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117)的补充材料[Dataset_S01 (XLSX)](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117/suppl_file/pnas.2008762117.sd01.xlsx)中可以下载到每个样本的具体信息（组别、性别、年龄、APOE等）：
+
+![GSE157827_1](/upload/md-image/other/GSE157827_1.png){:width="800px" height="800px"}
+https://www.jianshu.com/p/d7e086020fc8
+
+同时还有一些国内的教程，例如[复现2：AD与Normal细胞类型水平的差异基因挖掘](https://www.jianshu.com/p/d7e086020fc8)
+
+#### STAR比对
+
+还是先看序列信息
+
+```sh
+zcat SRR12623876_1.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+zcat SRR12623876_2.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+```
+
+- `SRRxxx_1.fastq.gz`：26bp——UMI+barcode
+- `SRRxxx_2.fastq.gz`：98bp——cDNA
+
+whitelist：因为是v3版本，所以用`3M-february-2018.txt`
+
+```sh
+cd /public/home/wangtianhao/Desktop/GSE157827/
+module load miniconda3/base
+conda activate STAR
+mkdir -p star/res
+cd star
+STAR \
+  --runMode alignReads \
+  --runThreadN 16 \
+  --genomeDir /public/home/wangtianhao/Desktop/STAR_ref/hg38/ \
+  --readFilesIn /public/home/wangtianhao/Desktop/GSE157827/fastq/SRR12623876_2.fastq.gz /public/home/wangtianhao/Desktop/GSE157827/fastq/SRR12623876_1.fastq.gz \
+  --readFilesCommand zcat \
+  --outFileNamePrefix res/SRR12623876_ \
+  --soloType CB_UMI_Simple \
+  --soloCBstart 1 \
+  --soloCBlen 16 \
+  --soloUMIstart 17 \
+  --soloUMIlen 10 \
+  --soloBarcodeReadLength 0 \
+  --soloCBwhitelist /public/home/wangtianhao/Desktop/STAR_ref/whitelist/3M-february-2018.txt \
+  --clipAdapterType CellRanger4 \
+  --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
+  --soloUMIfiltering MultiGeneUMI_CR \
+  --soloUMIdedup 1MM_CR \
+  --outSAMtype BAM SortedByCoordinate \
+  --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
+  --outSAMunmapped Within \
+  --outFilterScoreMin 30 \
+  --limitOutSJcollapsed 5000000 \
+  --outFilterMultimapNmax 500 \
+  --outFilterMultimapScoreRange 5
+```
+
+#### stellarscope计数
+
+```sh
+module load miniconda3/base
+conda activate stellarscope
+cd /public/home/wangtianhao/Desktop/GSE157827/
+mkdir -p stellarscope/res
+cd stellarscope
+samtools view -@1 -u -F 4 -D CB:<(tail -n+1 /public/home/wangtianhao/Desktop/GSE157827/star/res/SRR12623876_Solo.out/Gene/filtered/barcodes.tsv) /public/home/wangtianhao/Desktop/GSE157827/star/res/SRR12623876_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./res/Aligned.sortedByCB.bam
+stellarscope assign \
+  --exp_tag SRR12623876 \
+  --outdir ./res \
+  --nproc 16 \
+  --stranded_mode F \
+  --whitelist /public/home/wangtianhao/Desktop/GSE157827/star/res/SRR12623876_Solo.out/Gene/filtered/barcodes.tsv \
+  --pooling_mode individual \
+  --reassign_mode best_exclude \
+  --max_iter 500 \
+  --updated_sam \
+  ./res/Aligned.sortedByCB.bam \
+  /public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
+```

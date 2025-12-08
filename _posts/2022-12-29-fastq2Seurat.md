@@ -258,7 +258,7 @@ split-seq all \
 
 ### GSE138852
 
-数据量较小（共78.18G，碱基数153.78G，样本量8个），但作者提供了详细的计数矩阵+条形码+基因（包括每个SRR run的和总的），并且使用10X Genomics，条形码和UMI位置易确定，打算先用这个跑通基本pipeline（STARsolo+stellarscope+构建Seurat对象）
+数据量较小（共78.18G，碱基数153.78G，样本量8个），但作者提供了详细的计数矩阵+条形码+基因（包括每个SRR run的和总的），并且使用10X Genomics，条形码和UMI位置易确定，打算先用这个数据集跑通基本pipeline（STARsolo+stellarscope+构建Seurat对象）
 
 [GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852)
 
@@ -355,10 +355,15 @@ stellarscope assign \
 #### 循环运行并构建Seurat对象
 
 ```sh
+workDir=/public/home/GENE_proc/wth/GSE138852/
 genomeDir=/public/home/wangtianhao/Desktop/STAR_ref/hg38/
 whitelist=/public/home/wangtianhao/Desktop/STAR_ref/whitelist/737K-august-2016.txt
 hERV_gtf=/public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
-cd /public/home/GENE_proc/wth/GSE138852/
+res_barcodes=barcodes
+res_features=features
+res_counts=counts
+# STARsolo + stellarscope
+cd ${workDir}
 module load miniconda3/base
 for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
   conda activate STAR
@@ -405,6 +410,20 @@ for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
     ${hERV_gtf}
   conda deactivate
 done
+# 汇总结果
+cd ${workDir}
+for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
+  mkdir -p mtx/${SRR}/gene
+  cp ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv ./mtx/${SRR}/gene/${res_barcodes}.tsv
+  cp ./star/${SRR}_Solo.out/Gene/filtered/features.tsv ./mtx/${SRR}/gene/${res_features}.tsv
+  cp ./star/${SRR}_Solo.out/Gene/filtered/matrix.mtx ./mtx/${SRR}/gene/${res_counts}.mtx
+  mkdir -p mtx/${SRR}/hERV
+  cp ./stellarscope/${SRR}/stellarscope-barcodes.tsv ./mtx/${SRR}/hERV/${res_barcodes}.tsv
+  cp ./stellarscope/${SRR}/stellarscope-features.tsv ./mtx/${SRR}/hERV/${res_features}.tsv
+  cp ./stellarscope/${SRR}/stellarscope-TE_counts.mtx ./mtx/${SRR}/hERV/${res_counts}.mtx
+done
+du -sh ./mtx  # 看看最后的数据有多大
+# tar -czvf mtx.tar.gz ./mtx/
 ```
 
 ### GSE157827

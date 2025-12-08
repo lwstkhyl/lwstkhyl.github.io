@@ -77,7 +77,7 @@ done
 
 ### GSE233208
 
-[GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE233208)
+[GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE233208)，下载[GSE233208_AD-DS_Cases.csv.gz](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE233nnn/GSE233208/suppl/GSE233208%5FAD%2DDS%5FCases.csv.gz)样本信息
 
 点开其中一个样本的页面[GSM7412790](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM7412790)，可以看到是用什么测序技术测的，关键信息：
 
@@ -85,7 +85,7 @@ done
 using Parse biosciences Evercode WT kit (v1)
 ```
 
-进入[SRA run](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA975472)中，左面Assay Type选择RNA-Seq，下载41条数据
+进入[SRA run](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA975472)中，左面Assay Type选择RNA-Seq，下载41条数据（**共732.66G，碱基数2.29T，样本数96个**）
 
 相关论文[Spatial and single-nucleus transcriptomic analysis of genetic and sporadic forms of Alzheimer’s disease](https://www.nature.com/articles/s41588-024-01961-x)
 
@@ -167,7 +167,7 @@ STAR \
 
 ##### try 2
 
-[Analysis tools for split-seq](https://github.com/yjzhang/split-seq-pipeline)
+找了一个野生工具[Analysis tools for split-seq](https://github.com/yjzhang/split-seq-pipeline)，作者使用自己创作的解码（条形码和sample组别）方式，没有依赖splitpipe，但更新时间是5年前，有一些古老
 
 ```sh
 # 安装
@@ -238,7 +238,15 @@ split-seq all \
   --sample '20' D11-D12
 ```
 
-在分析的末尾，作者的`split_seq/analysis.py`文件中的`generate_single_dge_report`报错`KeyError(f"{not_found} not in index")`，仔细一看是一段对`Fraction Reads in Cells`统计的代码出错，感觉这个数据不太重要，于是注释掉了该文件中所有类似统计的行（527-531、540-541、546、574、576-583
+在分析的末尾，作者的`split_seq/analysis.py`文件中的`generate_single_dge_report`报错`KeyError(f"{not_found} not in index")`，仔细一看是一段对`Fraction Reads in Cells`统计的代码出错，感觉这个数据不太重要，于是注释掉了该文件中所有类似统计的行（527-531、540-541、546、574、576-583）
+
+结果：处理一条数据大约需要6-7个小时，确实可以得到看起来很正确的统计结果，包括每个样本id对应的计数矩阵+条形码+基因，作者筛选出来有有效条形码的读段fastq文件极其比对结果bam，理论上可以根据这个结果来构建Seurat对象
+
+![GSE233208_1](/upload/md-image/other/GSE233208_1.png){:width="600px" height="600px"}
+
+问题：
+- 虽然有类似的结果，但不能确定这个GitHub项目处理的流程是否正确，毕竟是野生项目，有可能只是作者给自己使用的数据写的，无法推广到这个比较偏门的数据。最主要这个结果的正确性是无法验证的（除非跑完整个流程后再到Seurat里面画图查看）
+- 需要与后续stellarscope分析衔接，因为作者使用自己写的流程，不知道是否保留了后面stellarscope需要的文件，而且尚未清楚是怎么筛选的、筛选结果的格式是什么，需要进一步根据stellarscope的输入和这个pipeline的输出进行研究
 
 #### 构建Seurat对象
 
@@ -249,6 +257,8 @@ split-seq all \
 
 
 ### GSE138852
+
+数据量较小（共78.18G，碱基数153.78G，样本量8个），但作者提供了详细的计数矩阵+条形码+基因（包括每个SRR run的和总的），并且使用10X Genomics，条形码和UMI位置易确定，打算先用这个跑通基本pipeline（STARsolo+stellarscope+构建Seurat对象）
 
 [GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852)
 
@@ -399,6 +409,8 @@ done
 
 ### GSE157827
 
+和上面GSE138852相比，同样都有作者提供的详细的计数矩阵+条形码+基因、都使用10X Genomics，但多了每个样本的注释信息（组别、性别、年龄、APOE等），同时数据量较大（共593.81G，碱基数2.02T，样本量21个）
+
 [GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE157827)
 
 点开其中一个样本的页面[GSM4775561](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM4775561)，可以看到是用什么测序技术测的（UMI和BC的位置和长度）
@@ -414,9 +426,8 @@ using the Chromium Single Cell 3′ Library Kit v3 (1000078; 10x Genomics)
 在相关论文[Single-nucleus transcriptome analysis reveals dysregulation of angiogenic endothelial cells and neuroprotective glia in Alzheimer’s disease](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117)的补充材料[Dataset_S01 (XLSX)](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117/suppl_file/pnas.2008762117.sd01.xlsx)中可以下载到每个样本的具体信息（组别、性别、年龄、APOE等）：
 
 ![GSE157827_1](/upload/md-image/other/GSE157827_1.png){:width="800px" height="800px"}
-https://www.jianshu.com/p/d7e086020fc8
 
-同时还有一些国内的教程，例如[复现2：AD与Normal细胞类型水平的差异基因挖掘](https://www.jianshu.com/p/d7e086020fc8)
+同时还有一些国内的教程，例如[复现2：AD与Normal细胞类型水平的差异基因挖掘](https://www.jianshu.com/p/d7e086020fc8)，使用广泛
 
 #### STAR比对
 

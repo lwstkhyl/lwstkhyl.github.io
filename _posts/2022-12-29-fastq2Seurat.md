@@ -250,7 +250,7 @@ split-seq all \
 
 #### 构建Seurat对象
 
-总体思路：关键普通基因使用STARsolo计数，hERV使用stellarscope计数，而最终我们是用普通基因先构建Seurat对象，再把stellarscope计数得到的矩阵作为一个assay挂载上去
+总体思路：普通基因使用STARsolo计数，hERV使用stellarscope计数，而最终我们是用普通基因先构建Seurat对象，再把stellarscope计数得到的矩阵作为一个assay挂载上去
 
 
 
@@ -422,9 +422,95 @@ for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
   cp ./stellarscope/${SRR}/stellarscope-features.tsv ./mtx/${SRR}/hERV/${res_features}.tsv
   cp ./stellarscope/${SRR}/stellarscope-TE_counts.mtx ./mtx/${SRR}/hERV/${res_counts}.mtx
 done
-du -sh ./mtx  # 看看最后的数据有多大
+du -sh ./mtx  # 看看最后的数据有多大--400多M
 # tar -czvf mtx.tar.gz ./mtx/
 ```
+
+将SRR号和诊断组别等信息整合为一个表格：
+
+![GSE138852_1](/upload/md-image/other/GSE138852_1.png){:width="500px" height="500px"}
+
+从mtx构建Seurat对象：
+
+```r
+library(Seurat)
+library(Matrix)
+library(tidyverse)
+library(readxl)
+data_root <- "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\data\\mtx"
+metadata_path <- "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\metadata.xlsx"
+# 读取一个SRR，返回一个Seurat对象（普通基因+hERV）
+read_one_srr <- function(srr) {
+  gene_dir <- file.path(data_root, srr, "gene")
+  herv_dir <- file.path(data_root, srr, "hERV")
+  # 读取mtx
+  gene_counts <- ReadMtx(
+    mtx = file.path(gene_dir, "counts.mtx"),
+    features = file.path(gene_dir, "features.tsv"),
+    cells = file.path(gene_dir, "barcodes.tsv")
+  )
+  herv_counts <- ReadMtx(
+    mtx = file.path(herv_dir, "counts.mtx"),
+    features = file.path(herv_dir, "features.tsv"),
+    cells = file.path(herv_dir, "barcodes.tsv"),
+    feature.column = 1
+  )
+  # 给不同SRR的细胞加前缀，避免重名
+  colnames(gene_counts) <- paste(srr, colnames(gene_counts), sep = "_")
+  colnames(herv_counts) <- paste(srr, colnames(herv_counts), sep = "_")
+  # 只保留gene和hERV都有的细胞
+  common_cells <- intersect(colnames(gene_counts), colnames(herv_counts))
+  gene_counts <- gene_counts[, common_cells, drop = FALSE]
+  herv_counts <- herv_counts[, common_cells, drop = FALSE]
+  # 用普通基因创建Seurat对象
+  seu <- CreateSeuratObject(
+    counts = gene_counts,
+    assay = "RNA",
+    project = "AD_hERV"
+  )
+  # 把hERV作为第二个assay挂上去
+  seu[["HERV"]] <- CreateAssayObject(counts = herv_counts)
+  # 在metadata里记一下SRR号，后面方便join
+  seu$SRR_id <- srr
+  return(seu)
+}
+```
+
+```r
+# 读取metadata
+sample_meta <- read_xlsx(metadata_path)
+# 列出所有文件夹
+srr_ids <- list.dirs(data_root, full.names = FALSE, recursive = FALSE)
+# 对所有SRR构建Seurat对象
+seu_list <- list()
+for (srr in srr_ids) {
+  seu <- read_one_srr(srr)
+  if (!is.null(seu)) {
+    seu_list[[srr]] <- seu
+  }
+}
+# 合并
+seu <- Reduce(function(x, y) merge(x, y), seu_list)
+rm(seu_list)
+head(seu@meta.data)
+# 添加metadata
+meta_df <- seu@meta.data %>%
+  rownames_to_column("cell") %>%
+  left_join(sample_meta, by = "SRR_id") %>%
+  column_to_rownames("cell")
+seu@meta.data <- meta_df
+# 合并每个layers
+seu <- JoinLayers(seu, assay = "RNA")
+# 检查一下layers
+Layers(seu, assay = "RNA")
+# 保存为rds
+saveRDS(
+  seu, 
+  file = "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\data\\GSE138852.rds", 
+  compress = "xz"
+)
+```
+
 
 ### GSE157827
 
@@ -517,3 +603,78 @@ stellarscope assign \
   ./res/Aligned.sortedByCB.bam \
   /public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
 ```
+
+#### 循环运行并构建Seurat对象
+
+```sh
+workDir=/public/home/GENE_proc/wth/GSE157827/
+genomeDir=/public/home/wangtianhao/Desktop/STAR_ref/hg38/
+whitelist=/public/home/wangtianhao/Desktop/STAR_ref/whitelist/3M-february-2018.txt
+hERV_gtf=/public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
+res_barcodes=barcodes
+res_features=features
+res_counts=counts
+# STARsolo + stellarscope
+cd ${workDir}
+module load miniconda3/base
+for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
+  conda activate STAR
+  mkdir -p star
+  STAR \
+    --runMode alignReads \
+    --runThreadN 16 \
+    --genomeDir ${genomeDir} \
+    --readFilesIn ./fastq/${SRR}_2.fastq.gz ./fastq/${SRR}_1.fastq.gz \
+    --readFilesCommand zcat \
+    --outFileNamePrefix star/${SRR}_ \
+    --soloType CB_UMI_Simple \
+    --soloCBstart 1 \
+    --soloCBlen 16 \
+    --soloUMIstart 17 \
+    --soloUMIlen 10 \
+    --soloBarcodeReadLength 0 \
+    --soloCBwhitelist ${whitelist} \
+    --clipAdapterType CellRanger4 \
+    --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
+    --soloUMIfiltering MultiGeneUMI_CR \
+    --soloUMIdedup 1MM_CR \
+    --outSAMtype BAM SortedByCoordinate \
+    --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
+    --outSAMunmapped Within \
+    --outFilterScoreMin 30 \
+    --limitOutSJcollapsed 5000000 \
+    --outFilterMultimapNmax 500 \
+    --outFilterMultimapScoreRange 5
+  conda deactivate
+  conda activate stellarscope
+  mkdir -p stellarscope/${SRR}
+  samtools view -@1 -u -F 4 -D CB:<(tail -n+1 ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv) ./star/${SRR}_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./stellarscope/${SRR}/Aligned.sortedByCB.bam
+  stellarscope assign \
+    --outdir ./stellarscope/${SRR} \
+    --nproc 16 \
+    --stranded_mode F \
+    --whitelist ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv \
+    --pooling_mode individual \
+    --reassign_mode best_exclude \
+    --max_iter 500 \
+    --updated_sam \
+    ./stellarscope/${SRR}/Aligned.sortedByCB.bam \
+    ${hERV_gtf}
+  conda deactivate
+done
+# 汇总结果
+cd ${workDir}
+for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
+  mkdir -p mtx/${SRR}/gene
+  cp ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv ./mtx/${SRR}/gene/${res_barcodes}.tsv
+  cp ./star/${SRR}_Solo.out/Gene/filtered/features.tsv ./mtx/${SRR}/gene/${res_features}.tsv
+  cp ./star/${SRR}_Solo.out/Gene/filtered/matrix.mtx ./mtx/${SRR}/gene/${res_counts}.mtx
+  mkdir -p mtx/${SRR}/hERV
+  cp ./stellarscope/${SRR}/stellarscope-barcodes.tsv ./mtx/${SRR}/hERV/${res_barcodes}.tsv
+  cp ./stellarscope/${SRR}/stellarscope-features.tsv ./mtx/${SRR}/hERV/${res_features}.tsv
+  cp ./stellarscope/${SRR}/stellarscope-TE_counts.mtx ./mtx/${SRR}/hERV/${res_counts}.mtx
+done
+du -sh ./mtx  # 看看最后的数据有多大--400多M
+# tar -czvf mtx.tar.gz ./mtx/
+```
+

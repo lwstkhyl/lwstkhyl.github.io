@@ -9,6 +9,10 @@ subcategory: other-other
 
 <!-- more -->
 
+### scRNA-seq的测序数据
+
+
+
 ### 数据下载和建索引
 
 由telescope的同作者开发的针对单细胞数据的hERV位点级分析工具[Stellarscope](https://github.com/nixonlab/stellarscope)
@@ -42,7 +46,6 @@ cd /public/home/wangtianhao/Desktop/GSE233208/1204test/fastq/
 module load miniconda3/base
 conda activate fastq-download
 nohup parallel-fastq-dump --sra-id SRR24710599 --threads 8 --split-files --tmpdir ./fastq_temp --gzip &
-# for file in *.fastq; do gzip "$file"; done
 # 或者
 nohup axel -n 8 ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR247/098/SRR24710598/SRR24710598_2.fastq.gz > /dev/null 2> error.log &
 nohup axel -n 8 ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR247/098/SRR24710598/SRR24710598_1.fastq.gz > /dev/null 2> error.log &
@@ -73,6 +76,608 @@ conda activate fastq-download
 for SRR in $(cat SRR_Acc_List.txt); do
     parallel-fastq-dump --sra-id ${SRR} --tmpdir ./fastq_temp --threads 8 --split-files --gzip
 done
+```
+
+### GSE138852
+
+数据量较小（共78.18G，碱基数153.78G，样本量8个），但作者提供了详细的计数矩阵+条形码+基因（包括每个SRR run的和总的），并且使用10X Genomics，条形码和UMI位置易确定，打算先用这个数据集跑通基本pipeline（STARsolo+stellarscope+构建Seurat对象）
+
+[GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852)
+
+点开其中一个样本的页面[GSM4120422](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM4120422)，可以看到是用什么测序技术测的（UMI和BC的位置和长度），关键信息：
+
+```
+I1 read: contains the sample index.
+R1 read: contains the cell barcode (first 16 nt) and UMI (next 10 nt).
+R2 read: contains the RNA sequence.
+Using the Grch38 (1.2.0) reference from 10x Genomics
+using the Chromium Single Cell 3′ Library & Gel Bead Kit v2 (10X Genomics, #PN-120237)
+```
+
+进入[SRA run](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA577618)中下载
+
+#### STAR比对
+
+因为下载下来得到的是`SRRxxx_1.fastq.gz`/`SRRxxx_2.fastq.gz`/`SRRxxx_3.fastq.gz`这样的文件，首先检测哪个是cDNA，哪个是UMI+barcode
+
+```sh
+zcat SRR10278808_1.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+zcat SRR10278808_2.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+zcat SRR10278808_3.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+```
+
+- `SRRxxx_1.fastq.gz`：8bp——index，对STAR计数不重要，可忽略
+- `SRRxxx_2.fastq.gz`：26bp——UMI+barcodes
+- `SRRxxx_3.fastq.gz`：116bp——cDNA
+
+whitelist从哪里下载：有时CellRanger的安装目录里就有，不过我没找到，直接到GitHub的开源项目中搜，比如[10X Cell Ranger whitelists](https://github.com/Lab-of-Adaptive-Immunity/cr_whitelists)，把两个txt解压即可。因为是v2版本，所以用`737K-august-2016.txt`
+
+```sh
+cd /public/home/wangtianhao/Desktop/GSE138852/
+module load miniconda3/base
+conda activate STAR
+mkdir -p star/res
+cd star
+# 注意以下命令执行时删掉#的行，否则只读到第一个#就不往下读了
+STAR \
+  --runMode alignReads \
+  --runThreadN 16 \
+  --genomeDir /public/home/wangtianhao/Desktop/STAR_ref/hg38/ \
+  --readFilesIn /public/home/wangtianhao/Desktop/GSE138852/fastq/SRR10278808_3.fastq.gz /public/home/wangtianhao/Desktop/GSE138852/fastq/SRR10278808_2.fastq.gz \
+  --readFilesCommand zcat \
+  --outFileNamePrefix res/SRR10278808_ \
+  # 条形码 \
+  --soloType CB_UMI_Simple \
+  --soloCBstart 1 \
+  --soloCBlen 16 \
+  --soloUMIstart 17 \
+  --soloUMIlen 10 \
+  --soloBarcodeReadLength 0 \
+  --soloCBwhitelist /public/home/wangtianhao/Desktop/STAR_ref/whitelist/737K-august-2016.txt \
+  # 计数/细胞筛选设置 \
+  --clipAdapterType CellRanger4 \
+  --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
+  --soloUMIfiltering MultiGeneUMI_CR \
+  --soloUMIdedup 1MM_CR \
+  # BAM输出和Tags（给Stellarscope用） \
+  --outSAMtype BAM SortedByCoordinate \
+  --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
+  # Stellarscope要求保留多重比对 \
+  --outSAMunmapped Within \
+  --outFilterScoreMin 30 \
+  --limitOutSJcollapsed 5000000 \
+  --outFilterMultimapNmax 500 \
+  --outFilterMultimapScoreRange 5
+```
+
+#### stellarscope计数
+
+```sh
+module load miniconda3/base
+conda activate stellarscope
+cd /public/home/wangtianhao/Desktop/GSE138852/stellarscope/
+mkdir -p res
+# 按名称排序
+samtools view -@1 -u -F 4 -D CB:<(tail -n+1 /public/home/wangtianhao/Desktop/GSE138852/star/res/SRR10278808_Solo.out/Gene/filtered/barcodes.tsv) /public/home/wangtianhao/Desktop/GSE138852/star/res/SRR10278808_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./res/Aligned.sortedByCB.bam
+# 计数
+stellarscope assign \
+  --exp_tag SRR10278808 \
+  --outdir /public/home/wangtianhao/Desktop/GSE138852/stellarscope/res \
+  --nproc 16 \
+  --stranded_mode F \
+  --whitelist /public/home/wangtianhao/Desktop/GSE138852/star/res/SRR10278808_Solo.out/Gene/filtered/barcodes.tsv \
+  --pooling_mode individual \
+  --reassign_mode best_exclude \
+  --max_iter 500 \
+  --updated_sam \
+  /public/home/wangtianhao/Desktop/GSE138852/stellarscope/res/Aligned.sortedByCB.bam \
+  /public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
+```
+
+#### 循环运行并构建Seurat对象
+
+总体思路：普通基因使用STARsolo计数，hERV使用stellarscope计数，而最终我们是用普通基因先构建Seurat对象，再把stellarscope计数得到的矩阵作为一个assay挂载上去
+
+```sh
+workDir=/public/home/GENE_proc/wth/GSE138852/
+genomeDir=/public/home/wangtianhao/Desktop/STAR_ref/hg38/
+whitelist=/public/home/wangtianhao/Desktop/STAR_ref/whitelist/737K-august-2016.txt
+hERV_gtf=/public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
+res_barcodes=barcodes
+res_features=features
+res_counts=counts
+# STARsolo + stellarscope
+cd ${workDir}
+module load miniconda3/base
+for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
+  conda activate STAR
+  mkdir -p star
+  STAR \
+    --runMode alignReads \
+    --runThreadN 16 \
+    --genomeDir ${genomeDir} \
+    --readFilesIn ./fastq/${SRR}_3.fastq.gz ./fastq/${SRR}_2.fastq.gz \
+    --readFilesCommand zcat \
+    --outFileNamePrefix star/${SRR}_ \
+    --soloType CB_UMI_Simple \
+    --soloCBstart 1 \
+    --soloCBlen 16 \
+    --soloUMIstart 17 \
+    --soloUMIlen 10 \
+    --soloBarcodeReadLength 0 \
+    --soloCBwhitelist ${whitelist} \
+    --clipAdapterType CellRanger4 \
+    --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
+    --soloUMIfiltering MultiGeneUMI_CR \
+    --soloUMIdedup 1MM_CR \
+    --outSAMtype BAM SortedByCoordinate \
+    --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
+    --outSAMunmapped Within \
+    --outFilterScoreMin 30 \
+    --limitOutSJcollapsed 5000000 \
+    --outFilterMultimapNmax 500 \
+    --outFilterMultimapScoreRange 5
+  conda deactivate
+  conda activate stellarscope
+  mkdir -p stellarscope/${SRR}
+  samtools view -@1 -u -F 4 -D CB:<(tail -n+1 ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv) ./star/${SRR}_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./stellarscope/${SRR}/Aligned.sortedByCB.bam
+  stellarscope assign \
+    --outdir ./stellarscope/${SRR} \
+    --nproc 16 \
+    --stranded_mode F \
+    --whitelist ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv \
+    --pooling_mode individual \
+    --reassign_mode best_exclude \
+    --max_iter 500 \
+    --updated_sam \
+    ./stellarscope/${SRR}/Aligned.sortedByCB.bam \
+    ${hERV_gtf}
+  conda deactivate
+done
+# 汇总结果
+cd ${workDir}
+for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
+  mkdir -p mtx/${SRR}/gene
+  cp ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv ./mtx/${SRR}/gene/${res_barcodes}.tsv
+  cp ./star/${SRR}_Solo.out/Gene/filtered/features.tsv ./mtx/${SRR}/gene/${res_features}.tsv
+  cp ./star/${SRR}_Solo.out/Gene/filtered/matrix.mtx ./mtx/${SRR}/gene/${res_counts}.mtx
+  mkdir -p mtx/${SRR}/hERV
+  cp ./stellarscope/${SRR}/stellarscope-barcodes.tsv ./mtx/${SRR}/hERV/${res_barcodes}.tsv
+  cp ./stellarscope/${SRR}/stellarscope-features.tsv ./mtx/${SRR}/hERV/${res_features}.tsv
+  cp ./stellarscope/${SRR}/stellarscope-TE_counts.mtx ./mtx/${SRR}/hERV/${res_counts}.mtx
+done
+du -sh ./mtx  # 看看最后的数据有多大--400多M
+# tar -czvf mtx.tar.gz ./mtx/
+```
+
+将SRR号和诊断组别等信息整合为一个表格：
+
+![GSE138852_1](/upload/md-image/other/GSE138852_1.png){:width="500px" height="500px"}
+
+从mtx构建Seurat对象：
+
+```r
+library(Seurat)
+library(Matrix)
+library(tidyverse)
+library(readxl)
+data_root <- "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\data\\mtx"
+metadata_path <- "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\metadata.xlsx"
+# 读取一个SRR，返回一个Seurat对象（普通基因+hERV）
+read_one_srr <- function(srr) {
+  gene_dir <- file.path(data_root, srr, "gene")
+  herv_dir <- file.path(data_root, srr, "hERV")
+  # 读取mtx
+  gene_counts <- ReadMtx(
+    mtx = file.path(gene_dir, "counts.mtx"),
+    features = file.path(gene_dir, "features.tsv"),
+    cells = file.path(gene_dir, "barcodes.tsv")
+  )
+  herv_counts <- ReadMtx(
+    mtx = file.path(herv_dir, "counts.mtx"),
+    features = file.path(herv_dir, "features.tsv"),
+    cells = file.path(herv_dir, "barcodes.tsv"),
+    feature.column = 1
+  )
+  # 给不同SRR的细胞加前缀，避免重名
+  colnames(gene_counts) <- paste(srr, colnames(gene_counts), sep = "_")
+  colnames(herv_counts) <- paste(srr, colnames(herv_counts), sep = "_")
+  # 只保留gene和hERV都有的细胞
+  common_cells <- intersect(colnames(gene_counts), colnames(herv_counts))
+  gene_counts <- gene_counts[, common_cells, drop = FALSE]
+  herv_counts <- herv_counts[, common_cells, drop = FALSE]
+  # 用普通基因创建Seurat对象
+  seu <- CreateSeuratObject(
+    counts = gene_counts,
+    assay = "RNA",
+    project = "AD_hERV"
+  )
+  # 把hERV作为第二个assay挂上去
+  seu[["HERV"]] <- CreateAssayObject(counts = herv_counts)
+  # 在metadata里记一下SRR号，后面方便join
+  seu$SRR_id <- srr
+  return(seu)
+}
+```
+
+```r
+# 读取metadata
+sample_meta <- read_xlsx(metadata_path)
+# 列出所有文件夹
+srr_ids <- list.dirs(data_root, full.names = FALSE, recursive = FALSE)
+# 对所有SRR构建Seurat对象
+seu_list <- list()
+for (srr in srr_ids) {
+  seu <- read_one_srr(srr)
+  if (!is.null(seu)) {
+    seu_list[[srr]] <- seu
+  }
+}
+# 合并
+seu <- Reduce(function(x, y) merge(x, y), seu_list)
+rm(seu_list)
+head(seu@meta.data)
+# 添加metadata
+meta_df <- seu@meta.data %>%
+  rownames_to_column("cell") %>%
+  left_join(sample_meta, by = "SRR_id") %>%
+  column_to_rownames("cell")
+seu@meta.data <- meta_df
+# 合并每个layers
+seu <- JoinLayers(seu, assay = "RNA")
+# 检查一下layers
+Layers(seu, assay = "RNA")
+# 保存为rds
+saveRDS(
+  seu, 
+  file = "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\data\\GSE138852.rds", 
+  compress = "xz"
+)
+```
+
+#### 初步验证两个计数矩阵是否正确
+
+**基本参数**：
+
+```r
+seu <- readRDS("C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\data\\GSE138852.rds")
+seu[["percent.mt"]] <- PercentageFeatureSet(seu, pattern = "^MT-")
+# 维度和细胞名是否对齐
+rna_counts  <- GetAssayData(seu, assay = "RNA",  slot = "counts")
+herv_counts <- GetAssayData(seu, assay = "HERV", slot = "counts")
+dim(rna_counts)
+dim(herv_counts)  # 细胞数应该相同
+all(colnames(rna_counts) == colnames(herv_counts))  # 细胞名应该相同
+# 基本分布
+seu$nCount_RNA <- Matrix::colSums(rna_counts)
+seu$nFeature_RNA <- Matrix::colSums(rna_counts > 0)
+summary(seu$nCount_RNA)  # 
+summary(seu$nFeature_RNA)
+seu$nCount_HERV <- Matrix::colSums(herv_counts)
+seu$nFeature_HERV <- Matrix::colSums(herv_counts > 0)
+summary(seu$nCount_HERV)
+summary(seu$nFeature_HERV)
+# HERV占整个转录本的比例
+seu$HERV_fraction <- seu$nCount_HERV / (seu$nCount_HERV + seu$nCount_RNA)
+summary(seu$HERV_fraction)
+```
+
+```
+summary(seu$nFeature_RNA)
+Min.   :   24  
+1st Qu.:  187  
+Median :  256  
+Mean   :  324  
+3rd Qu.:  375  
+Max.   : 3606  
+
+summary(seu$nCount_RNA)
+Min.   :   88  
+1st Qu.:  247  
+Median :  345  
+Mean   :  458  
+3rd Qu.:  523  
+Max.   : 7083  
+```
+
+对于经典10x单细胞，每个细胞的基因数`nFeature_RNA`正常中位数应该在1000-3000左右，每个细胞的UMI数`nCount_RNA`也应在几千-几万的水平，属于偏低但可以接受的范围，可能是测序深度过低/snRNA-seq的原因
+
+```
+summary(seu$nCount_HERV)
+Min.   :  0.0  
+1st Qu.:  0.0  
+Median :  2.0  
+Mean   :  2.4  
+3rd Qu.:  3.0  
+Max.   : 48.0  
+
+summary(seu$nFeature_HERV)
+Min.   :  0.0  
+1st Qu.:  0.0  
+Median :  1.0  
+Mean   :  2.1  
+3rd Qu.:  3.0  
+Max.   : 37.0  
+
+summary(seu$HERV_fraction)
+Min.   :0.000000  
+1st Qu.:0.000000  
+Median :0.004149   # 约 0.4%
+Mean   :0.005002   # 约 0.5%
+3rd Qu.:0.007321   # 约 0.7%
+Max.   :0.076271   # 最高~7.6%
+```
+
+理论上，大部分细胞的hERV UMI只有0-几个，feature数也只有0-3个左右，UMI占比没有出现“某些细胞几乎全是HERV，正常基因很少”的情况，符合真实生物信号
+
+**画QC图**：
+
+```r
+seu$QCgroup <- "All_cells"  # 给所有细胞加一个统一分组，防止画图时按SRR分组导致多个柱子的情况
+VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "QCgroup", ncol = 3)  
+FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "percent.mt", group.by = "QCgroup")  
+FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by = "QCgroup")
+```
+
+![GSE138852_2](/upload/md-image/other/GSE138852_2.png){:width="600px" height="600px"}
+
+![GSE138852_3](/upload/md-image/other/GSE138852_3.png){:width="600px" height="600px"}
+
+![GSE138852_4](/upload/md-image/other/GSE138852_4.png){:width="600px" height="600px"}
+
+- `nFeature_RNA - nCount_RNA`相关系数0.97，整体是一条弯曲的抛物线，没有出现很多“UMI很高但feature很少”的情况
+- `nCount_RNA - percent.mt`相关系数-0.09，基本接近0，整体是标准的L形，线粒体比例和UMI没有正相关，高线粒体的点主要集中在低UMI端，符合预期
+
+可以据此设置过滤阈值：
+
+```r
+seu_qc <- subset(
+  seu,
+  subset =
+    nFeature_RNA > 150 &    # 去掉极低特征细胞
+    nFeature_RNA < 2000 &   # 剪掉极高（可能doublet/异常）
+    nCount_RNA   > 200 &    # 去掉UMI太少的
+    nCount_RNA   < 4000 &   # 剪掉极高UMI
+    percent.mt   < 10       # 去掉线粒体高的
+)
+```
+
+**与作者提供的计数矩阵对照**：
+
+作者只提供了整个的计数矩阵（所有样本合在一起），从GEO[下载](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE138nnn/GSE138852/suppl/GSE138852%5Fcounts.csv.gz)
+
+```r
+# 读取作者计数矩阵
+author_counts <- read.csv(
+  "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\data\\GSE138852_counts.csv", 
+  row.names = 1,
+  check.names = FALSE
+)
+author_barcode <- sub("_.*$", "", colnames(author_counts))  
+author_individual <- sub("^[^_]+_", "", colnames(author_counts))
+author_cell_id <- paste(author_barcode, author_individual, sep = "_")
+colnames(author_counts) <- author_cell_id
+# 改我的seu的细胞名
+seu$individuals <- gsub("-", "_", seu$individuals)
+rna_counts <- GetAssayData(seu, assay = "RNA", slot = "counts")
+our_cell_names <- colnames(rna_counts)
+our_barcode <- sub("^SRR[0-9]+_", "", our_cell_names)
+our_barcode <- sub("-1$", "", our_barcode)
+our_individuals <- seu$individuals[match(our_cell_names, rownames(seu@meta.data))]
+our_cell_id <- paste(our_barcode, our_individuals, sep = "_")
+seu$cell_id_qc <- our_cell_id
+# 取交集
+common_cells <- intersect(our_cell_id, colnames(author_counts))
+our_idx <- match(common_cells, our_cell_id)
+author_idx <- match(common_cells, colnames(author_counts))
+our_sub    <- rna_counts[, our_idx, drop = FALSE]
+author_sub <- as.matrix(author_counts[, author_idx])
+stopifnot(all(common_cells == colnames(author_sub)))
+# 比较每个细胞的总UMI数
+our_lib    <- Matrix::colSums(our_sub)
+author_lib <- Matrix::colSums(author_sub)
+plot(
+  log10(author_lib + 1), log10(our_lib + 1),
+  xlab = "log10 UMI (author CSV)",
+  ylab = "log10 UMI (STARsolo)",
+  pch  = 16, cex = 0.5,
+)
+abline(0, 1, col = "red")
+cor(log10(author_lib + 1), log10(our_lib + 1), method = "pearson")
+```
+
+![GSE138852_6](/upload/md-image/other/GSE138852_6.png){:width="500px" height="500px"}
+
+相关性>0.9，几乎是线性关系——我的计数和作者的高度相关，整体位于对角线以下可能是因为star比对的参数不同，比如feature模式、对多重比对或重复的处理策略、过滤低质量细胞等
+
+**看看hERV的具体情况**：
+
+```r
+DefaultAssay(seu) <- "HERV"
+# 取表达最多的20个HERV
+herv_sums <- Matrix::rowSums(herv_counts)
+top_herv <- names(sort(herv_sums, decreasing = TRUE))[1:20]
+VlnPlot(seu, features = head(top_herv, 6), group.by = "diagnosis", ncol = 3)  # 没有在所有样本中都特别高或者都为0的情况即可
+# RNA和HERV总量的相关性
+plot(
+  log10(seu$nCount_RNA + 1), 
+  log10(seu$nCount_HERV + 1),
+  pch = 16, cex = 0.3,
+  xlab = "log10 nCount_RNA", ylab = "log10 nCount_HERV"
+)  # 大致呈现左下-右上对角线分布
+cor(log10(seu$nCount_RNA + 1), log10(seu$nCount_HERV + 1))  # 应该是有一些相关性的，不会完全是0，我这里是0.6多，正常
+# QC图
+VlnPlot(seu, features = c("nFeature_HERV", "nCount_HERV", "HERV_fraction"), group.by = "QCgroup", ncol = 3)  
+```
+
+![GSE138852_5](/upload/md-image/other/GSE138852_5.png){:width="600px" height="600px"}
+
+符合“不全为0、所有细胞hERV计数值都很高”的情况
+
+### GSE157827
+
+和上面GSE138852相比，同样都有作者提供的详细的计数矩阵+条形码+基因、都使用10X Genomics，但多了每个样本的注释信息（组别、性别、年龄、APOE等），同时数据量较大（共593.81G，碱基数2.02T，样本量21个）
+
+[GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE157827)
+
+点开其中一个样本的页面[GSM4775561](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM4775561)，可以看到是用什么测序技术测的（UMI和BC的位置和长度）
+
+进入[SRA run](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA662923)中下载
+
+关键信息：
+
+```
+using the Chromium Single Cell 3′ Library Kit v3 (1000078; 10x Genomics) 
+```
+
+在相关论文[Single-nucleus transcriptome analysis reveals dysregulation of angiogenic endothelial cells and neuroprotective glia in Alzheimer’s disease](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117)的补充材料[Dataset_S01 (XLSX)](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117/suppl_file/pnas.2008762117.sd01.xlsx)中可以下载到每个样本的具体信息（组别、性别、年龄、APOE等）：
+
+![GSE157827_1](/upload/md-image/other/GSE157827_1.png){:width="800px" height="800px"}
+
+同时还有一些国内的教程，例如[复现2：AD与Normal细胞类型水平的差异基因挖掘](https://www.jianshu.com/p/d7e086020fc8)，使用广泛
+
+#### STAR比对
+
+还是先看序列信息
+
+```sh
+zcat SRR12623876_1.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+zcat SRR12623876_2.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
+```
+
+- `SRRxxx_1.fastq.gz`：26bp——UMI+barcode
+- `SRRxxx_2.fastq.gz`：98bp——cDNA
+
+whitelist：因为是v3版本，所以用`3M-february-2018.txt`
+
+```sh
+cd /public/home/wangtianhao/Desktop/GSE157827/
+module load miniconda3/base
+conda activate STAR
+mkdir -p star/res
+cd star
+STAR \
+  --runMode alignReads \
+  --runThreadN 16 \
+  --genomeDir /public/home/wangtianhao/Desktop/STAR_ref/hg38/ \
+  --readFilesIn /public/home/wangtianhao/Desktop/GSE157827/fastq/SRR12623876_2.fastq.gz /public/home/wangtianhao/Desktop/GSE157827/fastq/SRR12623876_1.fastq.gz \
+  --readFilesCommand zcat \
+  --outFileNamePrefix res/SRR12623876_ \
+  --soloType CB_UMI_Simple \
+  --soloCBstart 1 \
+  --soloCBlen 16 \
+  --soloUMIstart 17 \
+  --soloUMIlen 10 \
+  --soloBarcodeReadLength 0 \
+  --soloCBwhitelist /public/home/wangtianhao/Desktop/STAR_ref/whitelist/3M-february-2018.txt \
+  --clipAdapterType CellRanger4 \
+  --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
+  --soloUMIfiltering MultiGeneUMI_CR \
+  --soloUMIdedup 1MM_CR \
+  --outSAMtype BAM SortedByCoordinate \
+  --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
+  --outSAMunmapped Within \
+  --outFilterScoreMin 30 \
+  --limitOutSJcollapsed 5000000 \
+  --outFilterMultimapNmax 500 \
+  --outFilterMultimapScoreRange 5
+```
+
+#### stellarscope计数
+
+```sh
+module load miniconda3/base
+conda activate stellarscope
+cd /public/home/wangtianhao/Desktop/GSE157827/
+mkdir -p stellarscope/res
+cd stellarscope
+samtools view -@1 -u -F 4 -D CB:<(tail -n+1 /public/home/wangtianhao/Desktop/GSE157827/star/res/SRR12623876_Solo.out/Gene/filtered/barcodes.tsv) /public/home/wangtianhao/Desktop/GSE157827/star/res/SRR12623876_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./res/Aligned.sortedByCB.bam
+stellarscope assign \
+  --exp_tag SRR12623876 \
+  --outdir ./res \
+  --nproc 16 \
+  --stranded_mode F \
+  --whitelist /public/home/wangtianhao/Desktop/GSE157827/star/res/SRR12623876_Solo.out/Gene/filtered/barcodes.tsv \
+  --pooling_mode individual \
+  --reassign_mode best_exclude \
+  --max_iter 500 \
+  --updated_sam \
+  ./res/Aligned.sortedByCB.bam \
+  /public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
+```
+
+#### 循环运行并构建Seurat对象
+
+```sh
+workDir=/public/home/GENE_proc/wth/GSE157827/
+genomeDir=/public/home/wangtianhao/Desktop/STAR_ref/hg38/
+whitelist=/public/home/wangtianhao/Desktop/STAR_ref/whitelist/3M-february-2018.txt
+hERV_gtf=/public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
+res_barcodes=barcodes
+res_features=features
+res_counts=counts
+# STARsolo + stellarscope
+cd ${workDir}
+module load miniconda3/base
+for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
+  conda activate STAR
+  mkdir -p star
+  STAR \
+    --runMode alignReads \
+    --runThreadN 16 \
+    --genomeDir ${genomeDir} \
+    --readFilesIn ./fastq/${SRR}_2.fastq.gz ./fastq/${SRR}_1.fastq.gz \
+    --readFilesCommand zcat \
+    --outFileNamePrefix star/${SRR}_ \
+    --soloType CB_UMI_Simple \
+    --soloCBstart 1 \
+    --soloCBlen 16 \
+    --soloUMIstart 17 \
+    --soloUMIlen 10 \
+    --soloBarcodeReadLength 0 \
+    --soloCBwhitelist ${whitelist} \
+    --clipAdapterType CellRanger4 \
+    --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
+    --soloUMIfiltering MultiGeneUMI_CR \
+    --soloUMIdedup 1MM_CR \
+    --outSAMtype BAM SortedByCoordinate \
+    --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
+    --outSAMunmapped Within \
+    --outFilterScoreMin 30 \
+    --limitOutSJcollapsed 5000000 \
+    --outFilterMultimapNmax 500 \
+    --outFilterMultimapScoreRange 5
+  conda deactivate
+  conda activate stellarscope
+  mkdir -p stellarscope/${SRR}
+  samtools view -@1 -u -F 4 -D CB:<(tail -n+1 ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv) ./star/${SRR}_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./stellarscope/${SRR}/Aligned.sortedByCB.bam
+  stellarscope assign \
+    --outdir ./stellarscope/${SRR} \
+    --nproc 16 \
+    --stranded_mode F \
+    --whitelist ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv \
+    --pooling_mode individual \
+    --reassign_mode best_exclude \
+    --max_iter 500 \
+    --updated_sam \
+    ./stellarscope/${SRR}/Aligned.sortedByCB.bam \
+    ${hERV_gtf}
+  conda deactivate
+done
+# 汇总结果
+cd ${workDir}
+for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
+  mkdir -p mtx/${SRR}/gene
+  cp ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv ./mtx/${SRR}/gene/${res_barcodes}.tsv
+  cp ./star/${SRR}_Solo.out/Gene/filtered/features.tsv ./mtx/${SRR}/gene/${res_features}.tsv
+  cp ./star/${SRR}_Solo.out/Gene/filtered/matrix.mtx ./mtx/${SRR}/gene/${res_counts}.mtx
+  mkdir -p mtx/${SRR}/hERV
+  cp ./stellarscope/${SRR}/stellarscope-barcodes.tsv ./mtx/${SRR}/hERV/${res_barcodes}.tsv
+  cp ./stellarscope/${SRR}/stellarscope-features.tsv ./mtx/${SRR}/hERV/${res_features}.tsv
+  cp ./stellarscope/${SRR}/stellarscope-TE_counts.mtx ./mtx/${SRR}/hERV/${res_counts}.mtx
+done
+du -sh ./mtx  # 看看最后的数据有多大--400多M
+# tar -czvf mtx.tar.gz ./mtx/
 ```
 
 ### GSE233208
@@ -248,433 +853,15 @@ split-seq all \
 - 虽然有类似的结果，但不能确定这个GitHub项目处理的流程是否正确，毕竟是野生项目，有可能只是作者给自己使用的数据写的，无法推广到这个比较偏门的数据。最主要这个结果的正确性是无法验证的（除非跑完整个流程后再到Seurat里面画图查看）
 - 需要与后续stellarscope分析衔接，因为作者使用自己写的流程，不知道是否保留了后面stellarscope需要的文件，而且尚未清楚是怎么筛选的、筛选结果的格式是什么，需要进一步根据stellarscope的输入和这个pipeline的输出进行研究
 
-#### 构建Seurat对象
+#### 验证野生pipeline结果是否正确
 
-总体思路：普通基因使用STARsolo计数，hERV使用stellarscope计数，而最终我们是用普通基因先构建Seurat对象，再把stellarscope计数得到的矩阵作为一个assay挂载上去
-
-
+大体思路：将作者提供的Seurat对象中对应批次（batch5_Sublibrary_8_S8_L004、batch5_Sublibrary_7_S7_L004）的细胞提取出来，再用我们测出来的两组数据构建Seurat对象，最后将这两个Seurat对象进行比较
 
 
 
-### GSE138852
-
-数据量较小（共78.18G，碱基数153.78G，样本量8个），但作者提供了详细的计数矩阵+条形码+基因（包括每个SRR run的和总的），并且使用10X Genomics，条形码和UMI位置易确定，打算先用这个数据集跑通基本pipeline（STARsolo+stellarscope+构建Seurat对象）
-
-[GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852)
-
-点开其中一个样本的页面[GSM4120422](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM4120422)，可以看到是用什么测序技术测的（UMI和BC的位置和长度），关键信息：
-
-```
-I1 read: contains the sample index.
-R1 read: contains the cell barcode (first 16 nt) and UMI (next 10 nt).
-R2 read: contains the RNA sequence.
-Using the Grch38 (1.2.0) reference from 10x Genomics
-using the Chromium Single Cell 3′ Library & Gel Bead Kit v2 (10X Genomics, #PN-120237)
-```
-
-进入[SRA run](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA577618)中下载
-
-#### STAR比对
-
-因为下载下来得到的是`SRRxxx_1.fastq.gz`/`SRRxxx_2.fastq.gz`/`SRRxxx_3.fastq.gz`这样的文件，首先检测哪个是cDNA，哪个是UMI+barcode
-
-```sh
-zcat SRR10278808_1.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
-zcat SRR10278808_2.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
-zcat SRR10278808_3.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
-```
-
-- `SRRxxx_1.fastq.gz`：8bp——index，对STAR计数不重要，可忽略
-- `SRRxxx_2.fastq.gz`：26bp——UMI+barcodes
-- `SRRxxx_3.fastq.gz`：116bp——cDNA
-
-whitelist从哪里下载：有时CellRanger的安装目录里就有，不过我没找到，直接到GitHub的开源项目中搜，比如[10X Cell Ranger whitelists](https://github.com/Lab-of-Adaptive-Immunity/cr_whitelists)，把两个txt解压即可。因为是v2版本，所以用`737K-august-2016.txt`
-
-```sh
-cd /public/home/wangtianhao/Desktop/GSE138852/
-module load miniconda3/base
-conda activate STAR
-mkdir -p star/res
-cd star
-# 注意以下命令执行时删掉#的行，否则只读到第一个#就不往下读了
-STAR \
-  --runMode alignReads \
-  --runThreadN 16 \
-  --genomeDir /public/home/wangtianhao/Desktop/STAR_ref/hg38/ \
-  --readFilesIn /public/home/wangtianhao/Desktop/GSE138852/fastq/SRR10278808_3.fastq.gz /public/home/wangtianhao/Desktop/GSE138852/fastq/SRR10278808_2.fastq.gz \
-  --readFilesCommand zcat \
-  --outFileNamePrefix res/SRR10278808_ \
-  # 条形码 \
-  --soloType CB_UMI_Simple \
-  --soloCBstart 1 \
-  --soloCBlen 16 \
-  --soloUMIstart 17 \
-  --soloUMIlen 10 \
-  --soloBarcodeReadLength 0 \
-  --soloCBwhitelist /public/home/wangtianhao/Desktop/STAR_ref/whitelist/737K-august-2016.txt \
-  # 计数/细胞筛选设置 \
-  --clipAdapterType CellRanger4 \
-  --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
-  --soloUMIfiltering MultiGeneUMI_CR \
-  --soloUMIdedup 1MM_CR \
-  # BAM输出和Tags（给Stellarscope用） \
-  --outSAMtype BAM SortedByCoordinate \
-  --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
-  # Stellarscope要求保留多重比对 \
-  --outSAMunmapped Within \
-  --outFilterScoreMin 30 \
-  --limitOutSJcollapsed 5000000 \
-  --outFilterMultimapNmax 500 \
-  --outFilterMultimapScoreRange 5
-```
-
-#### stellarscope计数
-
-```sh
-module load miniconda3/base
-conda activate stellarscope
-cd /public/home/wangtianhao/Desktop/GSE138852/stellarscope/
-mkdir -p res
-# 按名称排序
-samtools view -@1 -u -F 4 -D CB:<(tail -n+1 /public/home/wangtianhao/Desktop/GSE138852/star/res/SRR10278808_Solo.out/Gene/filtered/barcodes.tsv) /public/home/wangtianhao/Desktop/GSE138852/star/res/SRR10278808_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./res/Aligned.sortedByCB.bam
-# 计数
-stellarscope assign \
-  --exp_tag SRR10278808 \
-  --outdir /public/home/wangtianhao/Desktop/GSE138852/stellarscope/res \
-  --nproc 16 \
-  --stranded_mode F \
-  --whitelist /public/home/wangtianhao/Desktop/GSE138852/star/res/SRR10278808_Solo.out/Gene/filtered/barcodes.tsv \
-  --pooling_mode individual \
-  --reassign_mode best_exclude \
-  --max_iter 500 \
-  --updated_sam \
-  /public/home/wangtianhao/Desktop/GSE138852/stellarscope/res/Aligned.sortedByCB.bam \
-  /public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
-```
-
-#### 循环运行并构建Seurat对象
-
-```sh
-workDir=/public/home/GENE_proc/wth/GSE138852/
-genomeDir=/public/home/wangtianhao/Desktop/STAR_ref/hg38/
-whitelist=/public/home/wangtianhao/Desktop/STAR_ref/whitelist/737K-august-2016.txt
-hERV_gtf=/public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
-res_barcodes=barcodes
-res_features=features
-res_counts=counts
-# STARsolo + stellarscope
-cd ${workDir}
-module load miniconda3/base
-for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
-  conda activate STAR
-  mkdir -p star
-  STAR \
-    --runMode alignReads \
-    --runThreadN 16 \
-    --genomeDir ${genomeDir} \
-    --readFilesIn ./fastq/${SRR}_3.fastq.gz ./fastq/${SRR}_2.fastq.gz \
-    --readFilesCommand zcat \
-    --outFileNamePrefix star/${SRR}_ \
-    --soloType CB_UMI_Simple \
-    --soloCBstart 1 \
-    --soloCBlen 16 \
-    --soloUMIstart 17 \
-    --soloUMIlen 10 \
-    --soloBarcodeReadLength 0 \
-    --soloCBwhitelist ${whitelist} \
-    --clipAdapterType CellRanger4 \
-    --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
-    --soloUMIfiltering MultiGeneUMI_CR \
-    --soloUMIdedup 1MM_CR \
-    --outSAMtype BAM SortedByCoordinate \
-    --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
-    --outSAMunmapped Within \
-    --outFilterScoreMin 30 \
-    --limitOutSJcollapsed 5000000 \
-    --outFilterMultimapNmax 500 \
-    --outFilterMultimapScoreRange 5
-  conda deactivate
-  conda activate stellarscope
-  mkdir -p stellarscope/${SRR}
-  samtools view -@1 -u -F 4 -D CB:<(tail -n+1 ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv) ./star/${SRR}_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./stellarscope/${SRR}/Aligned.sortedByCB.bam
-  stellarscope assign \
-    --outdir ./stellarscope/${SRR} \
-    --nproc 16 \
-    --stranded_mode F \
-    --whitelist ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv \
-    --pooling_mode individual \
-    --reassign_mode best_exclude \
-    --max_iter 500 \
-    --updated_sam \
-    ./stellarscope/${SRR}/Aligned.sortedByCB.bam \
-    ${hERV_gtf}
-  conda deactivate
-done
-# 汇总结果
-cd ${workDir}
-for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
-  mkdir -p mtx/${SRR}/gene
-  cp ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv ./mtx/${SRR}/gene/${res_barcodes}.tsv
-  cp ./star/${SRR}_Solo.out/Gene/filtered/features.tsv ./mtx/${SRR}/gene/${res_features}.tsv
-  cp ./star/${SRR}_Solo.out/Gene/filtered/matrix.mtx ./mtx/${SRR}/gene/${res_counts}.mtx
-  mkdir -p mtx/${SRR}/hERV
-  cp ./stellarscope/${SRR}/stellarscope-barcodes.tsv ./mtx/${SRR}/hERV/${res_barcodes}.tsv
-  cp ./stellarscope/${SRR}/stellarscope-features.tsv ./mtx/${SRR}/hERV/${res_features}.tsv
-  cp ./stellarscope/${SRR}/stellarscope-TE_counts.mtx ./mtx/${SRR}/hERV/${res_counts}.mtx
-done
-du -sh ./mtx  # 看看最后的数据有多大--400多M
-# tar -czvf mtx.tar.gz ./mtx/
-```
-
-将SRR号和诊断组别等信息整合为一个表格：
-
-![GSE138852_1](/upload/md-image/other/GSE138852_1.png){:width="500px" height="500px"}
-
-从mtx构建Seurat对象：
-
-```r
-library(Seurat)
-library(Matrix)
-library(tidyverse)
-library(readxl)
-data_root <- "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\data\\mtx"
-metadata_path <- "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\metadata.xlsx"
-# 读取一个SRR，返回一个Seurat对象（普通基因+hERV）
-read_one_srr <- function(srr) {
-  gene_dir <- file.path(data_root, srr, "gene")
-  herv_dir <- file.path(data_root, srr, "hERV")
-  # 读取mtx
-  gene_counts <- ReadMtx(
-    mtx = file.path(gene_dir, "counts.mtx"),
-    features = file.path(gene_dir, "features.tsv"),
-    cells = file.path(gene_dir, "barcodes.tsv")
-  )
-  herv_counts <- ReadMtx(
-    mtx = file.path(herv_dir, "counts.mtx"),
-    features = file.path(herv_dir, "features.tsv"),
-    cells = file.path(herv_dir, "barcodes.tsv"),
-    feature.column = 1
-  )
-  # 给不同SRR的细胞加前缀，避免重名
-  colnames(gene_counts) <- paste(srr, colnames(gene_counts), sep = "_")
-  colnames(herv_counts) <- paste(srr, colnames(herv_counts), sep = "_")
-  # 只保留gene和hERV都有的细胞
-  common_cells <- intersect(colnames(gene_counts), colnames(herv_counts))
-  gene_counts <- gene_counts[, common_cells, drop = FALSE]
-  herv_counts <- herv_counts[, common_cells, drop = FALSE]
-  # 用普通基因创建Seurat对象
-  seu <- CreateSeuratObject(
-    counts = gene_counts,
-    assay = "RNA",
-    project = "AD_hERV"
-  )
-  # 把hERV作为第二个assay挂上去
-  seu[["HERV"]] <- CreateAssayObject(counts = herv_counts)
-  # 在metadata里记一下SRR号，后面方便join
-  seu$SRR_id <- srr
-  return(seu)
-}
-```
-
-```r
-# 读取metadata
-sample_meta <- read_xlsx(metadata_path)
-# 列出所有文件夹
-srr_ids <- list.dirs(data_root, full.names = FALSE, recursive = FALSE)
-# 对所有SRR构建Seurat对象
-seu_list <- list()
-for (srr in srr_ids) {
-  seu <- read_one_srr(srr)
-  if (!is.null(seu)) {
-    seu_list[[srr]] <- seu
-  }
-}
-# 合并
-seu <- Reduce(function(x, y) merge(x, y), seu_list)
-rm(seu_list)
-head(seu@meta.data)
-# 添加metadata
-meta_df <- seu@meta.data %>%
-  rownames_to_column("cell") %>%
-  left_join(sample_meta, by = "SRR_id") %>%
-  column_to_rownames("cell")
-seu@meta.data <- meta_df
-# 合并每个layers
-seu <- JoinLayers(seu, assay = "RNA")
-# 检查一下layers
-Layers(seu, assay = "RNA")
-# 保存为rds
-saveRDS(
-  seu, 
-  file = "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE138852\\data\\GSE138852.rds", 
-  compress = "xz"
-)
-```
 
 
-### GSE157827
 
-和上面GSE138852相比，同样都有作者提供的详细的计数矩阵+条形码+基因、都使用10X Genomics，但多了每个样本的注释信息（组别、性别、年龄、APOE等），同时数据量较大（共593.81G，碱基数2.02T，样本量21个）
 
-[GEO界面](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE157827)
 
-点开其中一个样本的页面[GSM4775561](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM4775561)，可以看到是用什么测序技术测的（UMI和BC的位置和长度）
-
-进入[SRA run](https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA662923)中下载
-
-关键信息：
-
-```
-using the Chromium Single Cell 3′ Library Kit v3 (1000078; 10x Genomics) 
-```
-
-在相关论文[Single-nucleus transcriptome analysis reveals dysregulation of angiogenic endothelial cells and neuroprotective glia in Alzheimer’s disease](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117)的补充材料[Dataset_S01 (XLSX)](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117/suppl_file/pnas.2008762117.sd01.xlsx)中可以下载到每个样本的具体信息（组别、性别、年龄、APOE等）：
-
-![GSE157827_1](/upload/md-image/other/GSE157827_1.png){:width="800px" height="800px"}
-
-同时还有一些国内的教程，例如[复现2：AD与Normal细胞类型水平的差异基因挖掘](https://www.jianshu.com/p/d7e086020fc8)，使用广泛
-
-#### STAR比对
-
-还是先看序列信息
-
-```sh
-zcat SRR12623876_1.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
-zcat SRR12623876_2.fastq.gz | awk 'NR%4==2 {print length($0)}' | head
-```
-
-- `SRRxxx_1.fastq.gz`：26bp——UMI+barcode
-- `SRRxxx_2.fastq.gz`：98bp——cDNA
-
-whitelist：因为是v3版本，所以用`3M-february-2018.txt`
-
-```sh
-cd /public/home/wangtianhao/Desktop/GSE157827/
-module load miniconda3/base
-conda activate STAR
-mkdir -p star/res
-cd star
-STAR \
-  --runMode alignReads \
-  --runThreadN 16 \
-  --genomeDir /public/home/wangtianhao/Desktop/STAR_ref/hg38/ \
-  --readFilesIn /public/home/wangtianhao/Desktop/GSE157827/fastq/SRR12623876_2.fastq.gz /public/home/wangtianhao/Desktop/GSE157827/fastq/SRR12623876_1.fastq.gz \
-  --readFilesCommand zcat \
-  --outFileNamePrefix res/SRR12623876_ \
-  --soloType CB_UMI_Simple \
-  --soloCBstart 1 \
-  --soloCBlen 16 \
-  --soloUMIstart 17 \
-  --soloUMIlen 10 \
-  --soloBarcodeReadLength 0 \
-  --soloCBwhitelist /public/home/wangtianhao/Desktop/STAR_ref/whitelist/3M-february-2018.txt \
-  --clipAdapterType CellRanger4 \
-  --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
-  --soloUMIfiltering MultiGeneUMI_CR \
-  --soloUMIdedup 1MM_CR \
-  --outSAMtype BAM SortedByCoordinate \
-  --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
-  --outSAMunmapped Within \
-  --outFilterScoreMin 30 \
-  --limitOutSJcollapsed 5000000 \
-  --outFilterMultimapNmax 500 \
-  --outFilterMultimapScoreRange 5
-```
-
-#### stellarscope计数
-
-```sh
-module load miniconda3/base
-conda activate stellarscope
-cd /public/home/wangtianhao/Desktop/GSE157827/
-mkdir -p stellarscope/res
-cd stellarscope
-samtools view -@1 -u -F 4 -D CB:<(tail -n+1 /public/home/wangtianhao/Desktop/GSE157827/star/res/SRR12623876_Solo.out/Gene/filtered/barcodes.tsv) /public/home/wangtianhao/Desktop/GSE157827/star/res/SRR12623876_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./res/Aligned.sortedByCB.bam
-stellarscope assign \
-  --exp_tag SRR12623876 \
-  --outdir ./res \
-  --nproc 16 \
-  --stranded_mode F \
-  --whitelist /public/home/wangtianhao/Desktop/GSE157827/star/res/SRR12623876_Solo.out/Gene/filtered/barcodes.tsv \
-  --pooling_mode individual \
-  --reassign_mode best_exclude \
-  --max_iter 500 \
-  --updated_sam \
-  ./res/Aligned.sortedByCB.bam \
-  /public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
-```
-
-#### 循环运行并构建Seurat对象
-
-```sh
-workDir=/public/home/GENE_proc/wth/GSE157827/
-genomeDir=/public/home/wangtianhao/Desktop/STAR_ref/hg38/
-whitelist=/public/home/wangtianhao/Desktop/STAR_ref/whitelist/3M-february-2018.txt
-hERV_gtf=/public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
-res_barcodes=barcodes
-res_features=features
-res_counts=counts
-# STARsolo + stellarscope
-cd ${workDir}
-module load miniconda3/base
-for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
-  conda activate STAR
-  mkdir -p star
-  STAR \
-    --runMode alignReads \
-    --runThreadN 16 \
-    --genomeDir ${genomeDir} \
-    --readFilesIn ./fastq/${SRR}_2.fastq.gz ./fastq/${SRR}_1.fastq.gz \
-    --readFilesCommand zcat \
-    --outFileNamePrefix star/${SRR}_ \
-    --soloType CB_UMI_Simple \
-    --soloCBstart 1 \
-    --soloCBlen 16 \
-    --soloUMIstart 17 \
-    --soloUMIlen 10 \
-    --soloBarcodeReadLength 0 \
-    --soloCBwhitelist ${whitelist} \
-    --clipAdapterType CellRanger4 \
-    --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts \
-    --soloUMIfiltering MultiGeneUMI_CR \
-    --soloUMIdedup 1MM_CR \
-    --outSAMtype BAM SortedByCoordinate \
-    --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
-    --outSAMunmapped Within \
-    --outFilterScoreMin 30 \
-    --limitOutSJcollapsed 5000000 \
-    --outFilterMultimapNmax 500 \
-    --outFilterMultimapScoreRange 5
-  conda deactivate
-  conda activate stellarscope
-  mkdir -p stellarscope/${SRR}
-  samtools view -@1 -u -F 4 -D CB:<(tail -n+1 ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv) ./star/${SRR}_Aligned.sortedByCoord.out.bam | samtools sort -@16 -n -t CB -T ./tmp > ./stellarscope/${SRR}/Aligned.sortedByCB.bam
-  stellarscope assign \
-    --outdir ./stellarscope/${SRR} \
-    --nproc 16 \
-    --stranded_mode F \
-    --whitelist ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv \
-    --pooling_mode individual \
-    --reassign_mode best_exclude \
-    --max_iter 500 \
-    --updated_sam \
-    ./stellarscope/${SRR}/Aligned.sortedByCB.bam \
-    ${hERV_gtf}
-  conda deactivate
-done
-# 汇总结果
-cd ${workDir}
-for SRR in $(cat ./fastq/SRR_Acc_List.txt); do
-  mkdir -p mtx/${SRR}/gene
-  cp ./star/${SRR}_Solo.out/Gene/filtered/barcodes.tsv ./mtx/${SRR}/gene/${res_barcodes}.tsv
-  cp ./star/${SRR}_Solo.out/Gene/filtered/features.tsv ./mtx/${SRR}/gene/${res_features}.tsv
-  cp ./star/${SRR}_Solo.out/Gene/filtered/matrix.mtx ./mtx/${SRR}/gene/${res_counts}.mtx
-  mkdir -p mtx/${SRR}/hERV
-  cp ./stellarscope/${SRR}/stellarscope-barcodes.tsv ./mtx/${SRR}/hERV/${res_barcodes}.tsv
-  cp ./stellarscope/${SRR}/stellarscope-features.tsv ./mtx/${SRR}/hERV/${res_features}.tsv
-  cp ./stellarscope/${SRR}/stellarscope-TE_counts.mtx ./mtx/${SRR}/hERV/${res_counts}.mtx
-done
-du -sh ./mtx  # 看看最后的数据有多大--400多M
-# tar -czvf mtx.tar.gz ./mtx/
-```
 

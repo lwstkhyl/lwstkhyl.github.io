@@ -857,9 +857,66 @@ split-seq all \
 
 大体思路：将作者提供的Seurat对象中对应批次（batch5_Sublibrary_8_S8_L004、batch5_Sublibrary_7_S7_L004）的细胞提取出来，再用我们测出来的两组数据构建Seurat对象，最后将这两个Seurat对象进行比较
 
+**收集计数矩阵**：
 
+```sh
+cp -r /public/home/wangtianhao/Desktop/GSE233208/1205test/AD_S7_L004/*_DGE_filtered /public/home/wangtianhao/Desktop/GSE233208/1205test/mtx/AD_S7_L004/
+cp -r /public/home/wangtianhao/Desktop/GSE233208/1205test/AD_S8_L004/*_DGE_filtered /public/home/wangtianhao/Desktop/GSE233208/1205test/mtx/AD_S8_L004/
+du -sh /public/home/wangtianhao/Desktop/GSE233208/1205test/mtx/  # 2个sublibrary-2G
+cd /public/home/wangtianhao/Desktop/GSE233208/1205test
+tar -czvf mtx.tar.gz ./mtx/
+```
 
+**将作者提供的Seurat对象中对应批次的提取出来**：
 
+```r
+sn <- readRDS("C:\\Users\\17185\\Desktop\\hERV_calc\\GSE233208\\data\\GSE233208_human_snRNA_subset.rds")
+# sn <- readRDS("/public/home/wangtianhao/Desktop/GSE233208/raw_data/GSE233208_Human_snRNA-Seq_ADDS_integrated.rds")
+meta <- sn@meta.data
+cells_batch5_s7s8 <- meta %>%
+  filter(
+    Batch == "Batch5",
+    Sublibrary %in% c("Sublibrary_7_S7", "Sublibrary_8_S8")
+  ) %>%
+  rownames()
+sn_b5_s7s8 <- subset(sn, cells = cells_batch5_s7s8)
+# 解决Seurat5.3版本的Error in validObject(object = object) : invalid class “DimReduc” object: dimension names for ‘cell.embeddings’ must be positive integers报错
+# sn_b5_s7s8 <- DietSeurat(sn_b5_s7s8, dimreducs = character())
+meta <- sn_b5_s7s8@meta.data
+suffix <- case_when(
+  str_detect(meta$Sublibrary, "S7$") ~ "7",
+  str_detect(meta$Sublibrary, "S8$") ~ "8",
+)
+new_cellnames <- paste0(meta$cell_barcode, "_", suffix)
+stopifnot(!any(duplicated(new_cellnames)))
+rename_vec <- setNames(
+  new_cellnames,
+  colnames(sn_b5_s7s8)
+)
+sn_b5_s7s8 <- RenameCells(sn_b5_s7s8, new.names = rename_vec)
+sn_b5_s7s8$cell_barcode_sub <- colnames(sn_b5_s7s8)
+View(sn_b5_s7s8@meta.data)
+saveRDS(
+  sn_b5_s7s8, 
+  file = "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE233208\\data\\GSE233208_Batch5_S7S8.rds", 
+  # file = "/public/home/wangtianhao/Desktop/GSE233208/data/GSE233208_Batch5_S7S8.rds", 
+  compress = "xz"
+)
+rm(list = ls())
+sn_b5_s7s8 <- readRDS("C:\\Users\\17185\\Desktop\\hERV_calc\\GSE233208\\data\\GSE233208_Batch5_S7S8.rds")
+```
+
+最后剩下15449个细胞
+
+```
+> sn_b5_s7s8
+An object of class Seurat 
+29889 features across 15449 samples within 1 assay 
+Active assay: RNA (29889 features, 0 variable features)
+ 2 layers present: counts, data
+```
+
+**合并我使用野生pipeline得到的计数矩阵**：
 
 
 

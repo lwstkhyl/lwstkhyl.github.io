@@ -5,13 +5,30 @@ category: other
 subcategory: other-other
 ---
 
-2025.12.03-2025.12.14研究进展
+2025.12.03-2025.12.17研究进展
 
 <!-- more -->
 
 ### scRNA-seq的测序数据
 
+对于普通的RNA-seq双端测序，是把一段DNA两段接上接头，固定一端后从一头往里读，之后再翻过去从另一头往里读，最后fastq有两份，这个R1/R2是从同一片段两端读进来的序列，内容通常是对称的，所以处理时不需要进行区分
 
+在scRNA-seq中，我需要知道两件事：
+- “这是哪个细胞的转录本”——**细胞条形码(cell barcode, CB)**：构建基因×细胞的文库，要知道哪些reads来自同一个细胞。条形码根据建库方法有所不同，10X Genomics通常是一个16bp的条形码，SPLiT-seq/Parse共有3个index，每个8bp，最后拼成24bp的条形码。最后所有来自这个细胞的转录本，在建库时都会带上这一段序列，比对和计数时就通过条形码把reads按细胞分组
+- “这几条read是不是同一个原始分子PCR放大出来的”——**UMI(unique molecular identifier)**：如果某个mRNA只有1个分子，但PCR放大了1000倍，就会测到1000条reads，如果直接按reads数当表达量，就会被PCR偏好性影响。于是在每个原始分子（转录本）上随机加一个UMI（通常10bp），无论PCR怎么放大，UMI不会变，最后统计时，“同一细胞、同一基因、同一个UMI”就只算一个分子
+
+在scRNA-seq的文库构建时，CB/UMI被特意设计在某一端的固定位置，这样双端测序结果中，就会有一端是CB/UMI，另一端才是真正的cDNA序列。比如10x Genomics的R1是16bp的CB+10bp的UMI+后面的linker，R2是cDNA序列，Parse Evercode/SPLiT-seq的R1是cDNA，R2是UMI+多组CB
+- cDNA的每条读段，前面有一段高度保守的motif（接头），后面序列多样（真正的基因序列）
+- UMI+CB的每条读段，UMI段多样性搞，UMI-CB或CB-后面序列中间有高度保守的linker，CB段序列结构固定，通常只能是在有固定数量的序列库(whitelist)中选取
+
+在STARsolo/cellranger等单细胞比对/计数软件中，需要先告诉它哪端是cDNA/CB+UMI，并指出UMI和CB的位置坐标
+- 对于每个cDNA序列，就像普通RNA-seq一样比对到参考基因组上，并判断这个read落在哪个基因
+- 对于每个UMI+CB序列，会根据坐标切出UMI+CB（如果有多段CB，就会把这些CB按顺序拼起来当作一个整体），之后根据whitelist做纠错/过滤（可选）。以上信息都会保存在BAM文件中  
+- 从BAM中获取CB/UMI和比对信息，丢掉mapping质量低、不在基因上的read。在每个`(cell, gene)`里，把UMI去重（“同一细胞、同一基因、同一个UMI”只算一次），聚合得到一个`counts[gene, cell]`
+- 最后得到：
+  - `matrix.mtx`：稀疏矩阵（行=基因，列=细胞）
+  - `barcodes.tsv`：每一列对应的CB
+  - `features.tsv`：每一行对应的基因名
 
 ### 数据下载和建索引
 
@@ -849,6 +866,16 @@ split-seq all \
 
 ![GSE233208_1](/upload/md-image/other/GSE233208_1.png){:width="600px" height="600px"}
 
+每个样本ID都对应一个文件夹，每个文件夹内有`cell_metadata.csv`/`DGE.mtx`/`genes.csv`三个文件
+
+- `cell_metadata.csv`：
+  
+  ![GSE233208_2](/upload/md-image/other/GSE233208_2.png){:width="800px" height="800px"}
+
+- `genes.csv`：
+  
+  ![GSE233208_3](/upload/md-image/other/GSE233208_3.png){:width="400px" height="400px"}
+
 问题：
 - 虽然有类似的结果，但不能确定这个GitHub项目处理的流程是否正确，毕竟是野生项目，有可能只是作者给自己使用的数据写的，无法推广到这个比较偏门的数据。最主要这个结果的正确性是无法验证的（除非跑完整个流程后再到Seurat里面画图查看）
 - 需要与后续stellarscope分析衔接，因为作者使用自己写的流程，不知道是否保留了后面stellarscope需要的文件，而且尚未清楚是怎么筛选的、筛选结果的格式是什么，需要进一步根据stellarscope的输入和这个pipeline的输出进行研究
@@ -918,7 +945,100 @@ Active assay: RNA (29889 features, 0 variable features)
 
 **合并我使用野生pipeline得到的计数矩阵**：
 
+```r
+# 读取一个计数矩阵的函数
+base_dir <- "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE233208\\data\\split-seq_res"
+sublibs <- c("AD_S7_L004", "AD_S8_L004")
+sub_suffix <- c("AD_S7_L004" = "_7", "AD_S8_L004" = "_8")
+seu_list <- list()
+read_one_sample <- function(sd, suffix, sample_id) {
+  features <- read.csv(file.path(sd, "genes.csv")) %>% 
+    select(gene_id, gene_name) %>% 
+    write_tsv(file = file.path(sd, "genes.tsv"), col_names = F)
+  barcode <- read.csv(file.path(sd, "cell_metadata.csv")) %>% 
+    select(cell_barcode) %>% 
+    write_tsv(file = file.path(sd, "barcodes.tsv"), col_names = F)
+  m <- readMM(file.path(sd, "DGE.mtx"))
+  writeMM(t(m), file.path(sd, "DGE_T.mtx"))
+  gene_counts <- ReadMtx(
+    mtx = file.path(sd, "DGE_T.mtx"),
+    features = file.path(sd, "genes.tsv"),
+    cells = file.path(sd, "barcodes.tsv")
+  )
+  colnames(gene_counts) <- paste0(colnames(gene_counts), suffix)
+  seu <- CreateSeuratObject(
+    counts = gene_counts,
+    assay = "RNA",
+    project = "ADDS_2021"
+  )
+  seu$sample_id <- sample_id
+  return(seu)
+}
+```
 
+```r
+# 循环读取所有矩阵
+for (sdir in sublibs) {
+  sublib_path <- file.path(base_dir, sdir)
+  sample_dirs <- list.dirs(sublib_path, full.names = TRUE, recursive = FALSE)
+  sample_dirs <- sample_dirs[grepl("DGE_filtered$", basename(sample_dirs))]
+  suffix <- sub_suffix[[sdir]]
+  for (sd in sample_dirs) {
+    sample_name <- basename(sd)
+    sample_id <- sub("_DGE_filtered$", "", sample_name)
+    seu <- read_one_sample(sd, suffix, sample_id)
+    seu_list[[paste(sdir, sd, sep = '_')]] <- seu
+  }
+}
+sn_my <- Reduce(function(x, y) merge(x, y), seu_list)
+rm(seu_list)
+# 合并每个layers
+sn_my <- JoinLayers(sn_my, assay = "RNA")
+# 添加metadata，并使这两个Seurat对象结构一致
+sample_meta <- read.csv("C:\\Users\\17185\\Desktop\\hERV_calc\\GSE233208\\GSE233208_AD-DS_Cases.csv")
+select_cols <- c("nCount_RNA", "nFeature_RNA", "SampleID", "Age", "Sex", "PMI", "APoE", "DX", "cell_barcode_sub")
+meta_df <- sn_my@meta.data %>%
+  mutate(
+    SampleID = sample_id,
+    cell_barcode_sub = rownames(sn_my@meta.data)
+  ) %>%
+  left_join(sample_meta, by = "SampleID") %>% 
+  select(select_cols)
+rownames(meta_df) <- meta_df$cell_barcode_sub
+sn_my@meta.data <- meta_df
+sn_b5_s7s8@meta.data <- sn_b5_s7s8@meta.data %>% 
+  select(select_cols)
+View(sn_b5_s7s8@meta.data)
+View(sn_my@meta.data)
+saveRDS(
+  sn_my, 
+  file = "C:\\Users\\17185\\Desktop\\hERV_calc\\GSE233208\\data\\my_Batch5_S7S8.rds", 
+  compress = "xz"
+)
+sn_my <- readRDS("C:\\Users\\17185\\Desktop\\hERV_calc\\GSE233208\\data\\my_Batch5_S7S8.rds")
+# 看看细胞名是否添加成功
+my_rna_counts <- GetAssayData(sn_my, assay = "RNA", slot = "counts")
+View(my_rna_counts)  # 有没有dimNames
+rna_counts <- GetAssayData(sn_b5_s7s8, assay = "RNA", slot = "counts")
+View(rna_counts)  # 结构是否差不多
+```
 
+剩下的细胞和基因数量都比作者的多：（后面一起分析原因）
 
+```
+> sn_my 
+An object of class Seurat 
+50319 features across 728585 samples within 1 assay 
+Active assay: RNA (50319 features, 0 variable features)
+ 1 layer present: counts
+```
 
+**有一个奇怪的问题**：其实在最早GSE138852建Seurat对象时就有，但我到这才发现
+
+如图，在`View(my_sn)`的界面，橙色框里面的Dimnames为null，但实际上如果我`my_rna_counts <- GetAssayData(sn_my, assay = "RNA", slot = "counts")`后，在`View(my_rna_counts)`的界面，同样的位置又可以正常显示细胞名和基因名
+
+![GSE233208_4](/upload/md-image/other/GSE233208_4.png){:width="500px" height="500px"}
+
+![GSE233208_5](/upload/md-image/other/GSE233208_5.png){:width="600px" height="600px"}
+
+据说是正常现象，是Seurat v5的特性，`RNA`是一个Assay5对象，表达矩阵存在layers里，而“基因名/细胞名”由Assay5在assay层面单独管理，通过`dimnames(Assay5)`方法获取/设置。上面在第一个View里面看到的是`sn_my[["RNA"]]@layers$counts`这个dgCMatrix本体，不包含dimnames，而`GetAssayData`时会按assay保存的基因名/细胞名把dimnames补回去，所以后面就能看到了。因此在后面分析时，要使用Seurat的正规接口，不要自己去操作底层对象

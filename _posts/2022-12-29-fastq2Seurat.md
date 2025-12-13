@@ -1042,3 +1042,173 @@ Active assay: RNA (50319 features, 0 variable features)
 ![GSE233208_5](/upload/md-image/other/GSE233208_5.png){:width="600px" height="600px"}
 
 据说是正常现象，是Seurat v5的特性，`RNA`是一个Assay5对象，表达矩阵存在layers里，而“基因名/细胞名”由Assay5在assay层面单独管理，通过`dimnames(Assay5)`方法获取/设置。上面在第一个View里面看到的是`sn_my[["RNA"]]@layers$counts`这个dgCMatrix本体，不包含dimnames，而`GetAssayData`时会按assay保存的基因名/细胞名把dimnames补回去，所以后面就能看到了。因此在后面分析时，要使用Seurat的正规接口，不要自己去操作底层对象
+
+---
+
+**验证结果：首先验证样本id-barcode是否对应**
+
+```r
+cells_my <- colnames(sn_my)
+cells_auth <- colnames(sn_b5_s7s8)
+length(cells_my)  # 728585
+length(cells_auth)  # 15449
+common_cells <- intersect(cells_my, cells_auth)
+length(common_cells)  # 15449
+all(cells_auth %in% cells_my)  # TRUE
+length(rownames(my_rna_counts))  # 50319
+length(rownames(rna_counts))  # 29889
+common_genes <- intersect(
+  rownames(my_rna_counts),
+  rownames(rna_counts)
+)
+length(common_genes)  # 19159
+```
+
+这里发现作者的细胞全在我的细胞中，可能是作者设置了筛选，而我的是原始结果（pipeline直接用普通STAR比对，在STAR时就没有筛选，后续也没有设置筛选的命令），然后作者的基因数也比较少（我的是5w，作者的是3w），最后取交集后剩2w（可能是作者的基因集版本和我的不同，我的gtf注释版本、基因范围可能更宽，或者作者过滤掉了低表达基因）。因此将两个计数矩阵取交集，只保留作者的基因/细胞
+
+```r
+# 矩阵取交集
+my_mat <- my_rna_counts[common_genes, common_cells, drop = FALSE]
+auth_mat <- rna_counts[common_genes, common_cells, drop = FALSE]
+# Seurat对象取交集（因为后面Seurat对象只比较细胞名，就只取了细胞名的交集）
+sn_my_common <- subset(
+  sn_my,
+  subset = cell_barcode_sub %in% common_cells
+)
+```
+
+继续验证样本id-barcode是否对应
+
+```r
+# 各自的SampleID分布
+table(sn_my_common$SampleID)
+table(sn_b5_s7s8$SampleID)  # SampleID是相同的
+sample_ids <- intersect(
+  unique(sn_my_common$SampleID),
+  unique(sn_b5_s7s8$SampleID)
+)
+sample_check <- lapply(sample_ids, function(sid) {
+  cells_my_sid <- colnames(sn_my_common)[sn_my_common$SampleID == sid]
+  cells_auth_sid <- colnames(sn_b5_s7s8)[sn_b5_s7s8$SampleID == sid]
+  list(
+    SampleID = sid,
+    n_my = length(cells_my_sid),  # 某个样本中我的细胞数
+    n_auth = length(cells_auth_sid),  # 作者的细胞数
+    n_overlap = length(intersect(cells_my_sid, cells_auth_sid)),  # 重叠的细胞数
+    my_not_auth = length(setdiff(cells_my_sid, cells_auth_sid)),
+    auth_not_my = length(setdiff(cells_auth_sid, cells_my_sid))  # 哪一边多出来的细胞（如果都是0就是完全一致）
+  )
+})
+View(do.call(rbind, lapply(sample_check, as.data.frame)))
+```
+
+![GSE233208_6](/upload/md-image/other/GSE233208_6.png){:width="600px" height="600px"}
+
+在以上步骤中，我先把我的Seurat对象根据作者Seurat对象的barcode进行提取，这样就起到一个过滤的作用；之后按样本ID分组，比较每个样本ID内，我的barcode和作者的是否相同。可以看到两组样本ID-barcode的对应关系完全相同，说明野生pipeline的样本id和barcode提取方式是正确的
+
+---
+
+**比较两个计数矩阵的差异**
+
+QC：每个cell/每个gene的总UMI&检出基因数
+
+```r
+# 每个细胞的总UMI
+lib_my <- Matrix::colSums(my_mat)
+lib_auth <- Matrix::colSums(auth_mat)
+cor_lib <- cor(lib_my, lib_auth)
+cor_lib
+summary(lib_my)
+summary(lib_auth)
+summary(lib_my - lib_auth)
+# 每个细胞的检出基因数（count>0）
+ng_my <- Matrix::colSums(my_mat > 0)
+ng_auth <- Matrix::colSums(auth_mat > 0)
+cor_ng <- cor(ng_my, ng_auth)
+cor_ng
+summary(ng_my)
+summary(ng_auth)
+summary(ng_my - ng_auth)
+# 每个基因
+gene_total_my <- Matrix::rowSums(my_mat)
+gene_total_auth <- Matrix::rowSums(auth_mat)
+cor_gene_total <- cor(gene_total_my, gene_total_auth)
+cor_gene_total
+summary(gene_total_my)
+summary(gene_total_auth)
+summary(gene_total_my - gene_total_auth)
+```
+
+![GSE233208_7](/upload/md-image/other/GSE233208_7.png){:width="600px" height="600px"}
+
+几乎是贴着对角线分布，低表达区域有一些散点在对角线附近发散，这是由于1->2、0->1这种对log1p来说差别比较大，但实际差别不大，属于正常现象
+
+```r
+v_my <- as.vector(log1p(my_mat))
+v_auth <- as.vector(log1p(auth_mat))
+cor_flat <- cor(v_my, v_auth)
+cor_flat  # 0.927427
+# 抽取3k个细胞×3k个基因画个散点图
+cells_sample <- sample(colnames(my_mat), 3000)
+genes_sample <- sample(rownames(my_mat), 3000)
+my_sub <- as.matrix(my_mat[genes_sample, cells_sample])
+auth_sub <- as.matrix(auth_mat[genes_sample, cells_sample])
+v_my_sub <- as.vector(log1p(my_sub))
+v_auth_sub <- as.vector(log1p(auth_sub))
+par(pin = c(10, 10))
+plot(v_my_sub, v_auth_sub, pch = ".", xlab = "log1p(my)", ylab = "log1p(author)")
+abline(0, 1, col = "red")
+```
+
+![GSE233208_8](/upload/md-image/other/GSE233208_8.png){:width="700px" height="700px"}
+
+总体来看我的计数和作者的计数相似度还是蛮高的，虽然总体UMI略微偏低而基因数偏高（大概率是因为计数策略差异，作者更宽松的保留了多重比对，以及前面说过的使用的gtf注释不同）
+
+```r
+# 差异是否均匀分布在所有sample上
+lib_diff_df <- data.frame(
+  cell = common_cells,
+  lib_my = lib_my,
+  lib_auth = lib_auth,
+  diff = lib_my - lib_auth
+)
+lib_diff_df$SampleID <- sn_b5_s7s8$SampleID[match(lib_diff_df$cell, colnames(sn_b5_s7s8))]
+View(lib_diff_df %>%
+  group_by(SampleID) %>%
+  summarise(
+    mean_diff = mean(diff),
+    median_diff = median(diff)
+  ))
+# 看看有没有某些基因在两个pipeline之间差异特别大
+eps <- 1
+log_my <- log2(gene_total_my   + eps)
+log_auth <- log2(gene_total_auth + eps)
+A <- (log_my + log_auth) / 2
+M <- log_my - log_auth
+ma_df <- data.frame(
+  gene = rownames(my_mat),
+  A = A,
+  M = M
+)
+keep <- (gene_total_my + gene_total_auth) >= 10
+ma_df_filt <- ma_df[keep, ]
+ggplot(ma_df_filt, aes(x = A, y = M)) +
+  geom_point(alpha = 0.3, size = 0.4) +
+  geom_hline(yintercept = 0, colour = "red") +
+  labs(
+    x = "A = mean log2(count)",
+    y = "M = log2(my) - log2(author)",
+    title = "Gene-level MA plot: my pipeline vs author"
+  ) +
+  theme_bw()
+```
+
+![GSE233208_9](/upload/md-image/other/GSE233208_9.png){:width="400px" height="400px"}
+
+- 所有样本的diff都是负值，方向一致；差异的数量级也相同，有一点波动但不多，说明不是某几个样本导致总体的差异
+
+![GSE233208_10](/upload/md-image/other/GSE233208_10.png){:width="700px" height="700px"}
+
+- 中高表达基因与作者的结果一致性比较高（围绕0对称、离散度适中），低表达基因计数更少（更容易把低计数变成0，或者更少地分配多重比对），是一种“低计数事件更保守”的模式，而不是因为某些特定基因而导致总体差异
+
+**总结**：野生pipeline的“识别barcode”以及“根据sampleID分组”的功能是没有问题的，在计数上识别的基因数偏高而UMI偏低，但总体相似度很高，问题不大。最主要的是需要加一个细胞过滤的功能，并且野生pipeline识别基因的方式可能与作者略有不同，后续需要注意（比如也加一个低表达基因过滤之类的）

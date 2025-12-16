@@ -529,7 +529,7 @@ VlnPlot(seu, features = c("nFeature_HERV", "nCount_HERV", "HERV_fraction"), grou
 
 ![GSE138852_5](/upload/md-image/other/GSE138852_5.png){:width="600px" height="600px"}
 
-符合“不全为0、所有细胞hERV计数值都很高”的情况
+符合“不全为0、所有细胞hERV计数值不都很高”的情况
 
 ### GSE157827
 
@@ -1232,6 +1232,11 @@ ggplot(ma_df_filt, aes(x = A, y = M)) +
   标准化函数会通过log操作把hERV和基因的UMI压到同一数量级，所以不用担心hERV的UMI过小而影响后续分析，而且回归分析这类的结果实际上是不受“很小的数”的影响的
 
 再具体一点来说，用RNA assay做QC、PCA、UMAP、聚类、细胞类型注释，对HERV assay用和RNA同一个库深度因子来做标准化，然后再在同一细胞类型内做AD-Control的HERV差异表达、HERV-AD风险基因表达相关性、HERV_fraction等指标与细胞状态、病理特征的关联分析
+
+**为什么更推荐“用RNA的库深度去标准化hERV”**：易操作——这样不用动RNA assay，RNA assay还是用正常的分析方法，只是在此基础上加一个hERV的视角；不让hERV影响库深度的定义——如果用第一种，在少部分HERV特别高的细胞里，库深度会突然被放大，而这部分变化其实是你感兴趣的signal本身，一边拿来做分母，一边还想研究它，就容易把signal抹掉一部分（基因数多、信号平滑，适合估计测序深度；而hERV稀疏而极端，更适合当“响应变量”，不适合当“校正因子”）
+- 如果想研究“所有转录本的全集”（基因+HERV+其它TE），想从最原始的读段数出发，做一个完全统一的大模型，就可以用第一种方法
+- 通常要做的分析都是在“RNA定义的细胞世界”里加一个HERV视角，而不是让hERV反过来定义世界观，因此大多数类似研究都是用基因计数作为size factor
+- 数学上两种方法的size factor差异不大，实践上更偏向第二种方法
 
 总结一下，统一标准化的根本原因，不是“因为这是两个不同assay”，而是“我们要分析这两个assay的相关性，即`cor(gene, hERV)`和`gene ~ hERV + covariates`，要求这些数值的相对量纲必须可比”，同时hERV的计数结构很极端（总量少，少数hERV位点占主导），放大了这种矛盾（hERV单独标准化后各细胞都差不多，无法与基因检测相关性），因此说统一标准化是需要的
 

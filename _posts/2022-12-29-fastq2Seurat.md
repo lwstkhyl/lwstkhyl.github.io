@@ -470,6 +470,13 @@ author_counts <- read.csv(
   row.names = 1,
   check.names = FALSE
 )
+View(head(author_counts))
+author_seu <- CreateSeuratObject(counts = author_counts, project = "AD_hERV")
+author_seu  # 10850 features across 13214 samples
+seu  # 93660 features across 83479 samples
+summary(author_seu$nCount_RNA)
+summary(author_seu$nFeature_RNA)
+# 改作者计数矩阵的细胞名
 author_barcode <- sub("_.*$", "", colnames(author_counts))  
 author_individual <- sub("^[^_]+_", "", colnames(author_counts))
 author_cell_id <- paste(author_barcode, author_individual, sep = "_")
@@ -502,6 +509,10 @@ plot(
 abline(0, 1, col = "red")
 cor(log10(author_lib + 1), log10(our_lib + 1), method = "pearson")
 ```
+
+![GSE138852_7](/upload/md-image/other/GSE138852_7.png){:width="500px" height="500px"}
+
+发现其实作者的计数矩阵是经过质控的，并且即使经过质控，UMI和基因数也不是很多
 
 ![GSE138852_6](/upload/md-image/other/GSE138852_6.png){:width="500px" height="500px"}
 

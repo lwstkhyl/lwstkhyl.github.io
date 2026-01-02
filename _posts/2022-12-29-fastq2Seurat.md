@@ -368,7 +368,7 @@ all(colnames(rna_counts) == colnames(herv_counts))  # 细胞名应该相同
 # 基本分布
 seu$nCount_RNA <- Matrix::colSums(rna_counts)
 seu$nFeature_RNA <- Matrix::colSums(rna_counts > 0)
-summary(seu$nCount_RNA)  # 
+summary(seu$nCount_RNA)
 summary(seu$nFeature_RNA)
 seu$nCount_HERV <- Matrix::colSums(herv_counts)
 seu$nFeature_HERV <- Matrix::colSums(herv_counts > 0)
@@ -558,7 +558,7 @@ VlnPlot(seu, features = c("nFeature_HERV", "nCount_HERV", "HERV_fraction"), grou
 using the Chromium Single Cell 3′ Library Kit v3 (1000078; 10x Genomics) 
 ```
 
-在相关论文[Single-nucleus transcriptome analysis reveals dysregulation of angiogenic endothelial cells and neuroprotective glia in Alzheimer’s disease](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117)的补充材料[Dataset_S01 (XLSX)](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117/suppl_file/pnas.2008762117.sd01.xlsx)中可以下载到每个样本的具体信息（组别、性别、年龄、APOE等）：
+在相关论文[Single-nucleus transcriptome analysis reveals dysregulation of angiogenic endothelial cells and neuroprotective glia in Alzheimer’s disease](https://www.pnas.org/doi/full/10.1073/pnas.2008762117)的补充材料[Dataset_S01 (XLSX)](https://www.pnas.org/doi/suppl/10.1073/pnas.2008762117/suppl_file/pnas.2008762117.sd01.xlsx)中可以下载到每个样本的具体信息（组别、性别、年龄、APOE等）：
 
 ![GSE157827_1](/upload/md-image/other/GSE157827_1.png){:width="800px" height="800px"}
 
@@ -634,7 +634,7 @@ stellarscope assign \
   /public/home/wangtianhao/Desktop/STAR_ref/transcripts.gtf
 ```
 
-#### 循环运行并构建Seurat对象
+#### 循环运行
 
 ```sh
 workDir=/public/home/GENE_proc/wth/GSE157827/

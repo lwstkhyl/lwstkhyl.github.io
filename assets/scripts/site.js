@@ -1,4 +1,16 @@
 $(document).ready(function () {
+    const header = document.querySelector('header.header');
+    document.addEventListener('keydown', function (event) {
+        if (!header || !event.ctrlKey || event.altKey || event.metaKey || event.shiftKey ||
+            (event.code !== 'Space' && event.key !== ' ') || event.isComposing) return;
+
+        event.preventDefault();
+        // 长按时只切换一次，松开后再次按下才切换。
+        if (event.repeat) return;
+        header.hidden = !header.hidden;
+        document.dispatchEvent(new Event('header-visibility-change'));
+    });
+
     const li = $("header.header nav.nav--header ul.list--nav li.item--nav");
     const title = $("main.main small.post-meta span.label--category a").text();
     li.each(function (index, dom) {
@@ -31,4 +43,4 @@ $(document).ready(function () {
             return;
         }
     });
-}); 
+});

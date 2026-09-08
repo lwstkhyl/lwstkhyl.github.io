@@ -97,6 +97,10 @@ ul.sub_nav {
 /* 网页背景图片↑ */
 
 /* header */
+header.header[hidden] {
+    display: none !important;
+}
+
 header.header {
     /* 顶边导航栏置顶，删去position: sticky;即可取消 */
     position: sticky;

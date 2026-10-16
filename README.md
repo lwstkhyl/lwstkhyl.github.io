@@ -6,6 +6,33 @@ lwstkhyl的新网站：[lwstkhyl.me](https://lwstkhyl.me/)
 
 ---
 
+**数学公式**：
+
+博客使用 Jekyll 默认的 Kramdown 转换 Markdown，再由 MathJax 在浏览器中排版公式；只有包含公式标记的页面才加载 MathJax（通过 jsDelivr CDN）。
+
+行内公式使用 `$$...$$`，与正文写在同一行：
+
+```markdown
+两种模型的活性参考为 $$s_A、s_D$$。
+```
+
+独立公式的 `$$` 各占一行，公式块前后留空行：
+
+```markdown
+$$
+\operatorname{logit}(\hat p_{T,t,L,j})
+= \beta_0
++ \beta_A\operatorname{logit}(s_A)
++ \beta_D\operatorname{logit}(s_D)
++ \gamma z_{d,j}
++ \delta_1x_j + \delta_2x_j^2
+$$
+```
+
+这是 Kramdown 的公式语法，行内、独立公式都用双美元符号。直接在 Markdown 中写 `\(...\)` 或 `\[...\]` 会被当作 Markdown 转义，推荐统一使用上面的写法。实际要排版的公式不要放在反引号或代码块（包括 `diff` 代码块）中；代码示例会保留原文。
+
+---
+
 **项目结构**：
 
 ```

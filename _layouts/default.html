@@ -71,6 +71,11 @@
   {% include site-fonts.html %}
 
   {% include site-before-start.html %}
+
+  {% comment %}Kramdown converts math into these delimiters before rendering layouts.{% endcomment %}
+  {% if content contains '\(' or content contains '\[' %}
+  {% include site-math.html %}
+  {% endif %}
 </head>
 
 <body class="layout-{{ page.layout }}{% if page.title %}  {{ page.title | slugify }}{% endif %}">

@@ -87,8 +87,141 @@ tail -f /public/home/GENE_proc/wth/ADnew/logs/SEA_AD_core.log
 - `HERV_internal_LTR_map.tsv`：internal与两端LTR的对应关系
 - `HERV_LTR_U3_R_U5_catalogue.tsv`：LTR角色、关联internal、置信度及推断依据
 
+[HERVd](https://herv.img.cas.cz/)：在论文[《Current status of human endogenous retrovirus annotation》](https://doi.org/10.1093/bib/bbag062)中作者比较了HERVd、Dfam和RepBase，指出不同资源的差异不仅来自识别能力，也来自如何拆分片段、重建元件和定义家族，可以直接下载[处理好的数据](https://zenodo.org/records/15053079)
+- `HERVd_06_24.csv`：补充HERVd记录、结构及碎片信息
+- `Table_HERV_classes.csv`：补充internal、LTR和家族分类关系
+- `RepeatMasker_from_UCSC_2024.tsv`：对照该研究使用的RepeatMasker版本
+- `DFAM_3_8.hits`：后续需要时核查Dfam识别结果
+- HERVd文件里面有hg38坐标，以及orientation、subtype、schema、repeatNames、fragmentationScore等字段，可以帮助我们识别“这个记录是LTR还是internal、是否经过碎片整合”
 
+[TEscape](https://www.biorxiv.org/content/10.64898/2026.07.08.737305v1)：提供了[处理好的数据](https://www.bioinfo.mochsl.org.br/tescape/downloads)
+- gtf文件包含83193个不同的transcript_id，有标准的transcript和exon记录
+- 可加入“外部转录本证据库”，但其中包含LINE、SINE等其他TE，所以要根据实际外显子与hERV/LTR的重叠关系，提取我们需要的部分
 
+长读长构建的TE转录本注释：来自[《Identification of cell-type-specific, transcriptionally active transposable elements using long-read RNA-sequencing data-based comprehensive annotation》](https://doi.org/10.1186/s44342-025-00048-1)
+- 论文的Additional file 2给出了[gtf](https://media.springernature.com/original/springer-static/esm/art%3A10.1186%2Fs44342-025-00048-1/MediaObjects/44342_2025_48_MOESM2_ESM.gtf)，但标准transcript_id缺失，转录本样ID被写在FPKM属性中。需要先检查全表、确认ID恢复规则，再生成规范GTF
+- 采用了较严格的定位和TE重叠筛选规则，这可能影响某些重复性较高或宿主基因相关结构的收录
+
+GTEx中TE起始转录本：来自[《Expression spectrum of TE-driven transcripts in human adult tissues》](https://doi.org/10.1186/s13059-025-03898-8)
+- 论文[Additional file 2](https://media.springernature.com/original/springer-static/esm/art%3A10.1186%2Fs13059-025-03898-8/MediaObjects/13059_2025_3898_MOESM2_ESM.xls)提供TE起始转录本及组织表达，可以筛选涉及LTR/ERV及脑组织的记录
+- [Additional file 3](https://media.springernature.com/original/springer-static/esm/art%3A10.1186%2Fs13059-025-03898-8/MediaObjects/13059_2025_3898_MOESM3_ESM.xls)进一步分析组织特异转录本，添加了组织背景
+- 这项研究关注的是转录起点落在TE中的已注释转录本，使用GENCODE v26和GTEx数据分析其组织表达，能帮助我们补充“某个LTR可能参与宿主基因替代起始”的已有记录
+- 这里的表达量主要来自完整转录本，并不等同于直接测量LTR启动子的活性
+
+[HERVdb](https://datadryad.org/dataset/doi:10.5061/dryad.6t1g1jxf6)：
+- 整合DIGS、RepBase和RetroTector，并提供位点ID及历史别名、层级分类、不同方法的支持信息、前病毒/solo-LTR等结构标签
+- 特别适合帮助我们建立名称对应表
+- 涉及hg19来源，因此必须核对genome_version并处理坐标转换
+
+还有一些适合用于局部验证的补充资料：
+- 家族精细研究，例如2026年的[HERV-K HML-2直接RNA测序研究](https://doi.org/10.1186/s13100-026-00400-4)，提供了HML-2剪接及读穿结构，部分代表性reads也存入GenBank
+- 转录端点资源：
+  
+  | 资源                                                         | 提供什么                           | 在本项目中的用途                    |
+  | ------------------------------------------------------------ | ---------------------------------- | ----------------------------------- |
+  | [FANTOM5的hg38重处理数据](https://fantom.gsc.riken.go.jp/5/) | CAGE起始位点及组织信号             | 检查LTR附近是否存在独立的5′起始支持 |
+  | [PolyASite v2.0](https://polyasite.unibas.ch/atlas)          | 专门3′端测序汇总的poly(A)位点      | 检查转录终止位置                    |
+  | [PolyASite v3.0](https://polyasite.unibas.ch/atlas_sc)       | 从单细胞3′测序推断的位点及组织信息 | 补充组织、细胞背景                  |
+
+- [TE-Seq](https://link.springer.com/article/10.1186/s13100-025-00381-w): 一个TE元件识别的RNA-seq pipeline，它区分solo-LTR、不同LTR–internal组合，并记录宿主基因位置关系，可以借鉴这些检查项，继续使用当前确定的比对和计数体系
+
+---
+
+我们研究的三个层次：
+
+| 层次   | 它回答的问题                    | 一个典型例子                          |
+| ------ | ------------------------------- | ------------------------------------- |
+| 片段   | 哪些碱基属于哪个重复模型？      | 一个LTR12C片段                        |
+| 位点   | 哪些片段可以归为同一个元件？    | 两端LTR及中间internal组成的候选前病毒 |
+| 转录本 | 实际RNA包含哪些区域、怎样连接？ | 从LTR起始并剪接到宿主基因的RNA        |
+
+- 一个hERV位点可以产生多种RNA
+- 一个RNA也可以包含两个hERV位点，或者同时包含hERV与其他TE
+- 不能因为两个hERV出现在同一条RNA里，就把它们合并为一个基因组位点
+- 这也是为什么我们要保留“位点–转录本关系表”，而不能只做一张不断扩展坐标的GTF
+
+**第一步：固定范围和版本，建立原始资源登记表**
+
+| 范围                    | 处理方式                     |
+| ----------------------- | ---------------------------- |
+| HERV内部区域及相关LTR   | 主体收录                     |
+| MaLR等相关LTR逆转座元件 | 保留并单独标记，便于后续选择 |
+| LINE、SINE、DNA转座子   | 可作为背景注释，保持各自类别 |
+
+- 每份文件记录下载地址、版本、基因组版本、坐标规则、原始ID、处理方法和数据来源
+
+**第二步：统一坐标、方向和名称**
+- 坐标统一到与你长读长比对一致的GRCh38参考
+- 分析用区间统一采用BED规则`0起点，左闭右开：[start, end)`
+- 方向需要保存两列：
+  - 元件方向：重复序列或前病毒在基因组中的方向
+  - RNA方向：观察到的转录方向
+
+**第三步：以RepeatMasker片段为底表，逐一添加Telescope、HERVd、ERVmap和HERVarium的对应关系**
+- 首先判断两个记录是不是在描述相同的重复片段。需要同时检查位置、重叠比例、方向、模型名称，以及是否存在嵌套插入
+- 然后判断多个片段能否组成一个位点
+  - 同一internal被拆成几段时，检查其在参考模型中的位置是否连续
+  - LTR与internal是否在方向和家族关系上合理
+  - 中间是否插入其他TE，造成注释被切开
+  - 不同资源是在描述同一个元件，还是把相邻元件错误连在一起
+- 对于LTR，至少区分：
+  
+  | 标签             | 含义                           |
+  | ---------------- | ------------------------------ |
+  | 已关联的5′/3′LTR | 有合理的internal对应关系       |
+  | solo-LTR候选     | 当前支持其为独立LTR            |
+  | 未确定关系的LTR  | 尚不能排除退化前病毒或配对遗漏 |
+  | 复杂结构         | 存在嵌套、共享或多个候选关系   |
+
+**第四步：把已有RNA和长读长结果接入**
+- 可以先导入SERVE、TEscape及其他公开转录本，我自己的等结果完成后，再接入同一套表
+- 核心操作是：用转录本的实际外显子与hERV片段相交
+- 需要区分以下情况：
+
+  | 观察结果                   | 我们可以怎样记录                    |
+  | -------------------------- | ----------------------------------- |
+  | RNA外显子包含hERV/LTR      | 有该区域被转录的证据                |
+  | RNA从LTR附近开始           | hERV/LTR起始候选，继续检查5′完整性  |
+  | 宿主外显子连接到hERV       | 宿主基因相关转录本                  |
+  | hERV只位于被剪掉的内含子中 | 不能据此认定成熟RNA包含hERV         |
+  | 未剪接read覆盖内含子hERV   | 单独记录前体RNA或内含子滞留相关证据 |
+
+  相同剪接链的转录本可以建立对应关系，但5′和3′端差异仍需保留。特别是“从上游宿主基因开始”与“从LTR开始”，可能具有相同的下游剪接结构，却对应不同解释
+- 如果可以的话，记录证据来自本研究脑组织、外部脑组织还是其他细胞
+
+**第五步：分别评价位点、RNA结构和起始证据**
+
+| 评价维度   | 主要检查内容                                       |
+| ---------- | -------------------------------------------------- |
+| 位点身份   | 坐标、家族及组成是否明确，有无资源冲突             |
+| RNA结构    | 定位是否可靠，外显子和junction是否有支持           |
+| 端点完整性 | 是否可能截短、内部引物起始，是否有CAGE/poly(A)支持 |
+| 样本重复性 | 是否跨样本、供体或平台出现                         |
+| 组织相关性 | 是否在脑组织或本研究样本中得到支持                 |
+
+**第六步：分别生成RNA参考与计数参考**
+
+| 文件              | 保存内容                               | 使用位置                               |
+| ----------------- | -------------------------------------- | -------------------------------------- |
+| RNA转录本GTF      | 完整外显子、真实剪接关系及宿主基因连接 | 转录本比较、结构展示、提供可信剪接信息 |
+| hERV计数GTF       | 归属于各hERV位点的实际计数区间         | Stellarscope等位点计数                 |
+| 位点–转录本关系表 | 两类对象如何对应                       | 汇总证据和解释结果                     |
+
+- 例如，一条RNA从LTR起始，随后连接三个宿主外显子。RNA参考应保存整条结构；hERV区域计数则应明确哪些区间归属于hERV，避免将宿主基因其他外显子的信号全部算作hERV区域表达
+
+**第七步：在正式分析前用同一批小规模样本、同一套比对结果比较计数结果**
+- 原Telescope注释
+- RepeatMasker中属于本研究范围的LTR/ERV片段
+- 整合后的位点注释
+
+| 检查项           | 要回答的问题                                      |
+| ---------------- | ------------------------------------------------- |
+| 新增检出位点     | 补充资源实际增加了什么？                          |
+| 原有位点计数变化 | 是否因拆分、归属变化或候选竞争而改变？            |
+| LTR重复归属      | 同一LTR是否同时作为前病毒组成部分和独立位点计数？ |
+| 宿主基因重叠     | 新信号是否主要来自宿主外显子或前体RNA？           |
+| 定位歧义         | 新增位点是否缺少足够的区分信息？                  |
+| 人工检查         | 随机和分层抽取的位点是否符合实际覆盖与结构？      |
 
 
 #### 长读长数据处理

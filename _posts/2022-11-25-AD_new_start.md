@@ -286,6 +286,101 @@ sbatch run_step.sbatch 2
 | `work/02_standardized/rejected_records.tsv.gz`    | 无法匹配参考等记录及具体原因          |
 | `work/02_standardized/normalization_summary.json` | 转换结果汇总                          |
 
+代码具体说明：
+- 1：建立登记表
+  
+  | 字段                           | 含义                                        |
+  | ------------------------------ | ------------------------------------------- |
+  | `assembly`                     | 参考基因组版本，例如GRCh38或hg19            |
+  | `coordinates`                  | 原文件采用的坐标规则                        |
+  | `resource_role`                | 描述的是基因组位点、重复片段，还是RNA转录本 |
+  | `source_version`、`source_url` | 来源版本和获取地址                          |
+  
+  ```py
+  result.update(
+      relative_path=rel,
+      source_version=source.get('version', ''),
+      source_url=source.get('url', '')
+  )
+  result.update({
+      key: convention.get(key, '')
+      for key in ['assembly', 'coordinates', 'resource_role']
+  })
+  write_json(
+      out / 'audit_status.json',
+      {'ready_for_step2': summary['failed'] == 0}
+  )
+  ```
+- 2.1：统一坐标
+  
+  对于GTF，核心转换等价于：
+
+  ```py
+  start0 = int(x[3]) - 1
+  end0 = int(x[4])
+  ```
+
+  `x[3]`和`x[4]`分别是GTF的第4、5列，即起点和终点
+
+  | 数据类型            | 转换为分析用BED时的处理 |
+  | ------------------- | ----------------------- |
+  | GTF                 | 起点减1，终点不变       |
+  | 已采用BED规则的区间 | 起点、终点均不变        |
+  | HERVd、GTEx TE-TSS  | 按已核实的规则，起点减1 |
+  | 输出的RNA GTF       | 继续保留1起点、两端包含 |
+
+- 2.2：统一染色体名称、检查区间，并处理方向
+
+  ```py
+  name = self.aliases.get(str(chrom))
+  if name is None:
+      return None, 'sequence_not_in_reference'
+  if start < 0 or end <= start:
+      return None, 'invalid_interval'
+  if end > self.lengths[name]:
+      return None, 'out_of_bounds'
+  ```
+
+  先通过别名表统一染色体名称，例如将`1`对应到`chr1`，再检查区间是否合法、是否超过染色体长度。不能匹配的记录写入`rejected_records.tsv.gz`，并注明原因
+
+  ```py
+  strand = {'C': '-', 'F': '+'}.get(strand, strand)
+  if strand not in ('+', '-', '.'):
+      strand = '.'
+  ```
+  
+  这里主要处理HERVd的`F/C`方向表示。ERVmap因为全是+所以采用单独规则：标准化方向写成`.`，同时保留原始`+`，等待后续核实
+- 2.3：添加来源前缀，并保留原始信息
+
+  ```py
+  record_id = source + '::' + str(source_id)
+  gene_id = source + '::' + old_gene
+  tx_id = source + '::' + old_tx
+  ```
+
+  例如，某条TEscape转录本会得到`TEscape::原始ID`这样的标准化ID，便于辨认来源，减少不同资源之间的ID冲突
+- 2.4：按记录含义分别保存，并处理特殊格式
+  - RepeatMasker：保留LTR及分类不确定的LTR记录，为后续筛选hERV及相关元件准备候选集合，此时仍保留MaLR等标签
+  - Telescope的`genes.gtf`用于保存位点整体范围，`transcripts.gtf`中的`exon`用于保存重复片段
+  - SERVE、TEscape等RNA注释则另外保存GTF和外显子BED
+  
+  ```py
+  # RepeatMasker
+  if x[11] not in ('LTR', 'LTR?'):  # x[11]是重复序列类别
+      continue
+  # Telescope
+  kind = 'locus_span' if feature == 'gene' else 'repeat_block_not_RNA_exon'
+  ```
+- 两个特殊资源：
+  - LongRead_TE_2025：从误写的`FPKM`属性中恢复可唯一识别的转录本ID，标记修复情况；含义不清的`FPKM`属性省略
+  - HERVdb：保留hg19原始坐标，放入`pending/`，待核实起点规则后再转换到hg38
+
+
+
+
+
+
+
 #### 长读长数据处理
 
 **两种长读长测序数据**：

@@ -375,7 +375,37 @@ sbatch run_step.sbatch 2
   - LongRead_TE_2025：从误写的`FPKM`属性中恢复可唯一识别的转录本ID，标记修复情况；含义不清的`FPKM`属性省略
   - HERVdb：保留hg19原始坐标，放入`pending/`，待核实起点规则后再转换到hg38
 
+---
 
+**初步确定参考基因组**：
+- 使用GENCODE v49+GRCh38的组合
+- 之前使用`GRCh38.p14.genome.fa`属于包含染色体、scaffold、patch和替代单倍型的全组装版本，而`primary assembly`版本保留主要染色体及未定位、未放置的scaffold，排除patch和替代单倍型。为减少hERV本身重复较多带来的额外比对歧义，选择没有替代序列`_alt`的primary assembly版本
+
+```sh
+# 下载数据
+mkdir -p /public/home/GENE_proc/wth/ADnew/reference/GRCh38_gencode49_primary
+cd /public/home/GENE_proc/wth/ADnew/reference/GRCh38_gencode49_primary
+base_url=https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49
+curl -fL --retry 5 -C - -o GRCh38.primary_assembly.genome.fa.gz \
+  "$base_url/GRCh38.primary_assembly.genome.fa.gz"
+curl -fL --retry 5 -C - -o gencode.v49.primary_assembly.annotation.gtf.gz \
+  "$base_url/gencode.v49.primary_assembly.annotation.gtf.gz"
+gunzip GRCh38.primary_assembly.genome.fa.gz
+gunzip gencode.v49.primary_assembly.annotation.gtf.gz
+sha256sum GRCh38.primary_assembly.genome.fa \
+  gencode.v49.primary_assembly.annotation.gtf > reference.SHA256SUMS.txt
+# 建立FASTA索引
+module load miniconda3/base
+conda activate ad-longread
+samtools faidx GRCh38.primary_assembly.genome.fa
+# 补做第二步的参考兼容性检查
+cd /public/home/GENE_proc/wth/ADnew/reference/HERV_annotation_steps12_20261029
+sbatch run_step.sbatch 2 \
+  --fai /public/home/GENE_proc/wth/ADnew/reference/GRCh38_gencode49_primary/GRCh38.primary_assembly.genome.fa.fai \
+  --out /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/work/02_standardized_primary
+```
+
+[结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep12_res_new.zip?)
 
 
 

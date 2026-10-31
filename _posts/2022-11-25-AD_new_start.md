@@ -407,6 +407,139 @@ sbatch run_step.sbatch 2 \
 
 [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep12_res_new.zip?)
 
+---
+
+**整合多种注释**：[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_annotation_step3_20261030.zip?)
+- 保留Telescope骨架：14267个位点及55897个组成重复块全部保留，继续使用原ID
+- 归属RepeatMasker片段：根据方向、模型名称和实际重复块覆盖比例建立对应；剩余片段生成新增重复单元候选，分别标记ERV、MaLR、其他LTR和未确定类别
+- 关联其他基因组来源：对接ERVmap、HERVarium和HERVd，保留边界、分类、配对及归属冲突
+- 关联外部RNA：使用SERVE、TEscape和LongRead_TE_2025的实际外显子建立关系，分别记录同向、反向、方向未知及仅位于内含子中的情况
+
+```sh
+cd /public/home/GENE_proc/wth/ADnew/reference/HERV_annotation_step3_20261030
+bash submit_step3.sh
+```
+
+实现过程：
+- 保留Telescope已经定义的位点，同时保存每个位点内部的实际重复块
+  - `genomic/Telescope_loci.bed.gz`记录一个位点的整体位置、方向和原始ID，`genomic/Telescope_segments.bed.gz`记录这个位点由哪些重复片段组成
+    
+    假设某个位点为：
+
+    | 内容           | 区间         |
+    | -------------- | ------------ |
+    | 位点整体跨度   | `[100,1000)` |
+    | 一个LTR块      | `[100,200)`  |
+    | 一个internal块 | `[300,700)`  |
+    | 另一个LTR块    | `[900,1000)` |
+
+    整体跨度是900bp，实际重复块合计覆盖600bp，中间还有300bp没有被这些块覆盖。代码分别记录`block_union_bp = 600`和`span_gap_bp = 300`
+  - 本轮保留了14,267个位点和55,897个重复块，主要写入`genomic/loci.tsv.gz`（位点整体信息）和`genomic/locus_blocks.tsv.gz`（位点内部的实际重复块）
+- 判断每条RepeatMasker片段能否归入已有Telescope位点，剩余片段再形成新增候选
+  
+  ```py
+  hits = defaultdict(list)
+  for block in baseline_index.query(chrom, start, end):
+      if block.strand == strand and block.model == model:
+          hits[block.key].append((max(start, block.start), min(end, block.end)))
+  strong = {
+      key: covered_bp(value)
+      for key, value in hits.items()
+      if covered_bp(value) / (end - start) >= RULES['telescope_fragment_min_coverage']
+  }
+  ```
+  
+  要求同时满足：染色体位置相交、方向相同、规范后的模型名称相同、同一位点的匹配块覆盖该RepeatMasker片段至少80%
+  - “模型”：重复序列参考模板，即RepeatMasker用来识别重复片段的参考DNA序列。同一种模板可以对应基因组上许多不同位置的拷贝
+    - 在RepeatMasker表中，`repName`例如LTR7是模板名称（其实就是所属家族名），`repStart`、`repEnd`、`repLeft`是模板上的匹配坐标及剩余长度信息
+  - 覆盖比例=`片段与该位点同向、同模型重复块的交集并集长度`/`RepeatMasker片段长度`
+    
+    例如，一个100bp片段有90bp被符合条件的重复块覆盖，就达到90%
+  - 代码根据符合条件的位点数标记：
+  
+    | 情况         | 输出标签                         | 处理方式                   |
+    | ------------ | -------------------------------- | -------------------------- |
+    | 只有一个位点 | `unique_baseline_match`          | 记录唯一归属               |
+    | 多个位点     | `ambiguous_baseline_match`       | 保留全部归属，并进入复核表 |
+    | 没有位点     | 后续标记为`additional_candidate` | 进入新增候选构建           |
+
+  - 新增候选构建时，我们尝试连接同一重复模型被拆开的相邻片段，要求同一染色体、同一方向且不能重新从模型起点开始、基因组上相邻片段间隔为0–100bp、模型间隔	−20至100bp且允许最多20bp的模型坐标重叠
+  
+    最终将672,419条片段组织成656,402个新增候选
+  - 按`repeat_family`分配范围标签：
+    
+    | `scope`            | 当前判断依据             |
+    | ------------------ | ------------------------ |
+    | `core_ERV`         | 家族为ERV1、ERVK或ERVL   |
+    | `related_MaLR`     | 家族名称包含MaLR         |
+    | `other_LTR`        | 家族名称包含Gypsy        |
+    | `unclassified_LTR` | 其余尚不能确定范围的记录 |
+    
+  - 已有Telescope位点的边界和重复块保持原样，RepeatMasker片段通过关系表与其关联
+- 把其他基因组来源对应到上述目录，并保留来源之间的分歧：ERVmap、HERVarium和HERVd逐条与目录的实际重复块相交，记录关系
+
+  ```py
+  bp = covered_bp(overlaps[key])  # 交集并集长度：重叠区域去重后的总长度
+  source_fraction = bp / (end - start)  # 交集并集长度/来源记录跨度
+  target_fraction = bp / covered_bp(  # 交集并集长度/目录位点的重复块并集长度
+      (block.start, block.end) for block in locus.blocks
+  )
+  ```
+  - 对于HERVd和ERVmap：
+    - `same_component_candidate`：来源记录与目录位点同向、模型匹配，且两个比例都至少为80%
+    - `same_locus_span_candidate`：HERVd记录同向、模型匹配，且双方整体跨度的相互覆盖比例均≥80%
+    - `span_match_direction_unverified`：ERVmap记录的双方整体跨度相互覆盖比例均≥80%；方向仍未核实
+    - 如果一条来源记录对应多个候选，程序记录歧义
+    - 如果完全没有重复块交集，则标记`no_block_overlap`，仍在状态表中保留原始记录。当前代码不会仅凭这条来源记录的整体跨度，新建一个目录位点
+  - HERVarium还做了两项专门处理：
+    - 核对它的LTR BED和catalogue：相同来源ID必须具有完全一致的坐标和方向，才能建立一一对应
+    - 检查来源已经给出的internal–LTR配对，包括染色体、方向、5′/3′相对位置、计算距离、模型关联，以及原始角色标签，写入`relations/HERVarium_pair_links.tsv.gz`
+  - 结果保存在`relations/source_locus_links.tsv.gz`和`relations/source_record_status.tsv.gz`
+- 检查外部RNA的外显子是否真正覆盖目录中的重复块：使用SERVE、TEscape和LongRead_TE_2025数据集
+  - 每个资源读取两类输入：`transcripts/资源名.transcripts.tsv.gz`和`transcripts/资源名_exons.bed.gz`
+  - 将外显子归到转录本，检查染色体、方向及外显子行数，然后合并重叠区间
+
+    一个转录本可以关联多个位点，一个位点也可以关联多个转录本
+  - 对每个“转录本—位点”组合：
+  
+    | 字段                   | 含义                                  |
+    | ---------------------- | ------------------------------------- |
+    | `overlap_union_bp`     | RNA外显子与该位点重复块的交集并集长度 |
+    | `RNA_exonic_fraction`  | 交集长度÷RNA外显子总长度              |
+    | `locus_block_fraction` | 交集长度÷该位点重复块总长度           |
+    | `strand_relation`      | RNA与元件同向、反向或方向未知         |
+
+    例如，RNA外显子总长2,000bp，某个位点的重复块总长500bp，两者交集300bp，则两个比例分别为15%和60%。这些比例可以帮助区分“RNA仅包含一小段重复序列”和“RNA覆盖了该重复单元的大部分区域”
+  - 最后，程序给转录本生成两种结构ID
+    - `structure_id`：包含染色体、方向和完整外显子区间，因此不同起止端会得到不同ID
+    - `splice_chain_id`：只包含内含子链；起止端不同但剪接位点相同的转录本可以共享这个ID。单外显子转录本不生成剪接链ID
+  
+  结构记录保存在`transcript_structures.tsv.gz`，外显子关联保存在`exonic_links.tsv.gz`
+
+
+[结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep3_res.zip?)
+- 共有670669个单元，包括14267个Telescope位点和656402个新增候选
+  - 这个总数包含大量重复片段、LTR及MaLR等候选，需要经过结构整理才能形成最终计数参考
+- 三个外部RNA资源的结果也符合预期：
+  
+  | 资源             | 输入转录本 | 有外显子交集的转录本 |
+  | ---------------- | ---------: | -------------------: |
+  | SERVE            |     206884 |               206714 |
+  | TEscape          |      83193 |                13768 |
+  | LongRead_TE_2025 |     595755 |               244026 |
+- 一些待复核的事项：
+
+  | 待复核事项                                 |    数量 |
+  | ------------------------------------------ | ------: |
+  | RepeatMasker片段对应多个Telescope位点      |     6条 |
+  | 原Telescope位点之间的重复块重叠            |   103对 |
+  | 新增候选与Telescope重复块重叠              |   859对 |
+  | 新增候选之间的重复块重叠                   | 12567对 |
+  | HERVarium原始solo记录与同向Telescope块重叠 |  2402条 |
+  | HERVarium配对未获当前家族关系表支持        |  9217条 |
+
+
+
 
 
 
@@ -526,3 +659,74 @@ done
 
 
 
+### 文献阅读
+
+#### Lifespan single-cell transcriptomic atlas of the human prefrontal cortex
+
+过去的脑单细胞研究经常集中在某个年龄段，例如胎儿发育、成年或老年，也有很多研究直接比较患者和对照。这样容易留下一个问题：疾病中观察到的表达变化，有多少属于疾病本身，有多少属于正常发育或衰老？
+- 作者选择背外侧前额叶皮层(DLPFC)，建立跨生命周期的正常参考。这个脑区参与认知控制等高级功能，而且发育持续时间长，也容易受到衰老影响
+
+**研究数据**：主队列来自PsychAD统一处理的数据，公共队列分别用于独立验证和补充早期发育阶段
+
+| 数据             | 样本与规模                                                      | 在本文中的用途                                  |
+| ---------------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| 主研究队列       | 284名正常供体，0–97岁；1,307,674个细胞核；DLPFC                 | 建立正常生命周期图谱                            |
+| 公共验证队列     | 306名供体，孕22周至101岁；2,039,078个细胞核；来自3项研究        | 验证年龄相关表达变化和连续轨迹                  |
+| 拟时序整合队列   | 主队列与Herring等人的发育数据整合；311名供体、1,454,617个细胞核 | 补充胎儿等早期状态，分析细胞谱系                |
+| Visium空间转录组 | 10名成年供体，33–62岁；每人3张切片，共30张                      | 检查基因模块的皮层分层和灰白质分布              |
+| RNAscope         | 8名不同年龄供体                                                 | 验证SST阳性抑制性神经元和少突胶质细胞的组成变化 |
+| GWAS             | 24种精神、神经及其他性状                                        | 为基因模块提供疾病遗传关联信息                  |
+| 调控和互作资源   | CollecTRI、STRING及外部SCENIC+结果                              | 推断候选转录调控因子及相关网络                  |
+
+细胞分类：
+- 8个大类：兴奋性神经元、抑制性神经元、星形胶质细胞、免疫细胞、血管壁细胞、内皮细胞、少突胶质细胞、OPC
+- 27个subclasses
+- 65个subtypes
+
+| 分析年龄组       | 年龄范围                       | 主队列供体数 |
+| ---------------- | ------------------------------ | -----------: |
+| Development      | 0–19岁，合并婴儿、儿童和青少年 |           53 |
+| Young adulthood  | 20–39岁                        |           54 |
+| Middle adulthood | 40–59岁                        |           95 |
+| Late adulthood   | ≥60岁                          |           82 |
+
+先介绍一些缩写：
+- aDEGs：表达与真实年龄显著相关的基因
+- traDEGs：表达沿细胞拟时序显著变化的基因
+- Lifespan trajectory：根据供体年龄拟合出的表达曲线（Fig.2）
+- Pseudotime：根据细胞转录状态排列出的相对顺序（Fig.3–5）
+- MAGMA：判断一个基因集合是否富集GWAS关联信号
+- scDRS：判断一个细胞是否较多表达某种性状相关基因
+- TF activity：根据靶基因表达推断的调控活性，不能直接等同于TF自身表达量
+
+**Fig.1：建立图谱，并发现生命周期中的三个转录变化阶段**
+
+![AD_1](/upload/md-image/other/AD_1.webp){:width="800px" height="800px"}
+
+| 子图 | 展示内容                             | 应怎样理解                               |
+| ---- | ------------------------------------ | ---------------------------------------- |
+| a    | 年龄分组、研究设计、UMAP和细胞分类   | 交代研究对象及规模                       |
+| b    | 四个主要分析方向                     | 组成、表达、谱系和昼夜节律               |
+| c    | 不同年龄段中，年龄解释的表达变异比例 | 判断哪个阶段的表达更受年龄影响           |
+| d    | 各年龄组的细胞组成                   | 展示不同细胞亚类的相对比例               |
+| e    | 年龄解释的组成变异比例               | 发育期组成变化最明显                     |
+| f    | 各年龄段、各亚类的组成变化效应       | 红色表示随年龄增加，蓝色表示减少         |
+| g    | RNAscope代表性图像                   | 对组成变化提供组织原位证据               |
+| h    | 各亚类中的年龄相关差异表达数量       | 支撑“三阶段”结论                         |
+| i    | 发育期aDEGs的GO富集                  | 解释表达变化涉及的功能                   |
+| j    | 发育期aDEGs的GWAS富集                | 将正常发育程序与精神疾病遗传风险联系起来 |
+
+
+
+
+| 研究问题                               | 对应分析                       |
+| -------------------------------------- | ------------------------------ |
+| 不同细胞的相对数量如何随年龄变化？     | 细胞组成建模及RNAscope验证     |
+| 哪些生命阶段的表达变化最多？           | 分年龄段的pseudobulk差异分析   |
+| 基因表达在整个生命周期中怎样变化？     | 真实年龄的非线性回归和轨迹聚类 |
+| 不同细胞亚类是否出现共同的衰老变化？   | mashr分析年龄效应的共享程度    |
+| 各细胞谱系有哪些发育、成熟和衰老程序？ | UMAT、Monocle3拟时序和基因模块 |
+| 这些程序对应哪些功能、疾病和解剖位置？ | GO、MAGMA、scDRS及空间转录组   |
+| 老年细胞的昼夜节律是否改变？           | 根据死亡时间进行cosinor建模    |
+
+正常人DLPFC的转录组随年龄呈非线性变化，发育期主要改变神经元程序，成年中期变化较少，晚年则出现胶质细胞免疫、应激和昼夜节律程序的变化

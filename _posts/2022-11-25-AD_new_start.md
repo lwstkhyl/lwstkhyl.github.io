@@ -378,7 +378,7 @@ sbatch run_step.sbatch 2
 ---
 
 **初步确定参考基因组**：
-- 使用GENCODE v49+GRCh38的组合
+- 使用[GRCh38.primary_assembly.genome.fa](https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.primary_assembly.genome.fa.gz)和[gencode.v49.primary_assembly.annotation.gtf](https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.primary_assembly.annotation.gtf.gz)的组合
 - 之前使用`GRCh38.p14.genome.fa`属于包含染色体、scaffold、patch和替代单倍型的全组装版本，而`primary assembly`版本保留主要染色体及未定位、未放置的scaffold，排除patch和替代单倍型。为减少hERV本身重复较多带来的额外比对歧义，选择没有替代序列`_alt`的primary assembly版本
 
 ```sh
@@ -538,9 +538,29 @@ bash submit_step3.sh
   | HERVarium原始solo记录与同向Telescope块重叠 |  2402条 |
   | HERVarium配对未获当前家族关系表支持        |  9217条 |
 
+---
+
+**结构复核**：[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_annotation_step4_20261031.zip?)
+
+```sh
+cd /public/home/GENE_proc/wth/ADnew/reference/HERV_annotation_step4_20261031
+sbatch run_step4.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/work/04_structure_review/
+```
+
+[结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep4_res.zip?)
 
 
 
+
+
+**添加GENCODE宿主基因关系和CAGE／PolyASite端点证据**：[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_annotation_step5_20261109.zip?)
+
+```sh
+cd /public/home/GENE_proc/wth/ADnew/reference/HERV_annotation_step5_20261109
+sbatch run_step5.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/work/05_gene_endpoints/
+```
+
+[结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep5_res.zip?)
 
 
 
@@ -656,7 +676,31 @@ done
 
 [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2FAD_longread_preprocess_res.zip?)
 
+| 平台   | run数 |     原始reads | 处理后reads | 输出/原始数量比 | 处理后各run均长 |
+| ------ | ----: | ------------: | ----------: | --------------: | --------------: |
+| ONT    |    12 | 1,331,089,445 | 604,942,340 |          45.45% |       386–713nt |
+| PacBio |    30 |   102,976,672 |  94,984,163 |          92.24% |   2,268–3,490nt |
 
+- ONT平均读长较短
+- PacBio的SRR31437239的输出比为76.31%，其余样本为90.51%–94.21%
+- 先保留全部run进行比对
+
+##### 比对到基因组
+
+使用之前hERV注释构建时确定的GRCh38 primary和gencode.v49 primary的组合
+
+试运行：[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FAD_longread_reference_20261102.sbatch?) \| [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Falign_test_res.zip?)
+
+正式运行：[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FAD_longread_align_20261109.zip?)
+
+```sh
+# test
+cd /public/home/GENE_proc/wth/ADnew/longread
+sbatch AD_longread_reference_20261102.sbatch
+# 正式运行
+cd /public/home/GENE_proc/wth/ADnew/longread/AD_longread_align_20261109
+bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
+```
 
 
 ### 文献阅读

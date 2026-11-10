@@ -707,6 +707,8 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 
 #### Lifespan single-cell transcriptomic atlas of the human prefrontal cortex
 
+[原文链接](https://www.nature.com/articles/s41586-026-10271-7)
+
 过去的脑单细胞研究经常集中在某个年龄段，例如胎儿发育、成年或老年，也有很多研究直接比较患者和对照。这样容易留下一个问题：疾病中观察到的表达变化，有多少属于疾病本身，有多少属于正常发育或衰老？
 - 作者选择背外侧前额叶皮层(DLPFC)，建立跨生命周期的正常参考。这个脑区参与认知控制等高级功能，而且发育持续时间长，也容易受到衰老影响
 
@@ -1126,3 +1128,9 @@ fig3-5共用的拟时序流程：
 | 候选TF推断       | “TF–target interaction weights … CollecTRI”                                 | 根据已知调控关系及表达推断TF活性，再结合网络筛选。     | Methods第20页 |
 | 空间模块评分     | “The first principal component (PC1) … representing module expression”      | 用多基因综合分数表达模块空间分布。                     | Methods第20页 |
 | 节律建模         | “residualized expression … fit to a cosinor model separately in each group” | 先校正年龄等因素，再分别重建两年龄组的24小时节律。     | Methods第20页 |
+
+#### Reconstructing developmental and disease progression with sample-level embeddings
+
+[原文链接](https://www.cell.com/cell/fulltext/S0092-8674(26)01268-7)
+
+

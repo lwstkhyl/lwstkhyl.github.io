@@ -411,6 +411,9 @@ sbatch run_step.sbatch 2 \
 
 **整合多种注释**：[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_annotation_step3_20261030.zip?)
 - 保留Telescope骨架：14267个位点及55897个组成重复块全部保留，继续使用原ID
+  - 重复块：一个hERV位点里，单独记录了起止坐标的一段重复序列。一块可以是一段LTR，也可以是一段内部序列（如果内部序列在注释中被分成几段，每段就各记为一块）
+  
+  比如，`HARLEQUIN_6p21.31`是一个位点，表里的`blocks=7`表示它由7段带坐标的区间组成。从最左边到最右边的总跨度是5,947bp，这7段合起来实际覆盖5,569bp，块之间的空档共378bp
 - 归属RepeatMasker片段：根据方向、模型名称和实际重复块覆盖比例建立对应；剩余片段生成新增重复单元候选，分别标记ERV、MaLR、其他LTR和未确定类别
 - 关联其他基因组来源：对接ERVmap、HERVarium和HERVd，保留边界、分类、配对及归属冲突
 - 关联外部RNA：使用SERVE、TEscape和LongRead_TE_2025的实际外显子建立关系，分别记录同向、反向、方向未知及仅位于内含子中的情况
@@ -541,28 +544,302 @@ bash submit_step3.sh
 ---
 
 **结构复核**：[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_annotation_step4_20261031.zip?)
+- 读取第三步的位点、重复块、来源关系和外部RNA外显子关系，并核对FAI及输入文件的SHA-256
+- 第二步的家族表和HERVarium原始区间也参与核对
 
 ```sh
 cd /public/home/GENE_proc/wth/ADnew/reference/HERV_annotation_step4_20261031
 sbatch run_step4.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/work/04_structure_review/
 ```
 
+- 判断两个目录单元是否是同一个注释表示：`review_rules.py`中的`component_geometry()`先按规范后的重复模型和组成角色分组，再合并各组内部的区间。`identity_geometry()`把这组区间和染色体、方向、位点外层边界一起用于比较
+  
+  ```py
+  def component_geometry(blocks):
+      parts = defaultdict(list)
+      for block in blocks:
+          parts[(block.model, block.role)].append((block.start, block.end))
+      return tuple((model, role, tuple(merged(values))) for (model, role), values in sorted(parts.items()))
+  def identity_geometry(locus, blocks):
+      return locus['chrom'], locus['strand'], int(locus['start0']), int(locus['end0']), component_geometry(blocks)
+  ```
+
+  例如，A把`[100,200)`写成一个LTR块，B把它写成`[100,150)`和`[150,200)`两个同模型、同角色的块。若其余组成、外层边界和方向也一致，两种写法合并后的几何相同。主脚本将完整几何相同的单元列入`exact_annotation_aliases.tsv`，优先选Telescope ID作为建议代表
+- 用实际重复块重算重叠和包含：主脚本从第三步的`review/genomic_flags.tsv.gz`取出已标记的`locus_pair`并对无序配对去重，`assess_overlap()`分别算两侧重复块并集的交集，以及其中可由同模型块配对解释的碱基并集
+
+  ```py
+  overlap = intersections([(x.start, x.end) for x in left_blocks], [(x.start, x.end) for x in right_blocks])
+  bp = covered_bp(overlap)
+  a_bp = covered_bp((x.start, x.end) for x in left_blocks)
+  b_bp = covered_bp((x.start, x.end) for x in right_blocks)
+  fraction_a, fraction_b = bp / a_bp, bp / b_bp
+  ```
+
+  `fraction_A`和`fraction_B`的分母分别是A、B各自的重复块并集长度。`same_model_overlap_bp`按相交块的规范模型名是否相同计算，`role_pairs`另记相交块的角色，例如`LTR/LTR`或`internal/LTR`。`span_relationship`独立记录外层跨度的包含、相等或交叉
+
+  | `assessment`                      | 实际判断                                               | 本次配对数 |
+  | --------------------------------- | ------------------------------------------------------ | ---------: |
+  | `opposite_orientation_overlap`    | 实际块相交且方向相反，方向判定优先                     |      2,339 |
+  | `unknown_orientation_overlap`     | 实际块相交且至少一侧方向未知                           |          0 |
+  | `exact_annotation_duplicate`      | 同向，且4.1中的完整几何一致                            |          0 |
+  | `different_model_overlap`         | 同向，重叠中同模型碱基为0                              |      4,767 |
+  | `same_model_contained_annotation` | 全部重叠碱基同模型，且覆盖较小单元的全部重复块         |          4 |
+  | `high_reciprocal_model_overlap`   | 两侧覆盖率都≥80%，且交集中≥80%是同模型，前面的分类优先 |          1 |
+  | `mixed_model_overlap`             | 剩余配对中，交集仅一部分同模型                         |          2 |
+  | `partial_model_overlap`           | 剩余配对中，交集全部同模型                             |      6,416 |
+
+  例如，chr6上的`HC_976f71209d219a0d9283`和`HC_e51fa5391828b140d962`相交29bp，29bp全是同模型。两侧重复块分别长35bp和33bp，覆盖率为82.86%和87.88%。程序把这对标为`high_reciprocal_model_overlap`，作为两个有重叠的候选单元进入人工复核。13,529对实际块重叠包括103对Telescope–Telescope、859对Telescope–新增候选和12,567对新增候选–新增候选
+
+  程序另外遍历至少含一个Telescope位点的跨度相交对。比如`HC_6e4b77a3e0e0fbe59c8b`位于`ERV316A3_10p11.1a`的外层跨度内，两者的实际块相交为0bp，写入`span_only_context.tsv.gz`。此类关系有4,775对，表示区间位置背景
+- 复核RepeatMasker多归属和HERVarium的solo标签
+  - **RepeatMasker多归属**：从`fragment_locus_links.tsv.gz`取出第三步的`ambiguous_baseline_match`，将同一片段的所有父位点换算成4.1中的建议代表ID。如果代表ID只剩一个，歧义可以用完整注释等价解释，否则标为`parent_ambiguity_remains`。本次6条均保留多个父位点。例如`RF_dbb6b46aeadec3981620`这条`MLT2B5`片段在`chr1:[9302226,9302644)`，同时对应`ERVLB4_1p36.22`和`ERVL_1p36.22a`。两个ID和对应代表ID都写入`ambiguous_fragments.tsv.gz`
+  - **HERVarium的solo标签**：从第三步已标记的原始solo记录出发，逐个比较同向Telescope位点。`solo_component_status()`把交集分为同模型LTR、internal块和其他块，分别计算去重后的碱基数。判定的分母是HERVarium这条LTR的整段长度
+
+  ```py
+  matching_bp = covered_bp(same_ltr)
+  if matching_bp / (end - start) >= 0.8:
+      category = 'solo_label_matches_baseline_LTR_component'
+  elif matching_bp:
+      category = 'solo_label_partly_overlaps_matching_LTR'
+  elif internal:
+      category = 'solo_label_overlaps_internal_block'
+  else:
+      category = 'solo_label_other_model_overlap'
+  ```
+
+  2,402条原始solo记录进入复核。本次明细中，1,898条关系达到80%阈值，其中1,651条覆盖100%。另有93条仅部分覆盖同模型LTR，133条归入internal重叠，278条归入其他块重叠。例如`ERV316A3_10q25.1k`的一个同向`ERV3-16A3_LTR`块覆盖了HERVarium一条solo记录的全部329bp。`solo_role_review.tsv.gz`同时记录来源的`raw_role=solo`和它与Telescope组成块的关系，供后续检查这一LTR的结构归属
+- 核查HERVarium的internal–LTR配对：`family_pair_status()`用`family_model_links.tsv`分别检查internal模型、LTR模型及两者的组合。`family_assessment`细分家族表覆盖情况。`source_pair_review`沿用第三步的复合标记，其中可以同时包含染色体或链向冲突、位置或距离分歧、来源角色分歧以及家族表未支持配对。`source_distance_bp`取第三步根据实际区间算出的间距
+
+  | `family_assessment`                        | 实际判断                                 | 本次记录数 |
+  | ------------------------------------------ | ---------------------------------------- | ---------: |
+  | `listed_family_association`                | 当前家族表列出了这对组合                 |     14,818 |
+  | `known_models_without_listed_association`  | 两个模型均在各自的模型集合中，组合未列出 |      4,639 |
+  | `internal_model_missing_from_family_table` | internal模型缺项                         |        687 |
+  | `LTR_model_missing_from_family_table`      | LTR模型缺项                              |      3,881 |
+  | `both_models_missing_from_family_table`    | 两个模型均缺项                           |         10 |
+
+  对后四类共9,217条配对，`alternative_partners()`查询internal的原配对侧。候选需同染色体、同链、处于该侧且与internal区间分离，模型也需出现在当前允许配对列表。正链5′侧在左、3′侧在右，负链相反。默认索引窗口为10kb，使用半开区间，因此可返回的候选间距为0至9,999bp。主脚本排除原LTR ID，将候选按距离和ID排序写入`alternative_LTR_partners.tsv.gz`。8,177条在该范围内无候选，844条有1个，196条有多个。候选和原配对分别存列，`shared_LTR_links.tsv.gz`另记1,307个被多个不同internal记录共用的来源LTR
+- 记录RNA和来源证据，写出v0.2
+  - **RNA关系**：从三种外部RNA的`exonic_links.tsv.gz`中筛选`overlap_union_bp ≥ 20`的关系，按来源和`same`、`opposite`、`unknown`分别计数。另统计`SERVE_brain_same_ge20_links`和`observed_5prime_in_LTR_same_ge20_links`。前者要求SERVE记录有`external_brain`标签且与元件同向。后者要求观察到的RNA 5′端落在该同向位点的LTR块里。较短关系仍可在第三步明细中查到。计数单位是RNA–位点关系，端点字段表示外部RNA模型的几何位置
+  - **来源独有记录**：`no_block_overlap`的来源记录单列到`source_only_review.tsv.gz`。其中有ERVmap 7条、HERVarium internal 2,742条、HERVarium LTR catalogue 13,385条和HERVd 14,908条。`overlapping_unit_spans_only`给出可能相交的外层跨度，方便后续回查
+  - **目录状态**：`04_review_structures.py`逐行写出原目录字段，再添加`identity_review`、`structure_review`、`overlap_assessments_json`、`source_review_flags_json`及RNA计数。前两项分别看实际块重叠与来源结构标记，`count_reference_action`按重叠、等价别名、Telescope基线、新增候选的次序给出后续处理提示
+
+  例如，有非等价块重叠时，`identity_review`为`block_overlap_requires_review`。单元收到solo、未列家族配对或共享LTR的标记时，`structure_review`为`source_structure_claims_require_review`。对这些来源记录进行位点映射时，代码还会查找同链、同模型且与单个重复块相交≥20bp的单元
+
+  | 输出文件                                                       | 每行或每份的含义                                                          |
+  | -------------------------------------------------------------- | ------------------------------------------------------------------------- |
+  | `catalogue_v0.2.tsv.gz`                                        | 一个目录单元，附身份、结构、来源和RNA复核字段                             |
+  | `unit_overlap_review.tsv.gz`、`span_only_context.tsv.gz`       | 一对有实际块重叠的单元，或一对只有外层跨度相交的单元                      |
+  | `exact_annotation_aliases.tsv`、`ambiguous_fragments.tsv.gz`   | 完整几何等价的建议代表，或多归属片段的父位点清单                          |
+  | `solo_role_review.tsv.gz`、`family_pair_review.tsv.gz`         | 一条solo记录与基线位点的关系，或一条来源internal–LTR配对                  |
+  | `alternative_LTR_partners.tsv.gz`、`shared_LTR_links.tsv.gz`   | 一个探索窗口内的替代候选，或一个被多个internal共用的来源LTR               |
+  | `source_only_review.tsv.gz`                                    | 一条无目录重复块交集的来源记录                                            |
+  | `review_examples.tsv`、`review_example_regions.bed`            | 每类最多10个可复查案例及其浏览区间，区间两侧各加500bp并限制在染色体范围内 |
+  | `step4_summary.json`、`step4_summary.tsv`、`review_bundle.zip` | 数量和校验结果，以及关系明细回传包                                        |
+
+  结果写出670,669个目录单元，包括14,267个Telescope基线位点，共对应728,316个原始重复块。实际块重叠涉及25,638个单元，13,633个单元带来源结构复核标记。两种状态可同时出现在同一单元上。`step4_summary.json`中25项检查均通过，其中包括逐个读取本轮9个gzip输出并核对压缩完整性
+
 [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep4_res.zip?)
+- 6条多归属片段应按共享LTR处理：每条都是两个旧位点共用同一段LTR，而两个位点各有独有的internal块。例如，chr6的`MLT2B3`夹在`ERVL_6q16.1a`和`HERVL_6q16.1a`的internal块之间
+- solo冲突可以按实际覆盖拆开处理：2402条记录中，1651条的全段已被同向、同模型的Telescope LTR块覆盖，可作为已有组成块的来源佐证
+- 家族表缺项里有一批可以直接补足：3881条LTR模型缺项中，有1970条集中在`HERVH-int`与15种LTR7子型的组合；Dfam条目`DF003440068–DF003440082`，这15种模型均被标注为HERVH的LTR
+- 7条来源独有的ERVmap记录也已逐条回查原始RepeatMasker。其中`HERVK30`的527bp全段与`L1PA7`重合，这批记录适合继续保留在坐标和序列待核查表里
 
-
-
-
+---
 
 **添加GENCODE宿主基因关系和CAGE／PolyASite端点证据**：[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_annotation_step5_20261109.zip?)
+- `05_add_gene_and_endpoints.py`读取第四步的`catalogue_v0.2.tsv.gz`、第三步的原始重复块及外部RNA关系、第二步的端点轨道和GENCODE v49主组装GTF
 
 ```sh
 cd /public/home/GENE_proc/wth/ADnew/reference/HERV_annotation_step5_20261109
 sbatch run_step5.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/work/05_gene_endpoints/
 ```
 
+- 按实际重复块计算GENCODE基因关系：`context_rules.py`的`load_gencode()`把GTF第4、5列转成0起点、右端不含的区间。`gene`行给出基因整体范围，`exon`行按带版本的`gene_id`归组。同一基因内，合并所有异构体的重叠或相邻外显子，得到该基因的外显子并集。程序同时核对GTF的版本、FAI坐标范围及外显子与所属基因的染色体、方向和边界
+
+  ```py
+  start, end = int(left) - 1, int(right)
+  ```
+
+  `write_catalogue()`先合并一个hERV单元的实际重复块。`gene_context()`对每个相交基因计算重复块与基因范围的交集，再从这些区间中取出与该基因外显子并集重叠的部分。每个`locus_id–gene_id`组合写一行，附`gene_name`、`gene_type`和链向关系。如果位点和多个基因相交，目录汇总时对各基因的交集再次取并集，避免重叠碱基重复计数
+
+  ```py
+  genic_bp = span_bp(merged(spans))
+  exon_bp = span_bp(merged(exons))
+  context = 'exon_overlap' if exon_bp else 'gene_body_outside_exons' if genic_bp else 'intergenic'
+  ```
+
+  | `catalogue_v0.3.tsv.gz`字段          | 含义                                                                                                      |
+  | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+  | `GENCODE_overlapping_genes`          | 有实际块交集的基因数，另分同链、反链和链向未知                                                            |
+  | `GENCODE_gene_body_union_bp`         | 重复块与所有相交基因范围的交集并集长度，含外显子部分                                                      |
+  | `GENCODE_exon_union_bp`              | 重复块与所有相交基因的外显子并集重叠的去重长度                                                            |
+  | `GENCODE_gene_body_outside_exons_bp` | 基因范围交集长度减外显子交集长度                                                                          |
+  | `GENCODE_intergenic_repeat_bp`       | 实际重复块总长度减基因范围交集长度                                                                        |
+  | `GENCODE_same_strand_exon_union_bp`  | 只对同链基因的外显子交集取并集                                                                            |
+  | `GENCODE_context`                    | 有外显子交集记为`exon_overlap`，只有基因体非外显子交集记为`gene_body_outside_exons`，其余记为`intergenic` |
+
+  例如，`HML3_1q32.1b`的实际重复块长5,470bp，其中5,392bp落在一个同链基因范围内。范围内的2,534bp与外显子并集相交，2,858bp位于该基因范围的外显子并集之外，余下78bp在基因范围外。这个结果说明该位点与基因的空间关系。判断RNA的起始来源还需结合单条转录本的端点和剪接结构
+- 确定要匹配的RNA端点和参考位置：`add_rna_support()`先从SERVE、TEscape和LongRead_TE_2025筛出外显子与实际重复块相交≥20bp的RNA–位点关系，再读取相关的`transcript_structures.tsv.gz`。程序按转录方向检查第三步保存的5′和3′坐标。`start`和`end`是最外侧外显子的区间边界，因此最后一个碱基坐标为`end - 1`
+
+  ```py
+  expected = {'+': (start, end - 1), '-': (end - 1, start), '.': (None, None)}[strand]
+  ```
+
+  | 参考证据     | 匹配的RNA端点 | 脚本使用的位置                                                                              |
+  | ------------ | ------------- | ------------------------------------------------------------------------------------------- |
+  | FANTOM5 CAGE | 5′端          | 第二步从原始BED第7、8列取得的峰顶区间。第五步按相同峰ID核对染色体、链向和峰顶是否在峰区间内 |
+  | PolyASite    | 3′端          | 从簇ID解析1起点的代表位置，减1后形成单碱基区间，并核对原始染色体、链向和是否落在该簇内      |
+
+  例如，PolyASite簇`1:16450:-`在代码中使用`[16449,16450)`。FANTOM5的209,911个峰顶中，209,612个宽1bp、298个宽2bp、1个宽3bp，程序保留它们的实际区间。PolyASite的569,005个簇均按其代表碱基匹配
+- 分开记录邻近匹配、同块匹配和同LTR块匹配：`AnchorIndex.query()`按染色体和RNA链向检索参考位置。两个轨道的默认窗口都是±50bp，可分别用`--cage-window`和`--polya-window`调整。`Anchor.distance()`计算RNA端点到参考区间中最近碱基的距离。带符号距离沿RNA转录方向计算，正值表示参考位置在下游。
+
+  ```py
+  closest = min(max(self.start, pos), self.end - 1)
+  return closest - pos if strand == '+' else pos - closest
+  ```
+
+  `same_block_evidence()`从窗口候选中再做一次筛选。先找哪些**原始重复块**包含RNA端点，再判断其中是否有同一个块完整包含参考区间。这里使用未合并的重复块，连续的两个块也分别判断
+
+  ```py
+  end_blocks = [block for block in blocks if pos is not None and block.start <= pos < block.end]
+  for anchor in anchors:
+      roles = {block.role for block in end_blocks if block.start <= anchor.start < anchor.end <= block.end}
+      if roles:
+          matches[anchor] = roles
+  ```
+
+  例如，两个原始块分别为`[100,200)`和`[200,250)`，正链RNA 5′端位于199。窗口内最近的峰顶若在`[200,201)`，距离为+1bp，记录在转录本表。若另有峰顶`[195,196)`，距离为−4bp，则它才是这条关系中的最近同块匹配。最近记录按距离绝对值排序，同距离时按参考区间起点、终点和ID排序。共同块中含LTR时，该候选再计入同LTR块
+
+  | 记录层次                | 主要字段及读法                                                                                                                                                                              |
+  | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | 一个来源的一个RNA转录本 | `transcript_endpoint_support.tsv.gz`中的`CAGE_near_count`、`PolyASite_near_count`是窗口内参考记录数。`*_nearest_*`给出最近参考ID、区间和带符号距离                                          |
+  | 一条RNA–位点关系        | `rna_locus_endpoint_links.tsv.gz`中的`*_same_block_count`、`*_same_LTR_block_count`是通过对应块条件的候选数。`*_same_block_nearest_*`给出其中最近的同块记录                                 |
+  | 一个hERV目录单元        | `same_direction_*_near_RNA_links`、`same_direction_*_same_block_RNA_links`、`same_direction_*_same_LTR_block_RNA_links`分别统计三种条件下有匹配的同方向RNA关系数。一条关系在每项中最多计1次 |
+
+  匹配参考轨道用的是**RNA与参考轨道同链**。位点汇总另要求**RNA与hERV元件同向**。反向和未知方向的RNA–位点关系保存在明细中。RNA本身链向为`.`时，端点坐标留空。公共来源可共享同一结构或参考位点，关系数按来源和转录本记录计数
+- 补充第四步发现的HERVH家族表缺项：`extend_family_tables()`在原始Dfam EMBL中逐条检查`DF003440068`至`DF003440082`。每条需有预期的LTR7亚型名称、`SV 2`，且描述指明是HERVH的long terminal repeat。程序把原表中缺少的`HERVH-int–LTR7亚型`写入`family_model_links_extended.tsv`，再按两侧模型名匹配第四步的配对记录
+
+  例如，`LTR7d2`对应`DF003440078`。第四步有503条`HERVH-int–LTR7d2`关系属于`LTR_model_missing_from_family_table`。第五步的配对表为这些行追加`Dfam_HERVH_LTR7_family_compatible`、accession和版本，原家族分类、配对距离和位点归属仍可在原列中查阅。家族表从647条映射增加到662条。24,035条来源配对中，有1,970条补上了Dfam依据。该依据描述的是模型的家族关系，具体基因组配对还需结合方向、距离及结构证据判读
+-  写出v0.3并查看目标位点：`write_catalogue()`逐行核对v0.2中的第三步原始字段，并检查实际重复块的数量、方向、范围及并集长度。在v0.2的列后增加GENCODE和RNA端点字段。
+
+  | 输出文件                                                                                         | 每行或每份的含义                                       |
+  | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+  | `catalogue_v0.3.tsv.gz`                                                                          | 一个目录单元，附基因关系汇总和同方向RNA端点关系数      |
+  | `unit_gene_links.tsv.gz`                                                                         | 一个位点–基因关系，含基因ID、名称、方向和重叠长度      |
+  | `transcript_endpoint_support.tsv.gz`、`rna_locus_endpoint_links.tsv.gz`                          | 一个来源转录本的窗口匹配，或一条RNA–位点关系的同块匹配 |
+  | `family_model_links_extended.tsv`、`family_pair_review_v0.3.tsv.gz`、`Dfam_HERVH_LTR7_audit.tsv` | 扩展的家族映射、加证据后的来源配对和Dfam逐模型核对表   |
+  | `step5_summary.json`、`step5_summary.tsv`、`target_loci_context.tsv`、`context_bundle.zip`       | 参考版本和数量校验、7个目标位点及汇总回传包            |
+
+  服务器结果有670,669个目录单元、504,543条位点–基因关系和1,008,646条满足≥20bp的RNA–位点关系。有外显子重叠的单元43,357个，仅有基因体非外显子重叠的单元377,909个，基因间单元249,403个。下表统计至少有一条符合条件的同方向RNA关系的目录单元数
+
+  | 轨道      | ±50bp内有匹配 |  同块 | 同LTR块 |
+  | --------- | ------------: | ----: | ------: |
+  | CAGE      |        21,146 |   853 |     762 |
+  | PolyASite |        18,120 | 3,514 |   2,968 |
+
+  `target_loci_context.tsv`中，`HML3_1q32.1b`有20条CAGE邻近关系、0条CAGE同块关系，以及18条PolyASite同LTR块关系。用同批公共数据复算明细，18条关系均指向正链`chr1:205896087`这个PolyASite代表碱基（GRCh38，1起点），位于该单元的3′端`MER9A2`块内。这些记录支持同一个3′终止区域。`MER61_21q21.1a`的2,088bp实际重复块全部与同链基因的外显子并集相交，后续区分转录来源时可对照跨重复块边界的长读长剪接连接
+
 [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep5_res.zip?)
+- 用正式的GRCh38主组装和GENCODE v49生成了v0.3：共有670,669个条目、728,316个重复块和504,543条位点–基因关系，15个Dfam模型为1,970条原始配对补齐了家族依据
+- 7个目标位点各与1个同链GENCODE基因重叠
 
+  | 位点                |         同链外显子覆盖 | CAGE邻近／同块 | PolyASite邻近／同块 |
+  | ------------------- | ---------------------: | -------------: | ------------------: |
+  | `HARLEQUIN_6p21.31` |        0/5,569bp（0%） |           0／0 |                0／0 |
+  | `HERVW_15q21.2`     |    284/3,136bp（9.1%） |           0／0 |                0／0 |
+  | `MER41_13q13.3`     |    290/5,418bp（5.4%） |           1／0 |                0／0 |
+  | `HML1_1q32.1`       | 1,826/5,007bp（36.5%） |          19／0 |               12／0 |
+  | `HML3_1q32.1b`      | 2,534/5,470bp（46.3%） |          20／0 |              18／18 |
+  | `MER61_21q21.1a`    |  2,088/2,088bp（100%） |           5／0 |                0／0 |
+  | `MER61_21q21.1b`    |   800/3,143bp（25.5%） |           7／0 |                0／0 |
 
+  覆盖比例以实际重复块的总长度为分母，端点列统计同方向RNA–位点关系
+- `HML3_1q32.1b`有明确的3′端候选：用同一批公共数据重建明细后，18条同块关系均匹配到3′端`MER9A2`块内的同一个PolyASite代表位点`chr1:205896087`（GRCh38，1起点，正链），它们提供的是对同一个候选终止区域的支持；7个位点的同块CAGE计数均为0，转录起点仍需结合长读长的5′端和剪接链判断
+- `MER61_21q21.1a`的重复块全部被同链基因的外显子并集覆盖。这个位点单凭reads覆盖难以区分宿主转录和hERV自身转录，接入长读长后可以重点看跨越重复块边界的剪接连接
+
+最终的注释文件[catalogue_v0.3.xlsx](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fcatalogue_v0.3.xlsx?)（`work/05_gene_endpoints/catalogue_v0.3.tsv.gz`解压后转成的xlsx格式）
+- A–O：位点、分类和重复块
+  | Excel列 | 字段                        | 含义和用途                                                                                                                      |
+  | ------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+  | A       | `locus_id`                  | 项目内的位点主键。Telescope沿用原ID，新增候选使用`HC_`开头的ID。后续计数矩阵和证据表都用它对应。                                |
+  | B       | `chrom`                     | GRCh38主组装中的染色体或scaffold名称，与比对参考一致。                                                                          |
+  | C–D     | `start0`、`end0`            | 位点**外层跨度**的起点和终点，采用0起点、左闭右开。用于定位、浏览和初筛。                                                       |
+  | E       | `strand`                    | 重复元件在参考基因组中的方向。RNA与元件的同向、反向关系以此为基准。                                                             |
+  | F       | `kind`                      | 条目来源类型。`Telescope_baseline`为旧位点，`additional_repeat_unit_candidate`为新增候选。                                      |
+  | G       | `telescope_id`              | 原Telescope ID，便于和毕设结果及使用Telescope的文献对照。新增候选留空。                                                         |
+  | H       | `source_structure_category` | Telescope原始结构标签。例如`prototype`对应两侧LTR与internal的结构，`oneside`对应单侧LTR，`internal`对应内部区域。新增候选留空。 |
+  | I       | `canonical_models`          | 归一化后的重复模型名，可同时包含internal与LTR模型。例如`hervk9-int;mer9a2`。用于核对组成及家族配对。                            |
+  | J       | `repeat_families`           | 组成块的来源家族标签，例如`ERVK`、`ERV1`、`ERVL-MaLR`。                                                                         |
+  | K       | `scope`                     | 项目分析范围。`core_ERV`为ERV1、ERVK、ERVL，`related_MaLR`为MaLR，`other_LTR`为Gypsy等其他LTR，`unclassified_LTR`为分类待定。   |
+  | L       | `block_union_bp`            | 实际重复块取并集后的长度。重叠碱基只计一次，也是计算位点覆盖比例的分母。                                                        |
+  | M       | `blocks`                    | 原始重复块的数量。每块坐标和`LTR`、`internal`等角色在`locus_blocks.tsv.gz`中。                                                  |
+  | N       | `span_gap_bp`               | 外层跨度内未被重复块覆盖的长度，等于`end0 − start0 − block_union_bp`。                                                          |
+  | O       | `readiness`                 | 初始目录状态。`existing_baseline`表示旧位点，`candidate_review_required`表示新增候选需要复核。                                  |
+
+  - 一个hERV位点从最左边重复块的起点`start0`到最右边重复块的终点`end0`的整个基因组区间
+  
+  例如，`HARLEQUIN_6p21.31`的外层跨度是5,947bp，7个重复块的并集是5,569bp，中间有378bp空档。导出计数区域时要取这7个块的实际坐标（相当于Telescope中一个位点下面有多条`exon`记录）
+- P–V：结构复核和计数归属
+
+  | Excel列 | 字段                       | 含义和用途                                                                                                                       |
+  | ------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+  | P       | `exact_equivalence_group`  | 完全等价的注释组ID。要求染色体、方向、外层边界，以及按模型和角色分组的块区间均一致。本版整列为空。                               |
+  | Q       | `proposed_representative`  | 建议代表ID。有等价组时优先选Telescope ID，本版各行均指向自身。                                                                   |
+  | R       | `identity_review`          | 是否发现与其他条目的实际重复块重叠。本版25,638条记录标为`block_overlap_requires_review`。                                        |
+  | S       | `structure_review`         | 结构复核状态，区分沿用Telescope结构、来源结构标签待复核、新增候选结构待解析。                                                    |
+  | T       | `overlap_assessments_json` | 按类别记录该条目涉及的重叠关系数，例如异模型重叠、反向重叠、同模型局部重叠。对应位点和交集长度要查`unit_overlap_review.tsv.gz`。 |
+  | U       | `source_review_flags_json` | 按类别记录来源标记数，例如HERVarium的solo标签冲突、LTR–internal配对待查、同一来源LTR关联多个internal。                           |
+  | V       | `count_reference_action`   | 试计数的处理建议，包括保留为Telescope对照、保留新增候选供试计数、先复核重叠再决定计数归属。                                      |
+
+  - 例如，`MER41_13q13.3`在R列没有检测到目录单元间的块冲突，U列却有一项`source_solo_label_review`。这是因为HERVarium把一个`MER41B`片段标作solo，而Telescope将重叠区段标为已有位点的组成块
+- W–AH：外部RNA与位点的关系
+  
+  以RNA转录本–位点关系为统计单位。第三步用RNA的实际外显子与重复块相交，同一关系的交集去重后达到20bp才计入。`same`、`opposite`、`unknown`分别表示RNA相对元件同向、反向、方向无法确定
+
+  | RNA来源        | 同向                                  | 反向                                      | 方向未知                                 |
+  | -------------- | ------------------------------------- | ----------------------------------------- | ---------------------------------------- |
+  | SERVE          | W `SERVE_same_ge20_links`             | X `SERVE_opposite_ge20_links`             | Y `SERVE_unknown_ge20_links`             |
+  | TEscape        | Z `TEscape_same_ge20_links`           | AA `TEscape_opposite_ge20_links`          | AB `TEscape_unknown_ge20_links`          |
+  | 公共长读长目录 | AC `LongRead_TE_2025_same_ge20_links` | AD `LongRead_TE_2025_opposite_ge20_links` | AE `LongRead_TE_2025_unknown_ge20_links` |
+
+  | Excel列 | 字段                                     | 含义和用途                                                                                                  |
+  | ------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+  | AF      | `SERVE_brain_same_ge20_links`            | W列中组织被标为脑组织的子集，可优先查看与研究组织相关的公共RNA结构。                                        |
+  | AG      | `all_ge20_links`                         | W–AE九列之和，包括全部来源和方向。                                                                          |
+  | AH      | `observed_5prime_in_LTR_same_ge20_links` | 三个来源中，RNA与元件同向、外显子交集≥20bp，而且观察到的RNA 5′端落在LTR块内的关系数。用于筛查候选起始位置。 |
+
+  一个RNA可以覆盖多个位点，相同结构也可能在多个公共目录中出现
+- AI–AR：GENCODE v49宿主基因关系
+
+  均按实际重复块计算。对一个基因，先把所有注释转录本的外显子取并集。汇总到位点时，再对跨基因的交集取并集
+
+  | Excel列 | 字段                                                                                         | 含义和用途                                                                                                            |
+  | ------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+  | AI      | `GENCODE_context`                                                                            | 有任一外显子交集则为`exon_overlap`。只有基因范围交集则为`gene_body_outside_exons`。没有基因范围交集则为`intergenic`。 |
+  | AJ      | `GENCODE_overlapping_genes`                                                                  | 基因范围与该位点重复块有交集的基因数，按`gene_id`计。                                                                 |
+  | AK–AM   | `GENCODE_same_strand_genes`、`GENCODE_opposite_strand_genes`、`GENCODE_unknown_strand_genes` | 将AJ按同链、反链、方向未知拆分。                                                                                      |
+  | AN      | `GENCODE_gene_body_union_bp`                                                                 | 重复块落在任意GENCODE基因范围内的碱基数。                                                                             |
+  | AO      | `GENCODE_exon_union_bp`                                                                      | 重复块与任意GENCODE外显子并集相交的碱基数，包括不同链。                                                               |
+  | AP      | `GENCODE_gene_body_outside_exons_bp`                                                         | 重复块位于基因范围内、外显子并集外的碱基数，等于AN减AO。                                                              |
+  | AQ      | `GENCODE_intergenic_repeat_bp`                                                               | 重复块落在所有已注释基因范围之外的碱基数，等于L减AN。                                                                 |
+  | AR      | `GENCODE_same_strand_exon_union_bp`                                                          | 只考虑同链基因时，与其外显子并集相交的碱基数。`AR / L`可用来筛查宿主外显子重叠程度。                                  |
+
+  例如，`MER61_21q21.1a`的AR和L都是2,088bp，说明其重复块全部被同链基因的外显子并集覆盖。分析这个位点时，可以用长读长检查RNA从哪里起始、怎样连接到重复块，以及是否存在可区分转录来源的剪接连接
+- AS–AX：CAGE和PolyASite端点证据
+  
+  这6列先限定RNA与hERV同向且外显子交集≥20bp，再在同RNA链、端点±50bp内找公共证据。CAGE匹配RNA的5′端和FANTOM5峰顶，PolyASite匹配RNA的3′端和簇的代表碱基
+
+  | 证据      | 邻近匹配                                     | 同块匹配                                           | 同LTR块匹配                                            |
+  | --------- | -------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------ |
+  | CAGE      | AS `same_direction_CAGE_near_RNA_links`      | AT `same_direction_CAGE_same_block_RNA_links`      | AU `same_direction_CAGE_same_LTR_block_RNA_links`      |
+  | PolyASite | AV `same_direction_PolyASite_near_RNA_links` | AW `same_direction_PolyASite_same_block_RNA_links` | AX `same_direction_PolyASite_same_LTR_block_RNA_links` |
+
+  near只要求窗口内有匹配。`same_block`要求RNA端点和整个参考锚点落在同一个原始重复块内。`same_LTR_block`还要求该块是LTR。三者是嵌套计数，每条RNA–位点关系在每项里最多计一次
+
+  例如，`HML3_1q32.1b`有20条CAGE邻近关系、0条CAGE同块关系。它的18条PolyASite同LTR块关系则都指向3′端`MER9A2`块中的同一个代表位点`chr1:205896087`。所以后续要查的是这个候选3′端是否在本项目样本中复现
+
+  
 
 #### 长读长数据处理
 

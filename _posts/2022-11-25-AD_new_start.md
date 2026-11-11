@@ -262,7 +262,7 @@ foreach ($file in $removeFiles) {
 
 #### 已有注释初步整合
 
-[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_annotation_steps12_20261029.zip?) /| [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep12_res.zip?)
+[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_annotation_steps12_20261029.zip?) \| [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep12_res.zip?)
 
 ```sh
 module load miniconda3/base
@@ -760,6 +760,7 @@ sbatch run_step5.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annot
 
 最终的注释文件[catalogue_v0.3.xlsx](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fcatalogue_v0.3.xlsx?)（`work/05_gene_endpoints/catalogue_v0.3.tsv.gz`解压后转成的xlsx格式）
 - A–O：位点、分类和重复块
+  
   | Excel列 | 字段                        | 含义和用途                                                                                                                      |
   | ------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
   | A       | `locus_id`                  | 项目内的位点主键。Telescope沿用原ID，新增候选使用`HC_`开头的ID。后续计数矩阵和证据表都用它对应。                                |
@@ -839,7 +840,24 @@ sbatch run_step5.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annot
 
   例如，`HML3_1q32.1b`有20条CAGE邻近关系、0条CAGE同块关系。它的18条PolyASite同LTR块关系则都指向3′端`MER9A2`块中的同一个代表位点`chr1:205896087`。所以后续要查的是这个候选3′端是否在本项目样本中复现
 
-  
+---
+
+**准备位点试计数GTF**：[代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_counting_pilot_20261111.zip?)
+- 读取`catalogue_v0.3.tsv.gz`和第三步的重复块、RepeatMasker片段及HERVarium对应表。`select_catalogue()`保留Telescope原位点，并为扩展版筛选`core_ERV`候选。新增候选的组成块须均为LTR，有同链、同模型、双向覆盖≥80%的唯一HERVarium solo对应，且通过结构和重复块冲突检查
+- 导出时先合并同一ID内重叠或相邻的实际重复块，再用`partition_blocks()`找出同链多个ID共享的区间。共享区间从各自的计数范围扣除，记录在`excluded_regions.tsv.gz`。`write_reference()`将`[start0, end0)`转换成GTF的`[start0 + 1, end0]`，同一位点的多行共用一个`locus` ID。对相隔1bp的同ID区间，脚本从右侧区间起点额外扣去1bp，防止Stellarscope 1.5读入时合并这两段
+
+```sh
+cd /public/home/GENE_proc/wth/ADnew/reference/HERV_counting_pilot_20261111
+sbatch run_step6.sbatch
+```
+
+[结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fcount_res.zip?)
+
+| 试计数GTF            | 可计数ID |  区间数 |
+| -------------------- | -------: | ------: |
+| Telescope基线        |   14,267 |  42,175 |
+| 全量RepeatMasker LTR |  728,184 | 728,187 |
+| 项目扩展版           |  155,429 | 187,468 |
 
 #### 长读长数据处理
 

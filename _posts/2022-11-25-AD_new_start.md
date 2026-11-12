@@ -262,6 +262,8 @@ foreach ($file in $removeFiles) {
 
 #### 已有注释初步整合
 
+##### try1
+
 [代码](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2FHERV_annotation_steps12_20261029.zip?) \| [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Fstep12_res.zip?)
 
 ```sh
@@ -858,6 +860,15 @@ sbatch run_step6.sbatch
 | Telescope基线        |   14,267 |  42,175 |
 | 全量RepeatMasker LTR |  728,184 | 728,187 |
 | 项目扩展版           |  155,429 | 187,468 |
+
+##### try1复核与流程
+
+
+
+##### try2
+
+
+
 
 #### 长读长数据处理
 

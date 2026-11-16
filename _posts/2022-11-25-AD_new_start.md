@@ -888,7 +888,40 @@ sbatch run_step6.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annot
 
 ##### try2
 
+感觉总体流程还是有些过于复杂了。我有一个自己的想法：
+- 能否用HERVarium+telescope作为基础，rmsk作为验证，dfam补充信息（这里面是不是可以获取到LTR模型名和hERV家族的对应关系？我的主要出发点就是“假设telescope的注释已提供了以internal为核心的hERV注释，那么我们是否只补上solo lTR的部分，并把solo LTR和HERV家族作对应即可”，因为我们最后想得到的注释表肯定要是一个比较精简的，不要求特别全面但应保证每个序列都是准确且与hERV相关的
+- 可以把最终位点的命名统一一下，现在的HC开头加一堆乱码的格式完全没有标识性
+- telescope也是基于rmsk的，我们想避免“telescope/HERVarium作者过滤rmsk时删除了某条序列，但我们现在又给它加回来的情况”
+- 一个很重要很需要谨慎的点就是合并重复块的合理性，这块很难进行一个评估，所以尽量少进行合并和连接的操作，多使用现有的注释
 
+**HERVarium怎么判定solo LTR**：
+- HERVarium在GRCh38上用RepeatMasker 4.1.8和Dfam 3.9提取`LTR/ERV`类的LTR片段
+- 把同染色体、同链、同模型且相隔不超过100bp的片段合成一个区间
+- 随后从每个internal区间出发，在同链、同ERV大类的两侧各找200bp内最近的LTR
+- 没有被任何internal选中的LTR就标为`solo`
+- 也参考了Telescope的合并规则，不过正式结果采用自己的200bp合并规则
+- gpt说需要再查一次附近的internal，项目文件里就有一个例子：chr1上的一条`LTR8`被标为`solo`，同链、同家族的`HUERS-P1-int`却在51bp外，该internal选中了离它只有8bp的`LTR39`。说明HERVarium可能把某些前病毒残片标成solo
+
+| `role`   | 含义                                                                  |  位点数 |
+| -------- | --------------------------------------------------------------------- | ------: |
+| `solo`   | 没有被任何internal选为侧翼LTR                                         | 537,911 |
+| `5prime` | 被选为internal转录方向上的5′侧翼LTR                                   |  10,447 |
+| `3prime` | 被选为internal转录方向上的3′侧翼LTR                                   |  11,071 |
+| `both`   | 同一条LTR既被选为一段internal的5′侧翼，也被选为另一段internal的3′侧翼 |   1,165 |
+
+```sh
+module load miniconda3/base
+conda activate herv-annotation
+cd /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/try2
+python ./merge_herv_annotations.py \
+  /public/home/GENE_proc/wth/ADnew/reference/herv_annotation \
+  ./herv_merge_step1
+```
+
+[merge_herv_annotations.py](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2Ftry2%2Fmerge_herv_annotations.py?) \| [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Ftry2%2Fherv_merge_step1.zip?)
+- 保留Telescope原始位点，从HERVarium补充solo LTR，新增范围限chr1–22、chrX、chrY上的ERV1、ERVK和ERVL（用Telescope的`families.tsv`查家族，能唯一对应的才进入下一步，家族不明确的留在复核表）
+- 区分重复、重叠和近邻：与Telescope已有LTR的染色体、坐标、链和模型都一致时，主表只保留Telescope记录。其他与Telescope跨度重叠的候选，以及其余新增LTR之间的重叠，暂存复核
+  - 200bp内有同链、同家族internal时，只记录近邻ID和距离，候选照常进入合并表（例如前面提到的`LTR8`实际保留了，距离标记为51bp）
 
 
 #### 长读长数据处理

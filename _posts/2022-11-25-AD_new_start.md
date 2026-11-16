@@ -909,6 +909,30 @@ sbatch run_step6.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annot
 | `3prime` | 被选为internal转录方向上的3′侧翼LTR                                   |  11,071 |
 | `both`   | 同一条LTR既被选为一段internal的5′侧翼，也被选为另一段internal的3′侧翼 |   1,165 |
 
+**HERVarium和telescope构建hERV位点的方式有什么不同**：
+- Telescope以一个internal为中心
+  - 先规定哪些模型可以配在一起：`families.tsv`每行给一个HERV家族、一个internal模型和一组可配对的LTR模型。例如，`HML2`的internal模型是`HERVK-int`，对应的LTR模型包括`LTR5`、`LTR5A`、`LTR5B`和`LTR5_Hs`，之后构建程序按家族从UCSC提取这些模型的RepeatMasker记录
+  - 把可能属于同一internal的片段分到一个位点：先用10bp阈值聚合很近的同链片段，再用2,500bp阈值检查较远的片段。第二次还要求它们在重复模型上的命中位置能够接续。例如，两个片段分别命中同一模型的前段和后段，中间即使隔着一段插入，也可能属于同一个internal
+  - 找侧翼LTR，再筛选和复核：默认按该家族最长LTR模型的长度确定搜索窗口，查找与窗口相交的同链候选LTR。随后按片段排列给位点分类，按internal模型覆盖率筛掉过短的候选，公开代码的默认下限是10%
+- HERVarium先分别构建internal和LTR区间，再给它们建立关联
+  - 构建internal：在GRCh38上用RepeatMasker 4.1.8和Dfam 3.9，按`-int`等模型名标记提取internal片段。同染色体、同链、同模型的片段有重叠或间隔≤200bp时，合并成一个连续区间
+  - 构建LTR并配对：LTR片段另行合并，间隔阈值是100bp。之后从每条internal出发，在同染色体、同链、同ERV大类的两侧，各选200bp内最近的一条LTR。方向按转录链判断。关联表每个internal一行，LTR表则依据哪些LTR被选中来赋予`5prime`、`3prime`、`both`或`solo`
+
+**两套的internal实际有多一致**：
+
+| 每条记录的最佳匹配             | HERVarium internal | Telescope位点 |
+| ------------------------------ | -----------------: | ------------: |
+| 同模型，覆盖区间完全一致       |              2,092 |         2,092 |
+| 同模型，有重叠，覆盖区间不同   |             15,322 |         8,466 |
+| 有同链重叠，命中的都是其他模型 |              4,711 |         2,139 |
+| 无同链internal重叠             |             26,730 |         1,506 |
+| **合计**                       |         **48,855** |    **14,203** |
+
+- 一个位点对应多条记录：例如，Telescope的`HERVW_1p33a`把附近的`HERV17-int`片段归在一个位点下，GTF保留了各个片段。HERVarium在这里给了两条`HERV17-int`，中间相隔304bp，超过其200bp合并阈值
+- 区间完全相同、模型名不同：例如chr1负链的`[218749208,218755012)`，HERVarium标为`HERVE-int`，Telescope标为`HERVE_a-int`，两者在`families.tsv`里分别对应`HERVE`和`HERVEA`
+
+---
+
 ```sh
 module load miniconda3/base
 conda activate herv-annotation
@@ -918,10 +942,56 @@ python ./merge_herv_annotations.py \
   ./herv_merge_step1
 ```
 
-[merge_herv_annotations.py](https://lwstkhyl.me/api/download/A_new_start%2Fscript%2Ftry2%2Fmerge_herv_annotations.py?) \| [结果](https://lwstkhyl.me/api/download/A_new_start%2Fres%2Ftry2%2Fherv_merge_step1.zip?)
+思路1：[代码]() \| [结果]()
 - 保留Telescope原始位点，从HERVarium补充solo LTR，新增范围限chr1–22、chrX、chrY上的ERV1、ERVK和ERVL（用Telescope的`families.tsv`查家族，能唯一对应的才进入下一步，家族不明确的留在复核表）
 - 区分重复、重叠和近邻：与Telescope已有LTR的染色体、坐标、链和模型都一致时，主表只保留Telescope记录。其他与Telescope跨度重叠的候选，以及其余新增LTR之间的重叠，暂存复核
   - 200bp内有同链、同家族internal时，只记录近邻ID和距离，候选照常进入合并表（例如前面提到的`LTR8`实际保留了，距离标记为51bp）
+
+  ```
+  Telescope位点: 14,968
+  纳入的solo LTR: 81,719
+  其中有附近同家族internal: 23
+  暂未纳入的solo LTR: 156,460
+    unmapped_family: 125,867
+    ambiguous_family: 27,086
+    telescope_span_overlap: 1,620
+    duplicate_telescope_ltr: 1,418
+    near_same_family_internal: 1,120
+    telescope_block_overlap: 1,039
+    solo_overlap: 605
+  ```
+
+- 与rmsk进行核对
+
+  | 核对结果                                 | 位点数 |
+  | ---------------------------------------- | -----: |
+  | 坐标、链、模型、ERV大类完全一致          | 91,396 |
+  | 同链、同模型、同大类，全部覆盖但边界不同 | 15,561 |
+  | 同链、同模型、同大类，部分覆盖           | 25,310 |
+  | 同链、同模型，但ERV大类字段不同          |  2,685 |
+  | 同链命中其他`repClass=LTR`的模型         | 15,316 |
+  | 仅在反链命中`repClass=LTR`               |    170 |
+  | 仅命中非LTR重复序列                      |    895 |
+  | 无`rmsk`重叠记录                         |  5,127 |
+
+---
+
+思路2：
+- 之前说把hERV家族限制在ERV1、ERVK和ERVL，但HERVarium还给了第四类`ERVL-MaLR`的位点，之前做毕设的时候找rmsk，我记述的是“MaLR是哺乳动物LTR逆转座子，ERVL-MaLR是和ERVL谱系关系很近的一类MaLR元素”，用gpt重新找了一下，给出的描述如下
+  
+  按广义的演化分类，可以算作人类**Class III（ERV3）**相关的内源性逆转录元件；具体到分支，称为**MaLR**更准确。专门研究MaLR演化的论文把它列为ERV3的一个分支，一些综述也指出，有些分类把MaLR纳入Class III，依据是部分MaLR与这一类ERV有`gag`序列同源性。经典ERV分类常用`pol`来判断亲缘关系，而MaLR缺少可辨认的`pol`同源序列，所以对它的具体祖源要保留一定余地
+
+  所以可以说gpt也不太能确定这玩意算作hERV，属于是算了也行不算也行的概念？但一个重要的因素是HERVarium有298,389条MaLR solo LTR候选，超过其余三大类合计的238,179条，实在是太多了，因此也许对于现在的情况只保留三大类比较合理
+- 是否要把它们对internal的注释先统一一下？
+  - 同模型、双向覆盖高，一一对应：用Telescope的`locus`和原始`exon`片段计数，附上HERVarium的ID和坐标
+  - 一个Telescope位点对应多条HERVarium internal：把多条HERVarium记录关联到同一个Telescope位点。例如`HERVW_1p33a`对应两段相隔304bp的HERVarium internal
+  - 一条HERVarium记录跨多个Telescope位点，或同坐标但模型名不同：保留两边的模型和坐标供复核。先查Dfam模型编号、别名和原始片段，再判断是命名差异还是位点定义有分歧
+  - 只在HERVarium找到的internal：作为新增候选。优先核对模型归属、原始片段及与已有计数区间的重叠
+  
+  关于为什么最后以Telescope注释为准，除了之前毕设用的就是这个、位点较少便于比对筛选以外，还提到了现有rTWAS的文章用的也是telescope的注释
+
+
+
 
 
 #### 长读长数据处理

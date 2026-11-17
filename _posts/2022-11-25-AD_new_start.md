@@ -936,13 +936,13 @@ sbatch run_step6.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annot
 ```sh
 module load miniconda3/base
 conda activate herv-annotation
-cd /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/try2
+cd /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/try2-1
 python ./merge_herv_annotations.py \
   /public/home/GENE_proc/wth/ADnew/reference/herv_annotation \
   ./herv_merge_step1
 ```
 
-思路1：[代码]() \| [结果]()
+思路1：[代码](https://lwstkhyl.me/api/download/?files=%22A_new_start%2Fscript%2Ftry2-1%22) \| [结果](https://lwstkhyl.me/api/download/?files=%22A_new_start%2Fres%2Ftry2-1%22)
 - 保留Telescope原始位点，从HERVarium补充solo LTR，新增范围限chr1–22、chrX、chrY上的ERV1、ERVK和ERVL（用Telescope的`families.tsv`查家族，能唯一对应的才进入下一步，家族不明确的留在复核表）
 - 区分重复、重叠和近邻：与Telescope已有LTR的染色体、坐标、链和模型都一致时，主表只保留Telescope记录。其他与Telescope跨度重叠的候选，以及其余新增LTR之间的重叠，暂存复核
   - 200bp内有同链、同家族internal时，只记录近邻ID和距离，候选照常进入合并表（例如前面提到的`LTR8`实际保留了，距离标记为51bp）
@@ -976,7 +976,16 @@ python ./merge_herv_annotations.py \
 
 ---
 
-思路2：
+```sh
+module load miniconda3/base
+conda activate herv-annotation
+cd /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/try2-2
+python merge_herv_internal_solo.py \
+  /public/home/GENE_proc/wth/ADnew/reference/herv_annotation \
+  ./herv_internal_solo_local
+```
+
+思路2：[代码](https://lwstkhyl.me/api/download/?files=%22A_new_start%2Fscript%2Ftry2-1%22) \| [结果](https://lwstkhyl.me/api/download/?files=%22A_new_start%2Fres%2Ftry2-1%22)
 - 之前说把hERV家族限制在ERV1、ERVK和ERVL，但HERVarium还给了第四类`ERVL-MaLR`的位点，之前做毕设的时候找rmsk，我记述的是“MaLR是哺乳动物LTR逆转座子，ERVL-MaLR是和ERVL谱系关系很近的一类MaLR元素”，用gpt重新找了一下，给出的描述如下
   
   按广义的演化分类，可以算作人类**Class III（ERV3）**相关的内源性逆转录元件；具体到分支，称为**MaLR**更准确。专门研究MaLR演化的论文把它列为ERV3的一个分支，一些综述也指出，有些分类把MaLR纳入Class III，依据是部分MaLR与这一类ERV有`gag`序列同源性。经典ERV分类常用`pol`来判断亲缘关系，而MaLR缺少可辨认的`pol`同源序列，所以对它的具体祖源要保留一定余地
@@ -984,11 +993,132 @@ python ./merge_herv_annotations.py \
   所以可以说gpt也不太能确定这玩意算作hERV，属于是算了也行不算也行的概念？但一个重要的因素是HERVarium有298,389条MaLR solo LTR候选，超过其余三大类合计的238,179条，实在是太多了，因此也许对于现在的情况只保留三大类比较合理
 - 是否要把它们对internal的注释先统一一下？
   - 同模型、双向覆盖高，一一对应：用Telescope的`locus`和原始`exon`片段计数，附上HERVarium的ID和坐标
+    - 要求同模型，且两个方向的覆盖率都达到80%
   - 一个Telescope位点对应多条HERVarium internal：把多条HERVarium记录关联到同一个Telescope位点。例如`HERVW_1p33a`对应两段相隔304bp的HERVarium internal
+    - 要求每条HERVarium记录自身至少被覆盖80%，再把这些记录命中的碱基合起来，检查它们能否覆盖Telescope internal的80%
+    - 例如，`HERVW_1p33a`的internal片段共覆盖4,411bp。两条HERVarium记录分别有3,046bp和1,333bp与它重叠，各自被覆盖100%。单独看，它们只覆盖了Telescope一侧的69.05%和30.22%。合起来覆盖了4,379bp，也就是99.27%，所以两条都关联到同一个Telescope位点
   - 一条HERVarium记录跨多个Telescope位点，或同坐标但模型名不同：保留两边的模型和坐标供复核。先查Dfam模型编号、别名和原始片段，再判断是命名差异还是位点定义有分歧
   - 只在HERVarium找到的internal：作为新增候选。优先核对模型归属、原始片段及与已有计数区间的重叠
+    - 先查已有位点的整体跨度，保留落在Telescope的`gene`起止坐标之外的HERVarium位点
+
+      48,855条HERVarium internal中，有26,031条完全落在这些跨度之外
+    - 再查家族和`rmsk`证据：其中7,450条能唯一对应到Telescope的`families.tsv`中列出的家族，且属于本轮纳入的ERV大类；再核对UCSC rmsk，有1,930条能找到一条染色体、起止坐标、链、模型和ERV大类均一致的记录
+    - 最后计算重复模型覆盖率：`rmsk`同时记录了片段在基因组上的位置，以及它命中了重复模型的哪一段，我们用后者计算模型上的匹配长度÷模型总长
+      - 原因：Telescope原流程使用了`模型覆盖率≥10%`的筛选条件
+      - 1,930条都低于这个下限，此步骤新增计数internal为0
   
   关于为什么最后以Telescope注释为准，除了之前毕设用的就是这个、位点较少便于比对筛选以外，还提到了现有rTWAS的文章用的也是telescope的注释
+- 新增Solo LTR的处理：
+  - 先从HERVarium中取`role=solo`、位于chr1–22或X/Y、属于ERV1/ERVK/ERVL的记录，共238,179条
+  - 从名称中提取LTR模型，再查Telescope的`families.tsv`
+
+    例如，`LTR17`只对应`HERVW`，通过家族筛选，而`LTR2`同时对应`HARLEQUIN`、`HERVE`和`HERVEA`，标为`ambiguous_family`；查不到对应家族的标为`unmapped_family`。能唯一对应家族的共有85,226条
+  - 具体来说
+    - 与Telescope已有LTR片段的染色体、坐标、链和模型完全一致：标为`duplicate_telescope_ltr`，沿用已有Telescope位点
+    - 与Telescope的任一实际`exon`有重叠，或只落入`gene`跨度的空档：分别标为`telescope_block_overlap`或`telescope_span_overlap`，留待复核
+    - 与新增internal重叠：留待复核
+    - 通过前面筛选的solo LTR彼此重叠：标为`solo_overlap`，留待复核
+  
+  85,226条家族明确的候选中，2,902条因与Telescope重复或重叠进入复核，剩余候选中又有605条因solo之间互相重叠进入复核，最后纳入81,719条
+
+```
+internal        telescope_loci  14,968
+internal        hervarium_records       48,855
+internal        telescope_loci_with_link        8,901
+internal        telescope_loci_with_multiple_links      3,265
+internal        linked_via_dfam_alias   0
+internal        added_hervarium_loci    0
+solo    hervarium_candidates    238,179
+solo    added_solo      81,719
+solo    added_solo_near_internal        23
+solo    solo_review     156,460
+catalogue       total_loci      96,687
+internal_status below_model_coverage    1,930
+internal_status linked_multiple_hervarium       8,879
+internal_status linked_single   5,636
+internal_status low_coverage    2,476
+internal_status model_conflict  4,654
+internal_status multiple_telescope_loci 480
+internal_status no_exact_rmsk_record    5,520
+internal_status outside_erv_scope       3,098
+internal_status telescope_span_overlap  699
+internal_status unresolved_family_or_class      15,483
+solo_review_flag        ambiguous_family        27,086
+solo_review_flag        duplicate_telescope_ltr 1,418
+solo_review_flag        near_same_family_internal       1,120
+solo_review_flag        solo_overlap    605
+solo_review_flag        telescope_block_overlap 1,039
+solo_review_flag        telescope_span_overlap  1,620
+solo_review_flag        unmapped_family 125,867
+solo_added_erv_class    ERV1    37,557
+solo_added_erv_class    ERVK    5,903
+solo_added_erv_class    ERVL    38,259
+```
+
+结果主表`herv_annotation_merged.tsv`各列含义：
+- `locus_id`：项目的新位点ID
+  - Telescope原有计数位点：直接取原GTF的`locus`，例如`HERVW_1p33a`
+  - 新纳入的HERVarium solo LTR，例如`HERVW_LTR17_chr1_30229414_30230274_plus`，依次为家族、LTR模型、染色体、1-based起点、含终点的1-based终点、链方向。`plus`表示`+`，`minus`表示`-`。该位点对应表中的`[30229413,30230274)`，长度861bp
+  - 家族待定的solo LTR候选（在`solo_review.tsv`中）：例如`LTR2_chr1_15802123_15802583_plus`，用`LTR模型_染色体_起点1_终点1_方向`作为候选ID，家族候选另列，例如`HARLEQUIN,HERVE,HERVEA`
+- `source`：该行位点的注释来源，`Telescope`或`HERVarium`
+- `source_id`：来源文件中的原ID。Telescope为GTF的`locus`，HERVarium solo为原始LTR名称
+- `chrom`：染色体或参考序列名
+- `start0`：位点整体区间起点，0-based，包含
+- `end0`：位点整体区间终点，0-based，不包含
+- `strand`：`+`或`-`
+- `blocks`：实际计数区间，逗号分隔的`start0-end0`。Telescope来自原`exon`行，HERVarium直接用源表的`start`和`end`
+- `source_role`：原来源的结构标签。Telescope沿用GTF的`category`（`prototype`、`oneside`、`internal`），HERVarium沿用表格中的`role`（`solo`）
+- `erv_class`：ERV大类，例如`ERV1`、`ERVK`或`ERVL`。Telescope取internal exon的`repFamily`，HERVarium取原目录的大类
+- `herv_family`：项目使用的Telescope家族名，如`HERVW`。原Telescope位点取ID的家族前缀，HERVarium的solo LTR通过`families.tsv`映射后填写
+- `family_candidates`：存在多种映射时，逗号分隔的候选家族
+- `internal_model`：Internal的重复模型名。Telescope用`gene`行的`intModel`，例如`HERV17-int`
+- `ltr_models`：LTR重复模型名，多个模型按逗号分隔。Telescope从其LTR `exon`行取得，HERVarium使用`HERV_LTR_U3_R_U5_catalogue.tsv`的`name`列取`merged_pos`之前的部分
+  
+  例如，原名`LTR17_merged_pos_chr1_30229414_30230274_strand_+`提取出`LTR17`，写入`ltr_models`。再用`LTR17`查Telescope的`families.tsv`，得到家族`HERVW`，写入`herv_family`
+- `hervarium_internal_ids`：同该位点成功关联的HERVarium internal原ID，按逗号分隔
+- `dfam_accessions`：该行internal模型在本地Dfam中匹配到的登录号，按逗号分隔
+- `rmsk_model_pct`：对试跑拟新增internal使用的模型覆盖率。这次没有新增internal，该列为空
+- `overlapping_telescope_id`：触发Telescope重复或重叠规则时，脚本记录的一个相关Telescope位点，详见`telescope_overlaps.tsv`
+- `overlapping_new_internal_ids`：与试跑拟新增internal重叠时对应的ID。这次没有新增internal，该列为空
+- `overlapping_solo_id`：通过筛选后，计算solo间重叠时记录的一个对方原ID
+- `nearby_internal_id`：最邻近的同染色体、同链、同家族的internal ID，带`Telescope/`或`HERVarium/`前缀
+- `nearby_internal_gap_bp`：与该internal的间隔，单位bp。相邻或重叠均记0，上限200
+- `review_flags`：复核标记
+
+  | 标记                        | 触发条件                                                                       | `solo_review.tsv`条数 |
+  | --------------------------- | ------------------------------------------------------------------------------ | --------------------: |
+  | `ambiguous_family`          | LTR模型在`families.tsv`中对应多个家族                                          |                27,086 |
+  | `unmapped_family`           | LTR模型在`families.tsv`中查不到家族                                            |               125,867 |
+  | `duplicate_telescope_ltr`   | 染色体、起止坐标、链和模型都与Telescope已有的LTR片段一致                       |                 1,418 |
+  | `telescope_block_overlap`   | 未触发完全重复，但与Telescope的实际`exon`片段有坐标交集                        |                 1,039 |
+  | `telescope_span_overlap`    | 只与Telescope的`gene`整体跨度有交集，例如落在两个`exon`之间的空档              |                 1,620 |
+  | `overlapping_new_internal`  | 与本轮拟新增的internal区间重叠本轮新增internal为0                              |                     0 |
+  | `solo_overlap`              | 通过前面筛选的solo LTR候选彼此重叠，涉及的候选都进入复核表                     |                   605 |
+  | `near_same_family_internal` | 找到同染色体、同链、同家族且间隔≤200bp的internal<br>（这个标记只记录近邻关系） |                 1,120 |
+
+为了更精确的确定HERVarium的记录，我们回查了HERVarium作者在GRCh38上运行RepeatMasker后发布的命中表[GRCh38.primary_assembly.genome.fa.out.tar.xz](https://zenodo.org/records/19593457/files/GRCh38.primary_assembly.genome.fa.out.tar.xz?download=1)，里面每条记录给出一段重复序列在基因组上的位置、方向、模型名、ERV大类，以及它在重复模型上命中了哪一段。因为之前下载的`HERV_internal_LTR_map.tsv`和`HERV_ltr.bed`都是合并后的区间。例如，chr1上的一条`ERVL-E-int`在HERVarium里是一条记录；回查同版`.out`后，找到两段同链、同模型的命中，分别覆盖基因组上的298bp和29bp，中间隔44bp
+
+internal的“留待复核”：
+- 5,520条缺少`rmsk`支持的记录：HERVarium给出了一条internal候选，但在UCSC的`rmsk`表里，找不到一条同染色体、同链、同模型、且起止坐标都一致的命中
+  
+  UCSC分成两段，HERVarium原始`.out`里是一整段：chr1负链的`ERVL-E-int`候选是`164358306–164358590`，UCSC有两段同模型命中（`164358306–164358501`和`164358515–164358590`），两段合起来能对上候选的两个外端点，中间空了13bp，属于第一次复查中`用UCSC多段还原`的100条（用多条同模型命中对上候选的两个外端点，但模型覆盖率都低于当时新增位点用的10%门槛）；后来查HERVarium作者的原始`.out`，发现有一条命中恰好覆盖`164358306–164358590`整段，最终GTF优先采用这条原始命中，把它写成一条285bp的`exon`
+  
+  最终在原来5,520条里找到了4,468条候选，各自在作者`.out`中有一条起止完全一致的命中
+- 4,654条模型名冲突：一条HERVarium internal和一个Telescope位点的实际internal片段同链重叠，但两边用了不同的重复序列模型名，查Dfam也没能用同一个登录号确认它们是别名
+  
+  在`Telescope/transcripts.gtf`中取原internal片段，与HERVarium区间求交，只在这段共有区间里，分别统计UCSC rmsk对两个模型的支持bp（看共有区间里有多少bp被标成HERVarium用的模型，又有多少bp被标成Telescope用的模型）。4,377条只有Telescope模型有支持（rmsk与交集重叠长度\>0），277条两种模型都有支持。最终4,653条的候选片段都继续用原来的Telescope，只有1条特殊处理
+
+  chr11的`HERVIP10B3-int`：HERVarium区间长970bp，其中168bp与`HERVIP10FH_11p15.5`的internal片段重叠；UCSC另有一条同名的`HERVIP10B3-int`命中，长795bp，覆盖HERVarium区间的81.96%且完全处于HERVarium区间
+- 480条一条HERVarium internal命中多个Telescope位点：针对每个Telescope位点分别计算该HERVarium internal双向覆盖率，要求同链、模型一致且双向≥80%。只有115条HERVarium internal找到了这样的Telescope位点（都只有一个Telescope位点），于是关联到该位点ID
+  
+  例如`HERVFH19_1p36.23a`的双向覆盖率是88.80%和100%，相邻`HERVFH19_1p36.23b`只有4.62%和0.69%，所以关联到`a`
+- 2,476条与Telescope重叠但覆盖偏低：继续用telescope注释
+- 699条落在Telescope位点跨度内：拿`.out`或`rmsk`支持的实际片段重新与Telescope各条`exon`求交，只落在空档、且通过候选间去重的可以独立收录
+- 15,483条家族或大类待定（LTR模型找不到对应的hERV家族名）
+
+solo LTR的“留待复核”：
+- 家族待定：例如某个LTR属于`LTR2`，在UCSC中都有同坐标、同链、同模型的命中，但`families.tsv`仍给出`HARLEQUIN`、`HERVE`、`HERVEA`三个候选家族，就以`LTR2_chr1_15802123_15802583_plus`进入GTF
+- 与原注释重叠：
 
 
 

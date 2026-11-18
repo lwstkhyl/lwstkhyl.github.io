@@ -991,18 +991,21 @@ python merge_herv_internal_solo.py \
   按广义的演化分类，可以算作人类**Class III（ERV3）**相关的内源性逆转录元件；具体到分支，称为**MaLR**更准确。专门研究MaLR演化的论文把它列为ERV3的一个分支，一些综述也指出，有些分类把MaLR纳入Class III，依据是部分MaLR与这一类ERV有`gag`序列同源性。经典ERV分类常用`pol`来判断亲缘关系，而MaLR缺少可辨认的`pol`同源序列，所以对它的具体祖源要保留一定余地
 
   所以可以说gpt也不太能确定这玩意算作hERV，属于是算了也行不算也行的概念？但一个重要的因素是HERVarium有298,389条MaLR solo LTR候选，超过其余三大类合计的238,179条，实在是太多了，因此也许对于现在的情况只保留三大类比较合理
-- 是否要把它们对internal的注释先统一一下？
+- 是否要把它们对internal的注释先统一一下？ `注：以下内容括号中的内容对应下一步流程解释中的复核对象`
   - 同模型、双向覆盖高，一一对应：用Telescope的`locus`和原始`exon`片段计数，附上HERVarium的ID和坐标
     - 要求同模型，且两个方向的覆盖率都达到80%
+    - 80%以下的留待复核（2,476条与Telescope重叠但覆盖偏低）
   - 一个Telescope位点对应多条HERVarium internal：把多条HERVarium记录关联到同一个Telescope位点。例如`HERVW_1p33a`对应两段相隔304bp的HERVarium internal
     - 要求每条HERVarium记录自身至少被覆盖80%，再把这些记录命中的碱基合起来，检查它们能否覆盖Telescope internal的80%
     - 例如，`HERVW_1p33a`的internal片段共覆盖4,411bp。两条HERVarium记录分别有3,046bp和1,333bp与它重叠，各自被覆盖100%。单独看，它们只覆盖了Telescope一侧的69.05%和30.22%。合起来覆盖了4,379bp，也就是99.27%，所以两条都关联到同一个Telescope位点
-  - 一条HERVarium记录跨多个Telescope位点，或同坐标但模型名不同：保留两边的模型和坐标供复核。先查Dfam模型编号、别名和原始片段，再判断是命名差异还是位点定义有分歧
+  - 一条HERVarium记录跨多个Telescope位点（480条命中多个Telescope位点），或同坐标但模型名不同（4,654条模型名冲突）：保留两边的模型和坐标供复核
   - 只在HERVarium找到的internal：作为新增候选。优先核对模型归属、原始片段及与已有计数区间的重叠
     - 先查已有位点的整体跨度，保留落在Telescope的`gene`起止坐标之外的HERVarium位点
 
       48,855条HERVarium internal中，有26,031条完全落在这些跨度之外
-    - 再查家族和`rmsk`证据：其中7,450条能唯一对应到Telescope的`families.tsv`中列出的家族，且属于本轮纳入的ERV大类；再核对UCSC rmsk，有1,930条能找到一条染色体、起止坐标、链、模型和ERV大类均一致的记录
+
+      未通过的留待复核（699条与Telescope位点跨度有交集）
+    - 再查家族（15,483条家族或大类待定）和`rmsk`证据（5,520条缺少单条精确`rmsk`匹配）：其中7,450条能唯一对应到Telescope的`families.tsv`中列出的家族，且属于本轮纳入的ERV大类；再核对UCSC rmsk，有1,930条能找到一条染色体、起止坐标、链、模型和ERV大类均一致的记录
     - 最后计算重复模型覆盖率：`rmsk`同时记录了片段在基因组上的位置，以及它命中了重复模型的哪一段，我们用后者计算模型上的匹配长度÷模型总长
       - 原因：Telescope原流程使用了`模型覆盖率≥10%`的筛选条件
       - 1,930条都低于这个下限，此步骤新增计数internal为0
@@ -1096,20 +1099,18 @@ solo_added_erv_class    ERVL    38,259
   | `solo_overlap`              | 通过前面筛选的solo LTR候选彼此重叠，涉及的候选都进入复核表                     |                   605 |
   | `near_same_family_internal` | 找到同染色体、同链、同家族且间隔≤200bp的internal<br>（这个标记只记录近邻关系） |                 1,120 |
 
-为了更精确的确定HERVarium的记录，我们回查了HERVarium作者在GRCh38上运行RepeatMasker后发布的命中表[GRCh38.primary_assembly.genome.fa.out.tar.xz](https://zenodo.org/records/19593457/files/GRCh38.primary_assembly.genome.fa.out.tar.xz?download=1)，里面每条记录给出一段重复序列在基因组上的位置、方向、模型名、ERV大类，以及它在重复模型上命中了哪一段。因为之前下载的`HERV_internal_LTR_map.tsv`和`HERV_ltr.bed`都是合并后的区间。例如，chr1上的一条`ERVL-E-int`在HERVarium里是一条记录；回查同版`.out`后，找到两段同链、同模型的命中，分别覆盖基因组上的298bp和29bp，中间隔44bp
-
 internal的“留待复核”：
-- 5,520条缺少`rmsk`支持的记录（HERVarium给出了一条internal候选，但在UCSC的`rmsk`表里，找不到一条同染色体、同链、同模型、且起止坐标都一致的命中）：拿一条HERVarium的internal候选去查有几行`rmsk`记录与它坐标重叠，并且同染色体、同链、同模型
+- 5,520条缺少单条精确`rmsk`匹配（HERVarium给出了一条internal候选，但在UCSC的`rmsk`表里，找不到一条同染色体、同链、同模型、且起止坐标都一致的命中）：拿一条HERVarium的internal候选去查有几行`rmsk`记录与它坐标重叠，并且同染色体、同链、同模型
   - 单条命中就是查到1行，用这一行和候选直接算双向覆盖率（先算两条记录在基因组上共有多少bp，再分别除以HERVarium候选长度和`rmsk`记录长度。两个比例都要≥80%）
 
-    | 区间            | 基因组坐标          | 长度 |
-    | --------------- | ------------------- | ---: |
-    | HERVarium候选   | `34602214–34602310` | 97bp |
-    | UCSC `rmsk`命中 | `34602213–34602299` | 87bp |
-    | 两者交集        | `34602214–34602299` | 86bp |
+    | 区间            | 基因组坐标            |  长度 |
+    | --------------- | --------------------- | ----: |
+    | HERVarium候选   | `144044914–144045013` | 100bp |
+    | UCSC `rmsk`命中 | `144044914–144044993` |  80bp |
+    | 两者交集        | `144044914–144044993` |  80bp |
 
-    交集占HERVarium候选的比例是86÷97＝88.66%，占`rmsk`命中的比例是86÷87＝98.85%。两边都达标，所以GTF把交集`34602214–34602299`写成一条`exon`
-  - 多条命中就是查到2行或更多：需要满足“两端完全对齐”（最左片段的左端等于HERVarium候选的起点，最右片段的右端等于候选的终点）、“相邻片段的基因组间隔为0–200bp”、“沿元件方向，模型坐标依次向前”（命中的模型起点和终点都要逐段增大）
+    交集占HERVarium候选的比例是80÷100＝80%，占`rmsk`命中的比例是100%。两边都达标，所以录入HERVarium候选
+  - 多条命中就是查到2行或更多：需要满足“两端完全对齐”（最左片段的左端等于HERVarium候选的起点，最右片段的右端等于候选的终点）、“相邻片段的基因组间隔为0–200bp”、“沿元件方向，模型坐标依次向前”（命中的模型起点和终点都要逐段增大，且命中模型总长相同）；基因组间隔为0bp的相邻片段合并，正间隔保留为空档
 
     例如chr1负链的`ERVL-E-int`，HERVarium候选为`164358306–164358590`，两条UCSC命中按负链方向排列如下
 
@@ -1118,7 +1119,7 @@ internal的“留待复核”：
     | 第1段，右侧  | `164358515–164358590` | `8–83`         |
     | 第2段，左侧  | `164358306–164358501` | `132–329`      |
 
-    两段合起来正好对齐候选的两个外端，中间相隔13bp；沿负链读，模型起点从8增到132，终点从83增到329，因此通过检查。最终GTF在**同一个`gene_id`**下写入两条`exon`，13bp空档留在两条`exon`之间
+    两段合起来正好对齐候选的两个外端，中间相隔13bp；沿负链读，模型起点从8增到132，终点从83增到329，因此通过检查，录入HERVarium候选
 
   | 5,520条原候选的UCSC复查结果      |      条数 |  最终纳入 |
   | -------------------------------- | --------: | --------: |
@@ -1129,7 +1130,7 @@ internal的“留待复核”：
   | 多段的边界、间隔或模型顺序不合格 |       332 |         0 |
   | **合计**                         | **5,520** | **1,184** |
 
-- 15,483条家族或大类待定（LTR模型找不到对应的hERV家族名或对应多种家族）：沿用上面的处理方式，位点id直接用LTR模型名命名
+- 15,483条家族或大类待定（HERVarium internal模型找不到对应的hERV家族名或对应多种家族）：沿用上面的处理方式，位点id直接用internal模型名命名
 
   | `rmsk`核查结果                        | 候选数 |
   | ------------------------------------- | -----: |
@@ -1143,17 +1144,15 @@ internal的“留待复核”：
   | 多条命中，模型长度或模型坐标顺序不符  |    281 |
 
 - 4,654条模型名冲突：一条HERVarium internal和一个Telescope位点的实际internal片段同链重叠，但两边用了不同的重复序列模型名，查Dfam也没能用同一个登录号确认它们是别名
-  
-  在`Telescope/transcripts.gtf`中取原internal片段，与HERVarium区间求交，只在这段共有区间里，分别统计UCSC rmsk对两个模型的支持bp（看共有区间里有多少bp被标成HERVarium用的模型，又有多少bp被标成Telescope用的模型）。4,377条只有Telescope模型有支持（rmsk与交集重叠长度\>0），277条两种模型都有支持。最终它们都继续用原来的Telescope
-
+  - 由于与telescope的internal `exon`有重叠，全部删除，只沿用telescope的原位点
 - 480条一条HERVarium internal命中多个Telescope位点：针对每个Telescope位点分别计算该HERVarium internal双向覆盖率，要求同链、模型一致且双向覆盖率≥80%。只有115条HERVarium internal找到了这样的Telescope位点（都只有一个Telescope位点），于是关联到该位点ID（保持原有的telescope注释 并不再新增命中多个Telescope位点的HERVarium internal，只是在记录中注明这条HERVarium候选对应哪个已有Telescope位点）
   
   例如`HERVFH19_1p36.23a`的双向覆盖率是88.80%和100%，相邻`HERVFH19_1p36.23b`只有4.62%和0.69%，所以关联到`a`
 - 2,476条与Telescope重叠但覆盖偏低：继续用telescope注释
-- 699条落在Telescope位点跨度内：
+- 699条原HERVarium区间与Telescope位点跨度有交集：
   - GTF允许一个位点的跨度包含另一个位点，两个位点各有自己的`gene_id`
   - 拿`rmsk`支持的实际片段重新与Telescope各条`exon`求交
-  - 当落进空档后，只有候选与两侧internal片段同链、同模型，且模型坐标能按方向接起来，才补为原位点的一个`exon`
+  - 如果交集片段完整落进空档，只有候选与两侧internal片段同链、同模型，三者的模型总长一致，且候选的模型坐标沿元件方向能接在两侧片段之间，才补为原位点的一个`exon`
   - 不同模型或不同链且有独立UCSC支持的片段可以保留自己的位点ID，只落在空档、且通过候选间去重的独立收录
 
   原699条中，188条独立纳入，其中179条进入主GTF、9条进入MaLR GTF；其余369条缺合格UCSC支持、133条碰到原`exon`、9条同链同模型但无法接续；没有满足补为原位点`exon`的记录
@@ -1166,21 +1165,19 @@ solo LTR的“留待复核”：
 - 新增候选彼此重叠：
   - 当同链、同大类、同模型且双向覆盖≥80%时：比如两条同模型LTR分别长100bp和110bp，共有90bp。共有部分占各自长度的90%和81.8%，两边都达标，就选一条作代表，采用它的片段坐标
   
-    - 1. 优先选和rmsk有精确匹配，或者是能由多段rmsk还原的，或者是rmsk由近似匹配（同染色体、同链、同模型名、同ERV大类且坐标重叠，共有碱基占各自区间长度的比例都≥80%）
+    - 1. 优先选和rmsk有精确匹配，再优先能由多段rmsk还原的（即前面说的`多条命中就是查到2行或更多`中的方法），再优先rmsk由近似匹配（同染色体、同链、同模型名、同ERV大类且坐标重叠，共有碱基占各自区间长度的比例都≥80%）
     - 2. 若还无法区分，依次优先选`linked_internal`非空、实际支持片段更长的
     - 3. 若还无法区分，就按`source_id`字符串降序取第一条
     
-  - 不同模型或不同链的两个候选：如果在同一份原始RepeatMasker结果中各有独立命中，且共有碱基≤较短候选的20%，可以同时保留
+  - 不同模型或不同链的两个候选：如果在同一份原始RepeatMasker结果中各有精确匹配，且共有碱基≤较短候选的20%，可以同时保留
   - 经过前两轮仍无法区分的：优先保留在`rmsk`支持区间达到双向80%的，按上面提到的优先规则1确定保留，若两条仍互相冲突就都排除
 - 给新增internal补侧翼：把HERVarium原表已经指向某个internal的LTR，核对后写到该位点的同一个`gene_id`下（这个位点可以是已有的Telescope位点，也可以是本轮新纳入的HERVarium internal）
   - 确认LTR指向哪个internal：从`HERV_internal_LTR_map.tsv`读取每条internal（进入gtf的internal）的`ltr5_name`、`ltr3_name`和对应距离，再到LTR目录核对`role`和`link_internal`是否一致
 
-    如果是想补telescope internal的LTR，就用HERVarium的internal id号去`internal_crosswalk.tsv`里找对应的telescope internal，如果没有就找同链、同模型且双向覆盖≥80%后唯一的Telescope internal。例如，chr1的一条`MLT2E`在HERVarium原表里指向`66523441–66524803`这段`ERVL-E-int`的3′侧，这段坐标恰好与Telescope位点`ERVLE_1p31.3f`的第三条internal片段一致；归并后，`MLT2E`作为`3prime`，与这个位点的三条internal片段共用`gene_id=ERVLE_1p31.3f`
+    如果是想补telescope internal的LTR，就用HERVarium的internal id号去`internal_crosswalk.tsv`里找对应的telescope internal，如果没有就不进行补充。例如，chr1的一条`MLT2E`在HERVarium原表里指向`66523441–66524803`这段`ERVL-E-int`的3′侧，这段坐标恰好与Telescope位点`ERVLE_1p31.3f`的第三条internal片段一致；归并后，`MLT2E`作为`3prime`，与这个位点的三条internal片段共用`gene_id=ERVLE_1p31.3f`
   - 查这两个模型能否配对：用Telescope的`families.tsv`查该internal家族允许搭配哪些LTR模型；位点家族未定，或LTR模型查不到任何候选家族时，可以用Telescope原GTF里实际出现过的同大类、同一侧的internal–LTR模型组合作为依据
   - 用实际片段复算距离：两段须同染色体、同链、同ERV大类，原表距离和实际片段之间的距离都须≤200bp，实际片段须位于指定的一侧（HERVarium原始LTR表中`role`标记的`5prime`或`3prime`），且间隔内没有其他位点的片段，每侧需要原来没有prime且只有一条候选达标
 
-    有归属歧义、但本身通过片段筛选（按照上面“新增候选彼此重叠”规则）的侧翼LTR，会以`linked_ltr_unresolved`和独立的`gene_id`写入GTF
-  
   例：HERVarium把两条`MLT2D`指向同一个`ERVL-B4-int`，分别标为5′侧和3′侧。`MLT2D`模型可以对应多个家族，但这个internal在Telescope家族表中对应`ERVLB4`，而`MLT2D`正好列在`ERVLB4`允许搭配的LTR模型中
 
   | GTF中的`geneRegion` | `repName`     | chr10正链坐标     | 距internal |
@@ -1190,9 +1187,6 @@ solo LTR的“留待复核”：
   | `ltr3`              | `MLT2D`       | 58925367–58925525 |        0bp |
 
   三段各写成一条`exon`，共用`gene_id`
-
-  主GTF中，835个新增HERVarium位点里，788个补了一侧，47个补了两侧，所以共归入882条LTR。另有28个已有Telescope位点补入29条LTR，其中27个补了一侧，1个补了两侧
-
 
 
 

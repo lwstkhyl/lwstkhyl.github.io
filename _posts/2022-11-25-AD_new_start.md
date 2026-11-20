@@ -1001,7 +1001,7 @@ python3 build_herv_gtf.py "$reference_dir" ./results
 ```
 
 在进入流程说明前先说一些我们规定的处理方式和定义：
-- 在telescope和HERVarium记录中，每个位点/片段都会有一个对应的重复序列模型（或者说类别）。我们定义“模型名相同”：如果两个记录中模型名相同就直接算成相同；当原名不同时，如果两个名字各自唯一指向同一个Dfam登录号，也算作模型名相同
+- 在telescope和HERVarium记录中，每个位点/片段都会有一个对应的重复序列模型（或者说类别）。我们定义“**模型名相同**”：如果两个记录中模型名相同就直接算成相同；当原名不同时，如果两个名字各自唯一指向同一个Dfam登录号，也算作模型名相同
   
   dfam中的记录是这样的：
 
@@ -1014,7 +1014,7 @@ python3 build_herv_gtf.py "$reference_dir" ./results
   `NM`是Dfam记录的模型名，`AC`是登录号，`DR`列出了这条记录对应的Repbase名称
 
   `LTR2`和`HARLEQUINLTR`在这份文件中都唯一指向`DF000000449`，我们把它们视作同一模型名
-- 双向覆盖率：用同一段重叠的碱基数，分别除以两条记录各自的长度
+- **双向覆盖率**：用同一段重叠的碱基数，分别除以两条记录各自的长度
   
   例如，HERVarium候选长100bp，`rmsk`命中长80bp，且这80bp全部落在候选内，于是它们的交集长度就是80bp
 
@@ -1028,7 +1028,7 @@ python3 build_herv_gtf.py "$reference_dir" ./results
   如果100bp的候选完整落在一条500bp的命中里，两个比例就是100%和20%，只达到了一侧的门槛
 
   跟Telescope对照时，Telescope一侧用实际internal exon合起来的长度，片段之间的空档不算进去
-- 模型总长：用Telescope原始`transcripts.gtf`的internal exon计算，第7列给出链方向，第9列属性里的`repEnd`是命中在重复模型上的终点，模型总长等于`repEnd`加上模型末尾尚未命中的碱基数
+- **模型总长**：用Telescope原始`transcripts.gtf`的internal exon计算，第7列给出链方向，第9列属性里的`repEnd`是命中在重复模型上的终点，模型总长等于`repEnd`加上模型末尾尚未命中的碱基数
 
   | GTF链方向 | 末尾剩余碱基数 | 模型总长公式        | `ERVL-E-int`实例        |
   | --------- | -------------- | ------------------- | ----------------------- |
@@ -1036,7 +1036,7 @@ python3 build_herv_gtf.py "$reference_dir" ./results
   | 负链`-`   | `−repStart`    | `repEnd − repStart` | 5,341−(−326)＝5,667bp   |
 
   Telescope缺少该模型的长度时，用UCSC rmsk的同名字段按相同公式推算
-- 模型覆盖率：用入选的`rmsk`证据在重复模型上覆盖的bp除以模型总长，精确单条和近似单条都用命中的rmsk条目的模型起止坐标（不把HERVarium候选和rmsk取交集），多段重建则把各段的模型区间取并集 且重复覆盖的模型碱基只计一次
+- **模型覆盖率**：用入选的`rmsk`证据在重复模型上覆盖的bp除以模型总长，精确单条和近似单条都用命中的rmsk条目的模型起止坐标（不把HERVarium候选和rmsk取交集），多段重建则把各段的模型区间取并集 且重复覆盖的模型碱基只计一次
   - 注：有极少数的行这里的几个值会有冲突，这类的行会删去不参与统计
   - 原因：Telescope原流程使用了`模型覆盖率≥10%`的筛选条件，所以我们也仿照一下
   - 例1：HERVarium候选和近似单条命中各长100bp，在基因组上重叠80bp，双向覆盖率均为80%。如果这条命中的模型坐标是`401–500`，模型总长为1,000bp，那么模型覆盖率是`100÷1,000＝10%`
@@ -1045,11 +1045,11 @@ python3 build_herv_gtf.py "$reference_dir" ./results
     - 第三段假设覆盖`[981,1020]`。模型到第1,000位结束，所以只计`[981,1000]`的20bp。`[971,980]`是段间空档，也不计入
     - 因此，这条候选覆盖了模型上的110个碱基，模型覆盖率为`(90+20)/1000=11%`
 
-- 重叠：一个HERVarium记录与Telescope `exon`同染色体、同链且基因组坐标有重合；多个片段计算长度或重叠bp时取区间并集（重复覆盖的碱基只计一次）
-- `rmsk`证据：对每条HERVarium候选，查找与它同染色体、同链、同模型且基因组坐标重叠的`rmsk`记录；候选已有ERV大类时，再要求大类相同
-  - 单条精确命中`exact_single`：有一行`rmsk`记录的起点和终点都与候选一致
-  - 近似单条命中`reciprocal_single`：有一行`rmsk`记录且起点/终点不一致，双向覆盖率≥80%
-  - 多条命中`reconstructed`：有2行rmsk记录满足“两端完全对齐”（最左片段的左端等于HERVarium候选的起点，最右片段的右端等于候选的终点）、“相邻片段的基因组间隔为0–200bp”、“沿元件方向，模型坐标依次向前”（命中的模型起点和终点都要逐段增大，且命中模型总长相同）
+- **重叠**：一个HERVarium记录与Telescope `exon`同染色体、同链且基因组坐标有重合；多个片段计算长度或重叠bp时取区间并集（重复覆盖的碱基只计一次）
+- **`rmsk`证据/检验**：对每条HERVarium候选，查找与它同染色体、同链、同模型且基因组坐标重叠的`rmsk`记录；候选已有ERV大类时，再要求大类相同
+  - **单条精确命中**`exact_single`：有一行`rmsk`记录的起点和终点都与候选一致
+  - **近似单条命中**`reciprocal_single`：有一行`rmsk`记录且起点/终点不一致，双向覆盖率≥80%
+  - **多条命中**`reconstructed`：有2行rmsk记录满足“两端完全对齐”（最左片段的左端等于HERVarium候选的起点，最右片段的右端等于候选的终点）、“相邻片段的基因组间隔为0–200bp”、“沿元件方向，模型坐标依次向前”（命中的模型起点和终点都要逐段增大，且命中模型总长相同）
   
     注：如果同一候选既满足多条命中，又满足单条命中，则最后会标记为单条命中（精确/近似），这涉及到后面的rmsk证据优先级判断
   - 记录表中的标记：
@@ -1058,56 +1058,105 @@ python3 build_herv_gtf.py "$reference_dir" ./results
     - `multi_boundary_disagreement`：找到多条命中，但候选至少有一端找不到可对齐的片段
     - `multi_overlap_or_gap`：两端都有可对齐的片段，但找不到一组互不重叠、相邻间隔均在0–200bp的片段把两端接起来
     - `multi_model_order_disagreement`：有片段组合满足基因组上的边界和间隔要求，但找不到一组同时满足模型起点和终点逐段递增、模型总长一致的片段
-- 大类：共有四种ERV1、ERVK、ERVL和ERVL-MaLR，在判重时都一起算，最后结果中按大类分出只包括ERV1、ERVK、ERVL三种的主表和还包括ERVL-MaLR的
-  - HERVarium的LTR表记录了大类信息，我们直接沿用
+- **大类**：共有四种ERV1、ERVK、ERVL和ERVL-MaLR，在判重时都一起算，最后结果中按大类分出只包括ERV1、ERVK、ERVL三种的主表和还包括ERVL-MaLR的
+  - telescope和HERVarium的LTR表记录了大类信息，我们直接沿用
   - HERVarium的internal表没有这个信息，我们在对它进行rmsk检验后，把匹配到的rmsk位点的大类信息作为internal的大类信息
 - 最后写入gtf的都来自Telescope的原始exon或HERVarium的原发布区间，不会和rmsk取交集
 
-处理分为两部分，先是internal：把48,855条HERVarium internal先和同链的Telescope的internal `exon`比较，看哪些HERVarium internal能对应到已有telescope注释，哪些需要新增
-- 一个Telescope位点对应一条HERVarium internal（在只碰到这个Telescope位点的HERVarium记录中，只有一条满足同模型、自身至少80%被覆盖，这一条也覆盖了该Telescope位点至少80%的internal）：关联到原位点（5,636 `linked_single`）
-- 一个Telescope位点对应多条HERVarium internal（HERVarium的A、B两条记录分别覆盖了Telescope位点X的不同片段，A只碰到X B也只碰到X 且与X同模型、自身至少80%被覆盖，把它们覆盖到的internal碱基合在一起，达到X的internal总长度的80%）：关联到原位点（3,265个Telescope位点 8,879个HERVarium记录 `linked_multiple_hervarium`）
-- 一条HERVarium记录跨多个Telescope位点：对每个位点分别检查是否同模型，以及HERVarium记录和Telescope internal是否各自至少80%被覆盖
+**先对internal进行处理**：把48,855条HERVarium internal先和同链的Telescope的internal `exon`比较，看哪些HERVarium internal能对应到已有telescope注释，哪些需要新增
+- **一个Telescope位点对应一条HERVarium internal**（在只碰到这个Telescope位点的HERVarium记录中，只有一条满足同模型、自身至少80%被覆盖，这一条也覆盖了该Telescope位点至少80%的internal）：关联到原位点（5,636 `linked_single`）
+- **一个Telescope位点对应多条HERVarium internal**（HERVarium的A、B两条记录分别覆盖了Telescope位点X的不同片段，A只碰到X B也只碰到X 且与X同模型、自身至少80%被覆盖，把它们覆盖到的internal碱基合在一起，达到X的internal总长度的80%）：关联到原位点（3,265个Telescope位点 8,879个HERVarium记录 `linked_multiple_hervarium`）
+- **一条HERVarium记录跨多个Telescope位点**：对每个位点分别检查是否同模型，以及HERVarium记录和Telescope internal是否各自至少80%被覆盖
   - 恰好一个位点达标（一条HERVarium internal同时与位点X、Y重叠，X与它同模型 且两边各有90%的碱基相互重叠，Y只覆盖了这条HERVarium记录的5% 不达标）：关联到原位点（115 `multiple_telescope_unique_match`）
   - 其它：不关联（365 `multiple_telescope_unassigned`）
-- 只在HERVarium找到的internal（没有碰到任何同链Telescope internal exon）：26,730条进入`rmsk`核验，判断是否需要新增
-  - 26,730条中有14,208条获得合格`rmsk`证据
-  - 碰到Telescope同链`exon`的5条排除（`overlap_telescope_exon`）：前面只看了属性为internal的exon，这里也包括属性为LTR的exon
+- **只在HERVarium找到的internal**（没有碰到任何同链Telescope internal exon）：26,730条进入`rmsk`核验，判断是否需要新增
+  - 26,730条中有14,208条获得合格**`rmsk`证据**
+  - **碰到Telescope同链`exon`**的5条排除（`overlap_telescope_exon`）：前面只看了属性为internal的exon，这里也包括属性为LTR的exon
   - 若候选完整落在同链位点的空档内，且与该位点同大类、同模型，则查两侧最近的`exon`：两侧须都是同模型internal、模型总长一致，候选的模型坐标能接在两段之间且互不相交，且只能匹配到一个Telescope位点上。我们没找到满足该条件的新增候选（7条因接续失败或归属不唯一而排除 `gap_model_not_continuous_or_ambiguous`）
-  - 要求达到10%模型覆盖率，排除掉9,202条（`model_coverage_below_10pct`）
-  - 去重：排除掉7条
+  - 要求达到**10%模型覆盖率**，排除掉9,202条（`model_coverage_below_10pct`）
+  - **去重**：排除掉7条
     - 先按rmsk证据`精确单条＞多条＞近似单条`处理（5 `lower_evidence_overlap`）
     - rmsk证据同档、同链、同模型、同ERV大类，且两条HERVarium候选之间双向覆盖均≥80%时，判为重复，优先保留`rmsk`支持bp更多的一条
     - 同档去重后仍有冲突的候选都排除（2 `equal_evidence_overlap`）
     - 两条都是精确单条命中、链或模型不同，且重叠不超过较短候选长度的20%时，可以同时保留
   - 最终新增4,987个独立internal（`added_internal`）
 
-之后看新增LTR：一部分是作为solo LTR，一部分是给internal补侧翼LTR
-- 先核对原始注释：
+**之后看新增LTR**：一部分是作为solo LTR，一部分是给internal补侧翼LTR
+- **先核对原始注释**：
   - 先与作者提供的最终结果bed核对，不一致则排除：主染色体上有536,568条`solo`和21,389条`5prime`或`3prime`进入核验
-  - 与Telescope LTR同链、同模型、同坐标的记录记`duplicate_telescope_ltr`，只保留原Telescope片段，涉及1,418条solo和6,630条侧翼
-  - 与Telescope同链`exon`重叠，记`overlap_telescope_exon`并排除，涉及982条solo和4,264条侧翼
-- 侧翼LTR：
+  - **与Telescope LTR同链、同模型、同坐标**的记录记`duplicate_telescope_ltr`排除，只保留原Telescope片段，涉及1,418条solo和6,630条侧翼
+  - **与Telescope同链`exon`重叠**，记`overlap_telescope_exon`排除，涉及982条solo和4,264条侧翼
+- **侧翼LTR**：
   - 关联目标是Telescope位点时，通过已建立的internal关联确定对应的internal位点
-  - 要求有明确归属：HERVarium记录了侧翼LTR是属于哪个internal的3'还是5'，为了尽量避免重复以及控制LTR数量，我们没有使用`role=both`，即同时作为两条internal的3'和5'的记录
-  - 要求LTR与关联internal：同染色体、同链、同大类，原始距离（HERVarium配对表里的`dist5`或`dist3`）以及与对应HERVarium internal的间隔均须≤200bp
-  - 同时要求家族配对；如果家族或LTR模型映射缺失时，可用Telescope同大类、同侧的模型配对（查它的原注释里是否出现过同样的`internal模型-LTR模型-ERV大类-5′/3′侧别`组合）
+  - 要求有**明确归属**：HERVarium记录了侧翼LTR是属于哪个internal的3'还是5'，为了尽量避免重复以及控制LTR数量，我们没有使用`role=both`，即同时作为两条internal的3'和5'的记录
+  - 要求LTR**与关联internal：同染色体、同链、同大类，原始距离**（HERVarium配对表里的`dist5`或`dist3`）以及**与对应HERVarium internal的间隔均须≤200bp**
+  - 同时要求**家族配对**；如果家族或LTR模型映射缺失时，可用Telescope同大类、同侧的模型配对（查它的原注释里是否出现过同样的`internal模型-LTR模型-ERV大类-5′/3′侧别`组合）
   
     例如，Telescope的`HERVW_1p33a`在ERV1的`HERV17-int`两侧都注释了`LTR17`。如果另一个ERV1候选也是给`HERV17-int`补5′侧的`LTR17`，就可以用这个已有位点的5′配对作依据
 
-    - 关联目标为Telescope位点时，从HERVarium internal记录指向的internal出发，沿候选所在的5′或3′侧，在同一目标位点的`exon`中查找间隔为0–200bp的最近一条。如果最近一条是Telescope原注释的LTR，且标记为`ltr`或该侧对应的`ltr5`／`ltr3`，就保留原LTR，把新增候选记为`flank_pair_not_qualified`排除
+    - 关联目标为Telescope位点时，从HERVarium internal记录指向的internal出发，沿候选所在的5′或3′侧，在同一目标位点的`exon`中查找间隔为0–200bp的最近一条。如果**最近一条是Telescope原注释的LTR**，且标记为`ltr`或该侧对应的`ltr5`／`ltr3`，就保留原LTR，把新增候选记为`flank_pair_not_qualified`排除
 
     上述条件排除10,437条（`flank_pair_not_qualified`）
-- `rmsk`核验：Solo共排除124,483条，侧翼共排除49条。最终有409,685条solo和9条侧翼通过`rmsk`核验
-- 查LTR是否与已定稿的新增internal冲突：如果两条候选的模型或链方向不同，各自都有精确单条`rmsk`证据，而且共有bp不超过较短候选长度的20%，就允许同时保留；其余与已定稿新增internal重叠的LTR排除（`overlap_added_internal`），涉及58条solo、0条侧翼
+- **`rmsk`核验**：Solo共排除124,483条，侧翼共排除49条。最终有409,685条solo和9条侧翼通过`rmsk`核验
+- 查LTR**是否与已定稿的新增internal冲突**：如果两条候选的模型或链方向不同，各自都有精确单条`rmsk`证据，而且共有bp不超过较短候选长度的20%，就允许同时保留；其余与已定稿新增internal重叠的LTR排除（`overlap_added_internal`），涉及58条solo、0条侧翼
   - 侧翼还要检查它与所指internal之间的间隔：如果间隔内已有其他位点的计数片段，就排除该侧翼，记`intervening_locus`（后面还会进行一次）
-- 把剩下的solo和侧翼放在一起去重：沿用上一步允许两个候选同时保留的条件，对其余重叠按以下顺序处理
+- 把剩下的solo和侧翼放在**一起去重**：沿用上一步允许两个候选同时保留的条件，对其余重叠按以下顺序处理
   - 按`精确单条＞多条＞近似单条`排序：如果一条LTR和已经保留的、更高一档证据的LTR发生重叠冲突，就排除证据较低的这一条（`lower_evidence_overlap`），排除683条solo、0条侧翼
   - 同一档证据内，先找重复记录：两条LTR同链、同模型、同ERV大类，且共有bp分别占两条LTR各自长度的至少80%，就视为重复。在重复中先选有internal指向的一条；若两条都有指向或都没有指向，再选`rmsk`实际支持的基因组bp较多的一条，仍相同则按`source_id`降序取排在前面的一条（`duplicate_candidate`），这一步排除0条
-  - 若仍有重叠冲突，就排除冲突双（`equal_evidence_overlap`），本批排除687条solo、0条侧翼
+  - 若仍有重叠冲突，就排除冲突双方（`equal_evidence_overlap`），本批排除687条solo、0条侧翼
   
     注：这里“同一档去掉重复记录后仍有重叠冲突”不是说`source_id`也相同，是因为如果两条solo LTR都属于“近似单条”，也同链、同模型、同ERV大类，但双向覆盖率只有50%，低于判重要求的80%，所以两条都会走到下一步；此时它们仍然重叠，证据又同档，按规则两条都排除
-- 复查侧翼与目标之间的间隔：如果这一轮选出的其他LTR也在侧翼与目标之间形成了其他位点的计数片段，就移除该侧翼，对剩余LTR重新判重，前后两次间隔检查合计排除2条侧翼，记`intervening_locus`
+- **复查侧翼与目标之间的间隔**：如果这一轮选出的其他LTR也在侧翼与目标之间形成了其他位点的计数片段，就移除该侧翼，对剩余LTR重新判重，前后两次间隔检查合计排除2条侧翼，记`intervening_locus`
 - 最终独立收录408,257条solo，记`added_solo_ltr`；7条侧翼作为`ltr5`或`ltr3`的`exon`写入目标`gene_id`，记`added_flank_exon`，其中6条补给Telescope位点，1条补给新增internal
+
+**结果文件说明**：
+- `herv_loci_final.hg38.gtf.gz`：包含三大类hERV（ERV1、ERVK、ERVL）的主gtf
+- `malr_loci_final.hg38.gtf.gz`：只包括ERVL-MaLR的gtf
+- `build_summary.tsv`：记录候选输入量、筛选去向、`rmsk`证据类型和最终位点数
+
+| 输入项目               | ERV1、ERVK、ERVL | ERVL-MaLR |    合计 |
+| ---------------------- | ---------------: | --------: | ------: |
+| Telescope原位点        |           14,203 |         0 |  14,203 |
+| HERVarium internal候选 |                — |         — |  48,855 |
+| HERVarium Solo LTR候选 |          238,179 |   298,389 | 536,568 |
+| HERVarium侧翼LTR候选   |           20,486 |       903 |  21,389 |
+
+- Telescope原注释有14,968个位点，限制到主染色体后纳入14,203个
+- HERVarium internal最开始因为没给大类信息
+
+| 输出项目              |       主GTF |    MaLR GTF |        合计 |
+| --------------------- | ----------: | ----------: | ----------: |
+| 保留的Telescope原位点 |      14,203 |           0 |      14,203 |
+| 独立新增internal位点  |       3,831 |       1,156 |       4,987 |
+| 独立新增Solo LTR位点  |     186,881 |     221,376 |     408,257 |
+| **最终位点总数**      | **204,915** | **222,532** | **427,447** |
+| 补入目标位点的侧翼LTR |           7 |           0 |           7 |
+| 全部计数片段          |     246,400 |     222,532 |     468,932 |
+
+- 注：补入的侧翼LTR是作为一个位点里面的`exon`行，而不是独立位点
+
+**结果gtf总结**：
+- 位点数的增长主要来自Solo LTR
+  - 主GTF从14,203个Telescope位点增加到204,915个，新增部分以186,881个Solo LTR为主
+  - 主GTF和MaLR GTF的Solo LTR候选最终保留率分别为78.5%和74.2%
+  - 两份GTF合计收录的408,257个Solo LTR中，329,965个（80.8%）可以在原始UCSC rmsk中核对到坐标完全一致的单条记录
+- 新增internal和侧翼少
+  - 26,730条internal进入`rmsk`核验，14,208条拿到合格证据，其中9,202条随后在10%模型覆盖率这一步被排除
+  - 21,389条侧翼LTR输入中，6,630条与原Telescope LTR精确重复，4,264条与原`exon`同链重叠，10,437条未通过归属、配对或位置检查；剩余58条进入`rmsk`核验，9条通过，其中2条因与目标之间夹有其他位点而排除，最终补入7条
+- 位点级和大类级计数有明确的注释依据，家族级汇总的覆盖范围较小
+  - 主GTF新增Solo LTR中，70,075个有唯一家族，20,180个有多个候选家族，96,626个家族未定
+  - 3,831个新增internal中仅10个有唯一家族
+
+**我们使用的位点id**（`gene_id`）：
+- 独立新增位点统一按`模型_染色体_起点_终点_方向`命名；家族唯一时加`家族_`前缀；起止坐标为1-based、两端包含；`plus`表示正链，`minus`表示负链。例如`HERVW_LTR17_chr1_30229414_30230274_plus`依次表示HERVW家族、LTR17模型、chr1、起点、终点和正链
+  - 家族不唯一对应时把候选家族保存在gtf属性栏的`family_candidates`字段中
+- 补入的侧翼LTR沿用目标位点的ID：例如chr3上的`MLT2A1`作为5′侧`exon`，与internal共用`HERVL_HERVL-int_chr3_20872125_20873007_plus`，HERVarium原始记录的编号另存于各新增`exon`的`source_id`字段；ID中的`20872125`是internal起点，补入侧翼后`gene`行的起点是`20871639`
+- 例如：
+  - Telescope原位点：直接沿用原注释的`locus`，例如`HERVW_1p33a`
+  - 模型名有唯一家族对应的独立新增Solo LTR：标出对应的家族名，例如`HERVW_LTR17_chr1_30229414_30230274_plus`
+  - 模型名对应多个家族的独立新增Solo LTR：只用模型名，例如`LTR2_chr1_15802123_15802583_plus`
+  - 家族未定的独立新增internal：`MER31-int_chr1_3659159_3659675_minus`
+  - MaLR GTF中的新增Solo LTR：`MLT1A_chr1_30694_30848_plus`
 
 #### 长读长数据处理
 

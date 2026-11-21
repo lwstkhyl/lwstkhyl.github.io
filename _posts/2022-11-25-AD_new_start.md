@@ -909,14 +909,31 @@ sbatch run_step6.sbatch  # /public/home/GENE_proc/wth/ADnew/reference/herv_annot
 | `3prime` | 被选为internal转录方向上的3′侧翼LTR                                   |  11,071 |
 | `both`   | 同一条LTR既被选为一段internal的5′侧翼，也被选为另一段internal的3′侧翼 |   1,165 |
 
-**HERVarium和telescope构建hERV位点的方式有什么不同**：
-- Telescope以一个internal为中心
-  - 先规定哪些模型可以配在一起：`families.tsv`每行给一个HERV家族、一个internal模型和一组可配对的LTR模型。例如，`HML2`的internal模型是`HERVK-int`，对应的LTR模型包括`LTR5`、`LTR5A`、`LTR5B`和`LTR5_Hs`，之后构建程序按家族从UCSC提取这些模型的RepeatMasker记录
-  - 把可能属于同一internal的片段分到一个位点：先用10bp阈值聚合很近的同链片段，再用2,500bp阈值检查较远的片段。第二次还要求它们在重复模型上的命中位置能够接续。例如，两个片段分别命中同一模型的前段和后段，中间即使隔着一段插入，也可能属于同一个internal
-  - 找侧翼LTR，再筛选和复核：默认按该家族最长LTR模型的长度确定搜索窗口，查找与窗口相交的同链候选LTR。随后按片段排列给位点分类，按internal模型覆盖率筛掉过短的候选，公开代码的默认下限是10%
-- HERVarium先分别构建internal和LTR区间，再给它们建立关联
-  - 构建internal：在GRCh38上用RepeatMasker 4.1.8和Dfam 3.9，按`-int`等模型名标记提取internal片段。同染色体、同链、同模型的片段有重叠或间隔≤200bp时，合并成一个连续区间
-  - 构建LTR并配对：LTR片段另行合并，间隔阈值是100bp。之后从每条internal出发，在同染色体、同链、同ERV大类的两侧，各选200bp内最近的一条LTR。方向按转录链判断。关联表每个internal一行，LTR表则依据哪些LTR被选中来赋予`5prime`、`3prime`、`both`或`solo`
+**HERVarium和telescope构建hERV internal的方式有什么不同**：
+- 在从rmsk中获取hERV相关片段的方式上来看：
+  - Telescope以一个internal为中心，从指定模型出发
+    - 先规定哪些模型可以配在一起：`families.tsv`每行给一个HERV家族、一个internal模型和一组可配对的LTR模型。例如，`HML2`的internal模型是`HERVK-int`，对应的LTR模型包括`LTR5`、`LTR5A`、`LTR5B`和`LTR5_Hs`，之后构建程序按家族从UCSC提取这些模型的RepeatMasker记录
+  - HERVarium先分别构建internal和LTR区间，再给它们建立关联
+    - 在GRCh38上用RepeatMasker 4.1.8和Dfam 3.9重新建立rmsk总索引表，按`-int`等模型名标记提取internal片段；LTR片段独立生成，再从每条internal的5′和3′侧各找200bp内最近的同链、同ERV大类LTR
+- 在对internal片段的后处理方式上：
+  - Telescope：先用10bp阈值聚合很近的同链片段，再用2,500bp阈值检查较远的片段，并要求它们在重复模型上的命中位置能够接续。例如，两个片段分别命中同一模型的前段和后段，中间即使隔着一段插入，也可能属于同一个internal
+  - HERVarium：同染色体、同链、同模型的片段有重叠或间隔≤200bp时，合并成一个连续区间
+
+造成的影响：
+- 会有“多条HERVarium记录共同对应一个Telescope位点”或“多个Telescope位点对应一个HERVarium记录”的情况
+  - Telescope合，HERVarium拆：`HERVW_1p33a`，两组`HERV17-int`片段间隔约300bp，在模型上的命中位置可以接续；Telescope给它们同一个位点ID，HERVarium按200bp规则保留两条记录。所以逐条比较时，HERVarium的任一条都只覆盖Telescope位点的一部分
+  - HERVarium合，Telescope拆：`MER41_4q13.1b`和`MER41_4q13.1c`，两条负链`MER41-int`相隔67bp。HERVarium把它们合成一条连续记录；Telescope进入第二轮时要求在重复模型上的命中位置能接续，它不符合这个要求，所以分成两个位点
+- 整个hERV位点的起止坐标也受到侧翼归属的影响：比如chr5的`ERVL_5q22.2`，两边的internal完全相同，Telescope纳入了相隔215bp的`MLT2B1`，所以整个位点的左端比internal左端多伸出594bp（379bp的LTR＋215bp的间隔）；HERVarium的配对窗口是200bp，这条LTR在它的表里标为`solo`
+- 即使两边各只有一条internal，外侧端点也可以不同：比如`ERVLE_1p35.2f`，两边都是chr1负链的`ERVL-E-int`。统一到0起点、左闭右开坐标后，Telescope是`[31994775, 31995333)`，HERVarium是`[31994775, 31995402)`，右端差了69bp；rmsk在这里有一条同模型命中，坐标与Telescope一致
+- 即使坐标完全相同也可以有模型分歧：比如chr1负链的`[218749208, 218755012)`，两边的internal覆盖范围完全相同，rmsk把这里的两条命中都标为`HERVE_a-int`；Telescope沿用这个模型，位点叫`HERVEA_1q41`；HERVarium给出的模型是`HERVE-int`，如果按按Telescope的`families.tsv`，这两个模型分别归到`HERVEA`和`HERVE`
+
+回到最开始的问题：为什么有的internal只在一张表里出现
+- 模型未进入Telescope的收录清单：比如HERVarium在chr4的`[175330799, 175334624)`收录了`HERV16-int`，项目的UCSC rmsk在这一区域也有多条`HERV16-int`命中，但Telescope的`families.tsv`没有列这个internal模型，因此它不会以`HERV16-int`进入Telescope的位点构建
+- 两边都收录该模型，但该位置的命中太短：比如HERVarium在chr1的`[21048848, 21049112)`收录了一条`ERVL-E-int`，但这条命中只覆盖模型的约264÷5,667＝4.7%，附近也没有可在2,500bp内接续的同模型片段，把这条记录作为独立internal应用Telescope的10%门槛，就会被滤掉
+- Telescope有些模型在HERVarium发布的internal表里没有记录：例如`ERV316A3_1p35.3b`对应的`ERV3-16A3_I-int`在项目的UCSC rmsk中有同坐标命中，但HERVarium的internal发布表没有这个模型的记录
+  - 值得注意的是，Telescope中找不到HERVarium同链internal交集的1,506个位点里，**1,434个（95.2%）**集中在`ERV3-16A3_I-int`和`HERV4_I-int`两个模型
+
+    例如`ERV316A3_Xq22.1c`在Telescope和UCSC rmsk里都叫`ERV3-16A3_I-int`，HERVarium在完全相同的坐标和链上标成了`HERV16-int`，两者对应不同的Dfam登录号
 
 **两套的internal实际有多一致**：
 
@@ -1295,6 +1312,17 @@ sbatch AD_longread_reference_20261102.sbatch
 cd /public/home/GENE_proc/wth/ADnew/longread/AD_longread_align_20261109
 bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 ```
+
+#### 转录本重建
+
+能否参照[The landscape of hervRNAs transcribed from human endogenous retroviruses across human body sites](https://link.springer.com/article/10.1186/s13059-022-02804-w)这篇文章中通过RNA-seq重建hERV转录本的方法：
+- 论文的思路是：STAR比对→提取与HERV重叠、且不与GENCODE转录本重叠的reads→Trinity基因组引导组装→GMAP回贴基因组→TACO跨样本合并→定位与表达筛选
+  - 单样本组装序列要求count>5、回贴identity≥96%
+  - 合并候选要求长度≥200bp，并设置了≥50%样本检出的条件，最终保留能唯一定位的候选
+- 需要调整一下：
+  - 保留与宿主基因重叠的RNA，否则可能漏掉hERV–宿主嵌合转录本
+  - 把跨样本重复出现作为可信度证据，不直接要求一半样本检出
+
 
 
 ### 文献阅读

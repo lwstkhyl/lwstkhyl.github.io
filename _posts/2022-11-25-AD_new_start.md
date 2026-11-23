@@ -1013,8 +1013,8 @@ python merge_herv_internal_solo.py \
 ```sh
 module load miniconda3/base
 conda activate herv-annotation
-reference_dir=/public/home/GENE_proc/wth/ADnew/reference/herv_annotation
-python3 build_herv_gtf.py "$reference_dir" ./results
+cd /public/home/GENE_proc/wth/ADnew/reference/herv_annotation/try2-2/herv_try2_code/
+python3 build_herv_gtf.py /public/home/GENE_proc/wth/ADnew/reference/herv_annotation ./results
 ```
 
 在进入流程说明前先说一些我们规定的处理方式和定义：
@@ -1175,6 +1175,10 @@ python3 build_herv_gtf.py "$reference_dir" ./results
   - 家族未定的独立新增internal：`MER31-int_chr1_3659159_3659675_minus`
   - MaLR GTF中的新增Solo LTR：`MLT1A_chr1_30694_30848_plus`
 
+##### 概览
+
+
+
 #### 长读长数据处理
 
 **两种长读长测序数据**：
@@ -1322,6 +1326,20 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 - 需要调整一下：
   - 保留与宿主基因重叠的RNA，否则可能漏掉hERV–宿主嵌合转录本
   - 把跨样本重复出现作为可信度证据，不直接要求一半样本检出
+
+注释先加已有转录本注释（包括转录起始结束位置），再加长读长（是否需要再找点数据），用短读作验证，看加上长读长有什么改变
+
+#### 命名和整合
+
+命名统一到同一层级（比如id都只包含LTR种类不包括hERV家族），都用一种形式（不要telescope的用原名 新增的用自己的名字），对应其它注释表的什么位点
+
+### 合作项目
+
+RNA全量算，其它数据甲基化和多组学再找能跟RNA匹配上的
+
+找到的差异能否用甲基化解释，能否用多组学检测（检测蛋白检测代谢）发现预测marker
+
+
 
 
 

@@ -1221,7 +1221,7 @@ python3 build_herv_gtf.py /public/home/GENE_proc/wth/ADnew/reference/herv_annota
   ![AD_6](/upload/md-image/other/AD_6.jpg){:width="500px" height="500px"}
 
   - ERVL-MaLR的位点数是ERV1的两倍多，两类覆盖的基因组长度却几乎相同
-  - 四类合并后共覆盖190.23Mb，占24条主染色体总长的6.16%
+  - 四类合并后共覆盖190.28Mb，占24条主染色体总长的6.16%
 - 各class的Internal侧翼类型分布：用`ltr5`和`ltr3`标签将19,190个含internal的位点分为双侧、仅5′、仅3′和无明确侧翼
   
   ![AD_7](/upload/md-image/other/AD_7.jpg){:width="600px" height="600px"}
@@ -1411,8 +1411,18 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 
 大致思路：先加已有转录本注释（SERVE等基于转录本构建的hERV注释，也包括转录端点资源），再加长读长（先看看现有数据是否足够），用短读长bulk RNA-seq作验证，看加上我们自己的长读长数据后有什么改变
 
+##### 已有转录本注释
+
+- SERVE：优先接入`Brain_BA9_HERV.gtf`和`Brain_Cortex_HERV.gtf`这两个前额叶相关脑区，SERVE组装前排除了与GENCODE转录本重叠的reads，因此还需要其他资源补充hERV与宿主外显子的连接
+- TEscape、2025年公开长读长TE注释：补充包含hERV片段的基因相关RNA
+- FANTOM5、PolyASite：分别给RNA的5′端和3′切割加尾位置提供证据
+- GTEx TE-TSS：补充哪些已知转录本的注释起点位于TE内、这些转录本在哪些组织表达
 
 
+
+
+
+##### 长读长数据转录本发现
 
 
 

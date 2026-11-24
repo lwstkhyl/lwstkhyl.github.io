@@ -1112,9 +1112,10 @@ python3 build_herv_gtf.py /public/home/GENE_proc/wth/ADnew/reference/herv_annota
     例如，Telescope的`HERVW_1p33a`在ERV1的`HERV17-int`两侧都注释了`LTR17`。如果另一个ERV1候选也是给`HERV17-int`补5′侧的`LTR17`，就可以用这个已有位点的5′配对作依据
 
     - 关联目标为Telescope位点时，从HERVarium internal记录指向的internal出发，沿候选所在的5′或3′侧，在同一目标位点的`exon`中查找间隔为0–200bp的最近一条。如果**最近一条是Telescope原注释的LTR**，且标记为`ltr`或该侧对应的`ltr5`／`ltr3`，就保留原LTR，把新增候选记为`flank_pair_not_qualified`排除
-
-    上述条件排除10,437条（`flank_pair_not_qualified`）
-- **`rmsk`核验**：Solo共排除124,483条，侧翼共排除49条。最终有409,685条solo和9条侧翼通过`rmsk`核验
+    - 关联目标为ERVL-MaLR位点时，由于telescope不提供ERVL-MaLR的家族对应，所以不进行这一步过滤
+    
+    上述条件排除10,228条（`flank_pair_not_qualified`）
+- **`rmsk`核验**：Solo共排除124,483条，侧翼共排除91条。最终有409,685条solo和176条侧翼通过`rmsk`核验
 - 查LTR**是否与已定稿的新增internal冲突**：如果两条候选的模型或链方向不同，各自都有精确单条`rmsk`证据，而且共有bp不超过较短候选长度的20%，就允许同时保留；其余与已定稿新增internal重叠的LTR排除（`overlap_added_internal`），涉及58条solo、0条侧翼
   - 侧翼还要检查它与所指internal之间的间隔：如果间隔内已有其他位点的计数片段，就排除该侧翼，记`intervening_locus`（后面还会进行一次）
 - 把剩下的solo和侧翼放在**一起去重**：沿用上一步允许两个候选同时保留的条件，对其余重叠按以下顺序处理
@@ -1123,8 +1124,8 @@ python3 build_herv_gtf.py /public/home/GENE_proc/wth/ADnew/reference/herv_annota
   - 若仍有重叠冲突，就排除冲突双方（`equal_evidence_overlap`），本批排除687条solo、0条侧翼
   
     注：这里“同一档去掉重复记录后仍有重叠冲突”不是说`source_id`也相同，是因为如果两条solo LTR都属于“近似单条”，也同链、同模型、同ERV大类，但双向覆盖率只有50%，低于判重要求的80%，所以两条都会走到下一步；此时它们仍然重叠，证据又同档，按规则两条都排除
-- **复查侧翼与目标之间的间隔**：如果这一轮选出的其他LTR也在侧翼与目标之间形成了其他位点的计数片段，就移除该侧翼，对剩余LTR重新判重，前后两次间隔检查合计排除2条侧翼，记`intervening_locus`
-- 最终独立收录408,257条solo，记`added_solo_ltr`；7条侧翼作为`ltr5`或`ltr3`的`exon`写入目标`gene_id`，记`added_flank_exon`，其中6条补给Telescope位点，1条补给新增internal
+- **复查侧翼与目标之间的间隔**：如果这一轮选出的其他LTR也在侧翼与目标之间形成了其他位点的计数片段，就移除该侧翼，对剩余LTR重新判重，前后两次间隔检查合计排除4条侧翼，记`intervening_locus`
+- 最终独立收录408,257条solo，记`added_solo_ltr`；172条侧翼作为`ltr5`或`ltr3`的`exon`写入目标`gene_id`，记`added_flank_exon`，其中6条补给Telescope位点，166条补给新增internal
 
 **结果文件说明**：
 - `herv_loci_final.hg38.gtf.gz`：包含三大类hERV（ERV1、ERVK、ERVL）的主gtf
@@ -1147,8 +1148,8 @@ python3 build_herv_gtf.py /public/home/GENE_proc/wth/ADnew/reference/herv_annota
 | 独立新增internal位点  |       3,831 |       1,156 |       4,987 |
 | 独立新增Solo LTR位点  |     186,881 |     221,376 |     408,257 |
 | **最终位点总数**      | **204,915** | **222,532** | **427,447** |
-| 补入目标位点的侧翼LTR |           7 |           0 |           7 |
-| 全部计数片段          |     246,400 |     222,532 |     468,932 |
+| 补入目标位点的侧翼LTR |           7 |         165 |         172 |
+| 全部计数片段          |     246,400 |     222,697 |     469,097 |
 
 - 注：补入的侧翼LTR是作为一个位点里面的`exon`行，而不是独立位点
 
@@ -1159,9 +1160,9 @@ python3 build_herv_gtf.py /public/home/GENE_proc/wth/ADnew/reference/herv_annota
   - 两份GTF合计收录的408,257个Solo LTR中，329,965个（80.8%）可以在原始UCSC rmsk中核对到坐标完全一致的单条记录
 - 新增internal和侧翼少
   - 26,730条internal进入`rmsk`核验，14,208条拿到合格证据，其中9,202条随后在10%模型覆盖率这一步被排除
-  - 21,389条侧翼LTR输入中，6,630条与原Telescope LTR精确重复，4,264条与原`exon`同链重叠，10,437条未通过归属、配对或位置检查；剩余58条进入`rmsk`核验，9条通过，其中2条因与目标之间夹有其他位点而排除，最终补入7条
+  - 21,389条侧翼LTR输入中，6,630条与原Telescope LTR精确重复，4,264条与原`exon`同链重叠，10,228条未通过归属、配对或位置检查；剩余267条进入`rmsk`核验，176条通过，其中4条因与目标之间夹有其他位点而排除，最终补入172条
 - 位点级和大类级计数有明确的注释依据，家族级汇总的覆盖范围较小
-  - 主GTF新增Solo LTR中，70,075个有唯一家族，20,180个有多个候选家族，96,626个家族未定
+  - 主GTF新增Solo LTR中，70,736个有唯一家族，20,180个有多个候选家族，95,965个家族未定
   - 3,831个新增internal中仅10个有唯一家族
 
 **我们使用的位点id**（`gene_id`）：
@@ -1175,9 +1176,59 @@ python3 build_herv_gtf.py /public/home/GENE_proc/wth/ADnew/reference/herv_annota
   - 家族未定的独立新增internal：`MER31-int_chr1_3659159_3659675_minus`
   - MaLR GTF中的新增Solo LTR：`MLT1A_chr1_30694_30848_plus`
 
+---
+
+在[SnapShot: Human endogenous retroviruses](https://www.cell.com/cell/fulltext/S0092-8674(21)01491-4)中，作者给了一个hERV家族与LTR模型的对应表（包括40个LTR模型），我们把这个表与telescope给的那个表整合，SnapShot中：
+- 32个在Telescope表中已有对应
+- `PTR5`属于internal区域
+- 有6个名称（如`LTR10`、`MER9`和`LTR40`）在HERVarium、rmsk和Dfam里都查不到同名模型或可确认的别名
+- 最终补了`LTR16D → ERV316A3`这个对应关系，得到了新的[families.tsv](https://lwstkhyl.me/api/download/A_new_start%2Fdata%2Fherv_annotation%2Ffamilies.tsv?)，前面的结果链接为加上这个对应关系之后的新结果（不过只有位点id的变化，具体位点数量区域不变）
+
+位点的重叠情况：不考虑Telescope自己或HERVarium自己的重叠，telescope与HERVarium之间的重叠这个之前我们在去重时已经排除了，现在有一种比较诡异的情况，有11个位点的坐标和模型标注都高度一致，只有正反链的区别
+- 以chr11为例，同一段1,194bp的`HERV3-int`在`rmsk`里是负链，Telescope把它纳入正链位点，HERVarium则沿用负链命中
+- 在Stellarscope这种计数工具里，理论上是会区分链正反的（比如参数`--stranded_mode F`）
+- 可以先保留，等整合转录本证据时一起判断是应该用telescope的还是HERVarium的
+
 ##### 概览
 
+把ERVL-MaLR也合并进去
+- hERV class分布：每个gene_id计为一个位点（即把internal和其侧翼LTR一起算）
 
+  ![AD_1](/upload/md-image/other/AD_1.jpg){:width="500px" height="500px"}
+- hERV group分布：按`families.tsv`中列出的分组，只取有唯一group的位点（94,054个）
+
+  | Group归属    | 含internal位点 | Solo LTR位点 |
+  | ------------ | -------------: | -----------: |
+  | 可唯一归组   |         14,213 |       79,841 |
+  | 跨group候选  |              0 |       11,075 |
+  | 无family标签 |          4,977 |      317,341 |
+  | 两份GTF合计  |         19,190 |      408,257 |
+  
+  ![AD_5](/upload/md-image/other/AD_5.jpg){:width="600px" height="600px"}
+- LTR种类分布：一个位点的多个侧翼LTR也算成多个LTR
+  
+  构建时，整条LTR位于该位点internal总体跨度的左侧或右侧，才会结合链向标为`ltr5`或`ltr3`；与internal总体跨度相交的片段保留`ltr`标签（即图上的“未分侧LTR”）
+  
+  ![AD_2](/upload/md-image/other/AD_2.jpg){:width="600px" height="600px"}
+- 位点长度：
+
+  ![AD_3](/upload/md-image/other/AD_3.jpg){:width="600px" height="600px"}
+- 染色体密度：每个点表示一个窗口内的位点密度，按位点的中点把位点分入每个窗口
+  
+  ![AD_4](/upload/md-image/other/AD_4.jpg){:width="800px" height="800px"}
+- 各class的位点数量与覆盖长度：
+  
+  ![AD_6](/upload/md-image/other/AD_6.jpg){:width="500px" height="500px"}
+
+  - ERVL-MaLR的位点数是ERV1的两倍多，两类覆盖的基因组长度却几乎相同
+  - 四类合并后共覆盖190.23Mb，占24条主染色体总长的6.16%
+- 各class的Internal侧翼类型分布：用`ltr5`和`ltr3`标签将19,190个含internal的位点分为双侧、仅5′、仅3′和无明确侧翼
+  
+  ![AD_7](/upload/md-image/other/AD_7.jpg){:width="600px" height="600px"}
+
+- 与宿主基因的位置关系：将位点实际`exon`与GENCODE v49相交，不区分正反链，以≥1bp为阈值；同一位点优先归为外显子重叠，其次为仅内含子重叠
+  
+  ![AD_8](/upload/md-image/other/AD_8.jpg){:width="600px" height="600px"}
 
 #### 长读长数据处理
 
@@ -1317,6 +1368,37 @@ cd /public/home/GENE_proc/wth/ADnew/longread/AD_longread_align_20261109
 bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 ```
 
+两个长读长数据集的测序质量：
+
+| 指标                                      | SRP456327·ONT，12个run | GSE282551·PacBio CCS，30个run |
+| ----------------------------------------- | ---------------------: | ----------------------------: |
+| 原始平均Q值                               |            12.30–13.48 |                   30.13–33.09 |
+| 预处理后平均Q值                           |            14.27–14.70 |                   30.77–33.89 |
+| 原始平均读长                              |            463–1,130nt |                 2,364–3,635nt |
+| 预处理后平均读长                          |              386–713nt |                 2,268–3,490nt |
+| 预处理后reads总数                         |               约6.05亿 |                     约9,498万 |
+| 预处理后≥2kb的reads占比                   |                  4.52% |                        71.19% |
+| 总体比对率                                |                 80.54% |                        99.94% |
+| 已比对reads中MAPQ≥20的比例                |                 91.40% |                        99.61% |
+| 已比对reads中主比对覆盖read长度≥80%的比例 |                 97.01% |                        99.33% |
+
+- Q值：碱基识别的质量分数，表示测序软件对“这个碱基读对了”的置信程度。Q越高，预估读错的概率越低
+  
+  $$Q=-10\log_{10}(p),\qquad p=10^{-Q/10}$$
+
+  p是碱基被读错的预估概率。Q每增加10，预估错误概率降低到原来的十分之一
+
+  | Q值 | 预估错误概率 | 直观理解                  |
+  | --- | -----------: | ------------------------- |
+  | Q10 |          10% | 平均每10个碱基约错1个     |
+  | Q20 |           1% | 平均每100个碱基约错1个    |
+  | Q30 |         0.1% | 平均每1,000个碱基约错1个  |
+  | Q40 |        0.01% | 平均每10,000个碱基约错1个 |
+
+总结：ONT仍有约2,733万条≥2kb的reads，以及约9,846万条主比对含剪接的reads，能够提供大量候选结构证据；PacBio对应约6,762万条和8,297万条。PacBio对较长转录本的结构支持更充分，ONT可以增加候选位点的read支持和跨数据集验证
+- PacBio整体质量较好，各run表现也比较一致：预处理输出read数占原始read数的92.24%，除`SRR31437239`为76.31%外，其余run均为90.51%–94.21%；`SRR31437239`保留下来的reads仍有99.91%能够比对，因此目前可以继续使用
+- ONT的主要限制是读长偏短，同时原始Q值较低：预处理后85.04%的reads短于1kb；≥2kb的reads比对率达到99.98%，说明保留下来的长reads有很好的基因组匹配表现
+
 #### 转录本重建
 
 能否参照[The landscape of hervRNAs transcribed from human endogenous retroviruses across human body sites](https://link.springer.com/article/10.1186/s13059-022-02804-w)这篇文章中通过RNA-seq重建hERV转录本的方法：
@@ -1327,7 +1409,12 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
   - 保留与宿主基因重叠的RNA，否则可能漏掉hERV–宿主嵌合转录本
   - 把跨样本重复出现作为可信度证据，不直接要求一半样本检出
 
-注释先加已有转录本注释（包括转录起始结束位置），再加长读长（是否需要再找点数据），用短读作验证，看加上长读长有什么改变
+大致思路：先加已有转录本注释（SERVE等基于转录本构建的hERV注释，也包括转录端点资源），再加长读长（先看看现有数据是否足够），用短读长bulk RNA-seq作验证，看加上我们自己的长读长数据后有什么改变
+
+
+
+
+
 
 #### 命名和整合
 

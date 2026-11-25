@@ -98,9 +98,10 @@ tail -f /public/home/GENE_proc/wth/ADnew/logs/SEA_AD_core.log
 - gtf文件包含83193个不同的transcript_id，有标准的transcript和exon记录
 - 可加入“外部转录本证据库”，但其中包含LINE、SINE等其他TE，所以要根据实际外显子与hERV/LTR的重叠关系，提取我们需要的部分
 
-长读长构建的TE转录本注释：来自[《Identification of cell-type-specific, transcriptionally active transposable elements using long-read RNA-sequencing data-based comprehensive annotation》](https://doi.org/10.1186/s44342-025-00048-1)
+~~长读长构建的TE转录本注释~~：来自[《Identification of cell-type-specific, transcriptionally active transposable elements using long-read RNA-sequencing data-based comprehensive annotation》](https://doi.org/10.1186/s44342-025-00048-1)
 - 论文的Additional file 2给出了[gtf](https://media.springernature.com/original/springer-static/esm/art%3A10.1186%2Fs44342-025-00048-1/MediaObjects/44342_2025_48_MOESM2_ESM.gtf)，但标准transcript_id缺失，转录本样ID被写在FPKM属性中。需要先检查全表、确认ID恢复规则，再生成规范GTF
 - 采用了较严格的定位和TE重叠筛选规则，这可能影响某些重复性较高或宿主基因相关结构的收录
+- 这个gtf下载有点难，暂时不用这个数据了
 
 GTEx中TE起始转录本：来自[《Expression spectrum of TE-driven transcripts in human adult tissues》](https://doi.org/10.1186/s13059-025-03898-8)
 - 论文[Additional file 2](https://media.springernature.com/original/springer-static/esm/art%3A10.1186%2Fs13059-025-03898-8/MediaObjects/13059_2025_3898_MOESM2_ESM.xls)提供TE起始转录本及组织表达，可以筛选涉及LTR/ERV及脑组织的记录
@@ -1414,9 +1415,11 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 ##### 已有转录本注释
 
 - SERVE：优先接入`Brain_BA9_HERV.gtf`和`Brain_Cortex_HERV.gtf`这两个前额叶相关脑区，SERVE组装前排除了与GENCODE转录本重叠的reads，因此还需要其他资源补充hERV与宿主外显子的连接
-- TEscape、2025年公开长读长TE注释：补充包含hERV片段的基因相关RNA
+- TEscape：补充包含hERV片段的基因相关RNA
 - FANTOM5、PolyASite：分别给RNA的5′端和3′切割加尾位置提供证据
 - GTEx TE-TSS：补充哪些已知转录本的注释起点位于TE内、这些转录本在哪些组织表达
+
+**SERVE**
 
 
 
@@ -1424,17 +1427,195 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 
 ##### 长读长数据转录本发现
 
+**用bambu发现转录本**：
+
+| 参数设置                     | 用途                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| `discovery=TRUE, quant=TRUE` | 同时发现转录本并估计每个run的计数                                        |
+| `stranded=TRUE`              | 沿用两套cDNA经pychopper或Lima定向、minimap2以`-uf`比对的前提             |
+| `lowMemory=TRUE, ncore=2`    | 按染色体处理read class，首版用2核以控制内存峰值                          |
+| `NDR=auto`                   | 使用当前bambu版本自动建议的新转录本筛选阈值                              |
+| `min.txScore.singleExon=0`   | 打开新单外显子候选的报告<br>对solo LTR尤其重要，后续按read覆盖和端点核验 |
+| `trackReads=FALSE`           | 降低全样本建模时的内存开销                                               |
+
+- 输入是单个平台的所有BAM、GRCh38 primary FASTA和GENCODE v49 primary GTF
+  - 为什么这步的gtf不合并我们的hERV gtf：bambu会将参考GTF中的转录本视为已知转录本，并利用其外显子结构进行剪接位点校正、新转录本发现和表达量估计
+
+    例如，我们的一个hERV位点包含5′LTR、internal和3′LTR三个`exon`片段。如果将其作为一个已知转录本交给bambu，就可能把这些片段之间的空档错误地当成已知内含子
+  - 为什么不把已知转录本注释合并进去：避免将我们希望通过长读长数据验证的转录结构提前作为已知结构输入
+  - 不合并会不会影响hERV转录本的发现：bambu并不是只在GENCODE注释范围内寻找转录本，可以设置`discovery=TRUE`参数允许发现参考注释之外的新转录本、`min.txScore.singleExon=0`允许发现新的单外显子转录本（整条RNA转录本只有一个外显子，在基因组上对应一段连续的区间，不存在内含子及剪接连接，比如solo LTR的情况）
+- 输出包括bambu扩展GTF、每个run的计数，以及`models_positive.gtf`（保留至少在一个run中获得正估计计数的已知或新模型，供后续筛查）
+
+**把得到的转录本关联到hERV位点**：
+- 输入是`models_positive.gtf`、两份位点GTF和GENCODE
+- 输出：
+  - `links.tsv`：每行对应一个`transcript_id × locus_id`
+  - `linked_models.gtf`：达到门槛的模型的完整RNA结构
+- **计算RNA实际外显子与位点`exon`的重叠**：把它们的位置取交集（不要求同链，因为反义转录本也在研究范围内），同时计算重叠长度占转录本外显子总长度的比例`fraction_of_model`和占hERV位点实际片段总长度的比例`fraction_of_locus`
+  
+  例如，一个hERV位点包含`[101,200]`和`[401,500]`两个片段，一个转录本包含`[181,250]`和`[391,420]`两个外显子。两处分别重叠20bp，合计40bp。转录本覆盖比例为40/100=40%，hERV位点覆盖比例为40/200=20%
+
+  如果hERV位点完全落在转录本的内含子中，或者转录本只覆盖hERV位点不同片段之间的空档，都不算重叠
+- **根据转录本与单个hERV位点的重叠长度筛选**：
+  - 0bp：不建立关联
+  - 1–29bp或RNA链方向不明确：记录到`links.tsv`，不进入后续BAM核验
+  - ≥30bp且RNA链方向明确（bambu输出的GTF第7列`strand`为`+`或`-`）：将关联记录到`links.tsv`，将完整转录本写入`linked_models.gtf`，进入后续BAM核验
+
+  采用绝对重叠长度而不是覆盖比例作为筛选条件，是为了避免排除那些只包含一小段hERV序列的长宿主转录本
+
+  要求方向明确，是因为后续需要判断TSS、TES及剪接连接的方向；这里仍不要求RNA与hERV同链
+  - 如果一个转录本命中多个hERV位点，就分别计算重叠长度。例如，一个转录本分别命中位点A的45bp和位点B的20bp，则`links.tsv`记录两条关联，但后续仅对其与位点A的关联进行BAM核验
+- **比较转录方向**：根据bambu得到的RNA链方向和hERV GTF中记录的位点链方向，划分为同向`sense`/反向`antisense`/任意一方未知`unknown`
+
+  正义和反义转录本均保留，后续判断RNA与GENCODE宿主基因的关系时，使用RNA的链方向
+- **判断转录本是否连接hERV与宿主基因**：针对每一条转录本与hERV位点的关联，进一步判断该转录本的哪些外显子包含hERV序列，哪些外显子包含已知宿主基因的外显子序列
+  - 判断单个RNA外显子是否含有hERV：首先计算该外显子与当前hERV位点所有实际片段的重叠长度，如果重叠≥30bp，就认为该外显子含有该hERV位点的序列
+  - 判断单个RNA外显子是否含有宿主基因序列：查找与该RNA外显子同染色体、同RNA链的GENCODE exon，按GENCODE的`gene_id`分别计算重叠长度（同一个GENCODE基因的不同已知转录本可能包含相同的外显子，因此需要对其重叠区间取并集，避免重复计算）；从重叠区间中扣除与hERV位点片段重叠的部分，剩余长度≥30bp，才认为该RNA外显子含有这个宿主基因的外显子序列
+    - 不同宿主基因分别判断，不将多个基因的重叠长度相加
+
+    例如，一个RNA外显子为`[401,500]`，与GENCODE某基因的外显子重叠`[411,480]`（70bp），而当前hERV位点为`[451,500]`。扣除两者共同覆盖的`[451,480]`（30bp）后，还有40bp的宿主外显子序列，满足要求
+  - 判断剪接连接：按RNA的5′→3′方向排列外显子，逐一检查相邻两个外显子之间的junction
+
+    | 上游外显子                             | 下游外显子                                             | 判断结果                 |
+    | -------------------------------------- | ------------------------------------------------------ | ------------------------ |
+    | 含hERV序列                             | 不满足hERV重叠要求，但含宿主外显子序列                 | `herv_to_host_junctions` |
+    | 不满足hERV重叠要求，但含宿主外显子序列 | 含hERV序列                                             | `host_to_herv_junctions` |
+    | 含hERV序列                             | 含同一hERV位点的序列<br>不满足hERV和宿主外显子重叠要求 | 不标记上述两类连接       |
+    | 不满足hERV重叠要求                     | 不满足hERV重叠要求                                     | 不标记上述两类连接       |
+
+    例如，一个RNA包含`[101,200]`和`[401,500]`两个外显子，前者命中宿主基因，后者命中hERV：
+    - RNA为正链时，转录方向为低坐标→高坐标，属于宿主→hERV。
+    - RNA为负链时，转录方向为高坐标→低坐标，属于hERV→宿主
+
+    如果满足条件的宿主基因有多个，则分别记录其`gene_id`
+  - 不经过剪接的连接：除了上述junction，还单独记录两种情况
+    - `same_exon_host_genes`：同一个RNA外显子既包含≥30bp的hERV序列，又包含≥30bp的位点之外的宿主外显子序列
+    - `downstream_extension_genes`：在满足上一条件的基础上，该外显子覆盖的hERV序列还延伸至GENCODE宿主基因3′边界之外，即可能存在宿主基因的转录延伸
+- 针对每一条转录本与hERV位点的关联，判断**该转录本的起始位置和终止位置与这个hERV位点的结构关系**
+  - 确定转录本的5′和3′端点：如果bambu输出的转录本RNA链为+，那么5'端(TSS)是最小基因组坐标，3'端(TES)是最大基因组坐标
+  - 判断端点位于hERV的哪个组成片段：分别将TSS、TES与当前hERV位点的所有实际`exon`区间进行比较，根据命中片段的`geneRegion`属性确定类别
+
+    | 记录值     | 含义                             |
+    | ---------- | -------------------------------- |
+    | `ltr5`     | 位于5′侧翼LTR                    |
+    | `internal` | 位于internal片段                 |
+    | `ltr3`     | 位于3′侧翼LTR                    |
+    | `ltr`      | 位于通用LTR片段，如solo LTR      |
+    | `outside`  | 不位于该hERV位点的任何实际片段内 |
+    | `unknown`  | RNA链方向未知，无法确定端点      |
+    
+    - 即使端点位于hERV的整体`gene`跨度内，只要没有落在实际`exon`片段内，也记为`outside`
+    - 如果一个端点同时命中不同类型的片段，则同时记录这些类型，以逗号分隔
+    - 仍然不要求同链
+  - 计算TSS到当前hERV位点所包含LTR的最近距离：针对当前关联的hERV位点，提取其所有LTR片段（包括`ltr5`、`ltr3`和`ltr`），计算TSS与这些区间中最近碱基的距离，取最小值，记为`tss_to_ltr_bp`
+    - 如果TSS在LTR中距离计为0
+    - 如果该hERV位点没有LTR片段，则距离留空
+
+**用SQANTI3检查结构和端点风险**：
+
+| 参数                | 含义                                   |
+| ------------------- | -------------------------------------- |
+| `--isoforms`        | 输入上一阶段的`linked_models.gtf`      |
+| `--refGTF`          | GENCODE v49 GTF                        |
+| `--refFasta`        | GRCh38参考基因组FASTA                  |
+| `--force_id_ignore` | 允许非PacBio标准`PB.X.Y`格式的转录本ID |
+| `--skipORF`         | 不进行开放阅读框预测                   |
+| `--report skip`     | 不生成可视化报告，仍输出QC结果表       |
+| `--CAGE_peak`       | 可选，提供CAGE端点BED                  |
+| `--polyA_peak`      | 可选，提供PolyASite端点BED             |
+| `-t`                | 线程数                                 |
+| `-o`                | 输出文件名前缀                         |
+| `-d`                | 输出目录                               |
+
+- 输入是`linked_models.gtf`、同版GENCODE和FASTA
+- **判断转录本与GENCODE已有转录本的关系**：SQANTI3根据RNA外显子、剪接位点及剪接位点的组合，将候选转录本分为以下类型`structural_category`
+
+  | 类型                             | 判断依据                                                             |
+  | -------------------------------- | -------------------------------------------------------------------- |
+  | `full-splice_match`（FSM）       | 与某个已知转录本的全部剪接junction一致，但5′、3′端点可以不同         |
+  | `incomplete-splice_match`（ISM） | 剪接结构对应某个已知转录本的一部分                                   |
+  | `novel_in_catalog`（NIC）        | 使用的剪接位点均已被注释，但形成了新的剪接组合                       |
+  | `novel_not_in_catalog`（NNC）    | 至少包含一个未被注释的剪接位点                                       |
+  | `genic`                          | 与已知基因的外显子和内含子区域重叠，但不属于上述剪接匹配类型         |
+  | `genic_intron`                   | 位于已知基因的内含子区域                                             |
+  | `antisense`                      | 与已知基因反向重叠，且没有对应的同链基因匹配<br>注意不是相对hERV位点 |
+  | `intergenic`                     | 位于基因间区域                                                       |
+  | `fusion`                         | 转录本的结构涉及多个已知基因                                         |
+
+  例如，GENCODE中某个已知转录本由四个外显子A、B、C、D组成，假设不存在其他已知异构体
+
+  | bambu得到的转录本 | 分类 | 原因                                    |
+  | ----------------- | ---- | --------------------------------------- |
+  | A→B→C→D           | FSM  | 所有junction一致                        |
+  | B→C→D             | ISM  | 缺少5′端的外显子A                       |
+  | A→C→D             | NIC  | 跳过B，但使用的供体和受体剪接位点均已知 |
+  | A→新的外显子E→D   | NNC  | 使用了未被注释的剪接位点                |
+
+  - 对于单外显子转录本，SQANTI3另外通过区间重叠判断其与已知转录本的关系。例如，与已知单外显子转录本重叠可以归为FSM，完全位于已知多外显子转录本的某个外显子内可以归为ISM
+  - 进一步细分``subcategory`：
+    - 对于FSM，还比较与已知转录本的5′和3′端点差异。两端差异均≤50bp时归为参考匹配，否则根据哪一端差异较大，标记为不同的5′端或3′端异构体
+    - 对于ISM，根据缺少的是已知转录本的5′部分、3′部分、两端部分，还是存在内含子滞留，进行进一步分类
+    - 对于NIC，区分由已知junction形成的新组合，以及由已知供体、受体位点形成的新junction
+  - 对于我们的研究，不能仅保留FSM，也不能直接排除NIC、NNC和intergenic，因为我们研究的hERV相关转录本本身就可能没有被GENCODE完整收录
+- **检查剪接位点是否为经典类型(canonical)**：对于每一个junction，SQANTI3根据参考基因组FASTA提取内含子两端的二核苷酸，按照RNA的5′→3′方向判断剪接类型
+  
+  | 5′供体端 | 3′受体端 | 判断          |
+  | -------- | -------- | ------------- |
+  | GT       | AG       | canonical     |
+  | GC       | AG       | canonical     |
+  | AT       | AC       | canonical     |
+  | 其他组合 |          | non-canonical |
+
+  - `all_canonical`：记录该转录本是否所有junction均为经典类型
+  - `splice_site`：记录各junction具体的碱基组合
+  - `junction_category`：这个供体与受体的组合是否已被GENCODE注释
+  - `start_site_category`、`end_site_category`：3'/5'剪接位点是否分别被GENCODE注释
+
+  是否为canonical剪接位点与是否为已知剪接位点是两个不同的判断，一个新发现的junction完全可以采用GT-AG的经典组合
+- **检查反转录模板切换(RT switching, RTS)**：我们的两个长读长数据集均涉及cDNA测序，在反转录过程中，反转录酶可能由于RNA二级结构或重复序列，在合成cDNA时跳过RNA中的一段序列，导致最终得到的cDNA看起来像发生了剪接，但原始RNA实际上可能没有发生该剪接
+  - `RTS_junction`：某个junction是否具有模板切换风险
+  - `RTS_stage`：只要一个转录本中有至少一个junction存在上述风险，就标为`TRUE`
+- **检查3′端是否可能来源于内部引物起始(internal priming)**：正常情况下，oligo(dT)引物应与成熟RNA的poly(A)尾结合，但如果RNA内部存在富含A的区域，引物也可能在那里结合，导致得到的cDNA具有错误的3′
+  - 默认过滤规则将A比例≥60%的情况作为潜在内部引物起始风险
+  - 目前我们的代码只记录A比例，并没有执行≥60%就排除的规则
+- **利用已有数据检查转录本两端**：长读长数据构建出的转录本不一定是完整转录本，例如RNA降解可能导致5′端缺失，内部引物起始可能导致错误的3′端，因此还需要相对独立的端点证据
+  
+  这里利用CAGE数据检查5′端，CAGE主要用于识别带5′帽结构的RNA起始位置，我们可以使用之前下载的FANTOM5数据作为参考，通过`--CAGE_peak`传入BED文件
+  
+  针对每一个候选转录本，使用该转录本的5′端点，查找同染色体、同RNA链的CAGE peak
+  - `within_CAGE_peak`：5′端是否落在某个CAGE peak内
+  - `dist_to_CAGE_peak`：5′端与最近CAGE peak中心之间的距离，默认在10kb范围内查找。负值表示peak中心位于RNA起始位置上游，正值表示位于下游
+  
+  例如，一个转录本的5′端位于某个solo LTR内部，同时该位置存在同链CAGE peak，就增加了这个LTR相关转录本起始位置的可信度
+- **利用PolyASite数据检查3′端**：PolyASite收集了通过3′端测序等技术检测到的RNA切割及加poly(A)的位置，通过`--polyA_peak`传入BED文件
+  
+  针对每一个候选转录本，使用该转录本的3′端点，与同染色体、同RNA链的PolyASite位点进行比较
+  - `within_polyA_site`：3′端是否落在已知poly(A)位点区间内
+  - `dist_to_polyA_site`：与最近的poly(A)位点之间的距离
+- 输出：
+  - `*_classification.txt`：每行是一个转录本，记录结构分类、宿主关系、剪接风险、端点证据等
+  - `*_junctions.txt`：每行是一个转录本中的一个junction，查看具体哪个junction存在非经典剪接、RTS风险等
+- 根据SQANTI3的`isoform`与bambu的`transcript_id`建立关联
+
+  | 检查内容         | 加入结果表的字段                                         |
+  | ---------------- | -------------------------------------------------------- |
+  | 转录本分类       | `structural_category`、`subcategory`                     |
+  | 匹配参考注释     | `associated_gene`、`associated_transcript`               |
+  | 剪接风险         | `all_canonical`、`RTS_stage`                             |
+  | 内部引物起始风险 | `perc_A_downstream_TTS`                                  |
+  | 5′端证据         | `within_CAGE_peak`、`dist_to_CAGE_peak`                  |
+  | 3′端证据         | `within_polyA_site`、`dist_to_polyA_site`、`polyA_motif` |
+
+
+
+
 
 
 #### 命名和整合
 
 命名统一到同一层级（比如id都只包含LTR种类不包括hERV家族），都用一种形式（不要telescope的用原名 新增的用自己的名字），对应其它注释表的什么位点
 
-### 合作项目
 
-RNA全量算，其它数据甲基化和多组学再找能跟RNA匹配上的
-
-找到的差异能否用甲基化解释，能否用多组学检测（检测蛋白检测代谢）发现预测marker
 
 
 

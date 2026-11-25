@@ -1400,7 +1400,7 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 - PacBio整体质量较好，各run表现也比较一致：预处理输出read数占原始read数的92.24%，除`SRR31437239`为76.31%外，其余run均为90.51%–94.21%；`SRR31437239`保留下来的reads仍有99.91%能够比对，因此目前可以继续使用
 - ONT的主要限制是读长偏短，同时原始Q值较低：预处理后85.04%的reads短于1kb；≥2kb的reads比对率达到99.98%，说明保留下来的长reads有很好的基因组匹配表现
 
-#### 转录本重建
+#### 已有转录本注释
 
 能否参照[The landscape of hervRNAs transcribed from human endogenous retroviruses across human body sites](https://link.springer.com/article/10.1186/s13059-022-02804-w)这篇文章中通过RNA-seq重建hERV转录本的方法：
 - 论文的思路是：STAR比对→提取与HERV重叠、且不与GENCODE转录本重叠的reads→Trinity基因组引导组装→GMAP回贴基因组→TACO跨样本合并→定位与表达筛选
@@ -1412,7 +1412,7 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 
 大致思路：先加已有转录本注释（SERVE等基于转录本构建的hERV注释，也包括转录端点资源），再加长读长（先看看现有数据是否足够），用短读长bulk RNA-seq作验证，看加上我们自己的长读长数据后有什么改变
 
-##### 已有转录本注释
+##### try1
 
 - SERVE：优先接入`Brain_BA9_HERV.gtf`和`Brain_Cortex_HERV.gtf`这两个前额叶相关脑区，SERVE组装前排除了与GENCODE转录本重叠的reads，因此还需要其他资源补充hERV与宿主外显子的连接
 - TEscape：补充包含hERV片段的基因相关RNA
@@ -1425,7 +1425,9 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 
 
 
-##### 长读长数据转录本发现
+#### 长读长数据转录本发现
+
+##### try1
 
 **用bambu发现转录本**：
 
@@ -1606,6 +1608,142 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
   | 5′端证据         | `within_CAGE_peak`、`dist_to_CAGE_peak`                  |
   | 3′端证据         | `within_polyA_site`、`dist_to_polyA_site`、`polyA_motif` |
 
+**BAM核验：回查原始BAM，验证reads对转录本的支持情况**。bambu得到的是基于长读长数据构建的转录本模型，这一步重新读取ONT和PacBio各样本的BAM，分别判断原始reads是否支持这些模型的hERV覆盖、剪接结构以及两端位置
+- 对前面提到要进行BAM核验的转录本–位点关联，**提取每条关联中RNA外显子与hERV实际片段的交集区间**`overlap_blocks0`，将所有交集区间按染色体取并集 写成`audit_regions.bed`，然后利用BAM索引提取与这些区间重叠的比对记录
+
+  ```sh
+  samtools view -u -M -L audit_regions.bed -F 0xF04 -q 20 sample.bam
+  ```
+
+  | 参数       | 含义                                                                                            |
+  | ---------- | ----------------------------------------------------------------------------------------------- |
+  | `-u`       | 输出未压缩的BAM数据流，供Python直接读取                                                         |
+  | `-M`       | 利用索引查询多个区域，避免同一条比对记录因命中多个查询区域而被重复读取                          |
+  | `-L`       | 指定需要查询的BED区间                                                                           |
+  | `-F 0xF04` | 排除具有指定FLAG的比对记录，例如未比对成功的reads、未通过质量控制的reads、已标记为重复的reads等 |
+  | `-q 20`    | 排除MAPQ低于20的比对记录                                                                        |
+
+- **对提取的reads进行筛选**
+  - 保留MAPQ≥20（比对质量较高）且MAPQ≠255（255表示比对质量未知）的记录
+  - 排除带有`SA`标签的记录：说明该read存在其他拆分比对片段（一条read的不同部分比对到了不同位置，比如read前半段比对到chr1，后半段比对到chr2）
+  - 如果存在`NH`标签，要求`NH≤1`（排除多重比对）；若不存在该标签，则不根据这一项排除
+  - read参与比对的query长度至少占其总长度的80%
+- **判断read是否实际覆盖hERV位点**
+  - 用CIGAR提取read实际覆盖的参考基因组区间
+
+    | CIGAR操作 | 含义                           | 是否计入实际覆盖区间 |
+    | --------- | ------------------------------ | -------------------- |
+    | `M`       | 比对上参考序列，可能包含错配   | 是                   |
+    | `=`       | 与参考序列完全匹配的碱基       | 是                   |
+    | `X`       | 与参考序列发生错配的碱基       | 是                   |
+    | `I`       | 相对于参考基因组的插入         | 否                   |
+    | `D`       | 相对于参考基因组的缺失         | 否                   |
+    | `N`       | 跳过的参考基因组区域，如内含子 | 否                   |
+    | `S`、`H`  | 软截切、硬截切                 | 否                   |
+
+  - 计算read与转录本、hERV位点的三方交集
+    - 要求read与候选RNA转录本同染色体、同RNA链，但不要求read与hERV位点同链
+    - 将read的实际覆盖区间与前面得到的RNA外显子和hERV片段交集再次取交集
+    - 累计重叠≥30bp，认为该read能够支持这个RNA–hERV关联的区域覆盖，`n_cover_reads`加1
+- **判断read是否支持转录本结构**
+  - 多外显子转录本
+    - 从read的CIGAR中提取所有`N`对应的区间，作为read的剪接junction
+    - 从候选转录本的相邻外显子之间提取其junction
+    - 要求read和候选转录本的junction数量完全相同
+    - 按基因组坐标顺序逐一比较对应的junction，要求每个junction两侧的坐标差均满足以下条件：
+
+      | 平台   | 每个junction单侧允许的最大坐标差 |
+      | ------ | -------------------------------: |
+      | ONT    |                              6bp |
+      | PacBio |                              3bp |
+    
+    这里的结构支持仅表示完整剪接链匹配，不要求read的5′、3′端点也匹配
+  - 单外显子转录本：由于没有junction，改用实际覆盖区间的双向覆盖率判断
+    - 要求read的CIGAR中没有`N`
+    - 计算read实际覆盖区间与候选RNA外显子的交集长度
+    - 要求两个方向的覆盖率均≥80%（交集长度/read实际覆盖长度、交集长度/RNA外显子长度
+- **判断read是否支持转录本的5′3′端**
+  - 根据read的RNA方向，从实际覆盖区间中确定5′端和3′端
+  - 分别计算read端点与候选RNA对应端点的绝对距离
+  - 每个端点允许的最大距离均为50bp
+
+  | 字段                | 计数条件                        |
+  | ------------------- | ------------------------------- |
+  | `n_5p_reads`        | 5′端相差≤50bp                   |
+  | `n_3p_reads`        | 3′端相差≤50bp                   |
+  | `n_both_ends_reads` | 同一条read的两个端点均相差≤50bp |
+- **判断同一read是否覆盖hERV的三个组成片段**：对于已经通过结构检查的read，分别计算其在当前hERV位点三个组成区域的实际覆盖长度，即read、RNA外显子与对应`geneRegion`片段的三方交集，要求同一条read同时满足`ltr5覆盖`、`internal覆盖`、`ltr3覆盖`≥20bp
+  - 满足条件时，`n_three_region_reads`加1
+  - 注：必须是同一条read覆盖三个区域；没有要求该read同时通过5′、3′端点检查；不检查三个区域的排列顺序（不排除反义reads）
+- **处理一条read支持多个转录本的情况**：由于不同候选转录本可能具有相同的剪接链，一条read可能同时满足多个转录本的结构检查条件
+  - 对每条RNA–hERV关联独立判断
+  - 如果一条read同时满足两个候选转录本的检查条件，则两个转录本的对应支持计数均加1，不强制将read分配给其中一个
+  - 在逐read结果表中记录该read支持的不同`transcript_id`数量`compatible_models`，以及同时满足两端检查的转录本数量`end_compatible_models`
+- **根据reads和供体数量划分证据等级**：先分别统计各样本（run）中的支持read数量，然后按RNA–hERV关联进行汇总
+  - `n_structure_runs`：至少有一条结构支持read的run数量
+  - `n_both_ends_runs`：至少有一条同时支持结构和两端的read的run数量
+  - `n_known_donors_both_ends`：贡献了上述两端支持reads的已知供体数量（同一个供体的多个run只算一个供体，我们这里应该没有这种情况）
+
+  | 等级                   | 判断条件                                                      |
+  | ---------------------- | ------------------------------------------------------------- |
+  | `below_overlap_cutoff` | RNA与位点重叠不足30bp，未进入BAM核验                          |
+  | `unknown_rna_strand`   | RNA链方向未知，未进入BAM核验                                  |
+  | `model_overlap_only`   | 转录本与位点有重叠，但没有符合区域覆盖条件的read              |
+  | `region_coverage_only` | 有read实际覆盖该位点，但没有read通过结构检查                  |
+  | `structure_supported`  | 至少有一条结构支持read，但没有read同时支持两个端点            |
+  | `ends_supported`       | 有1–2条read同时支持结构和两端                                 |
+  | `multiple_reads_ends`  | 有≥3条read同时支持结构和两端，但已知供体数不足2               |
+  | `replicated_ends`      | 有≥3条read同时支持结构和两端，且至少来自2个已知供体的支持证据 |
+
+- 输出：
+
+  | 文件                        | 每行代表什么                       | 主要内容                                                  |
+  | --------------------------- | ---------------------------------- | --------------------------------------------------------- |
+  | `structural_reads.tsv.gz`   | 一条结构支持read与一条RNA–hERV关联 | read ID、MAPQ、实际端点、junction、覆盖长度、兼容模型数等 |
+  | `support_by_run.tsv`        | 一个run中的一条RNA–hERV关联        | 区域覆盖、结构支持、两端支持等read计数                    |
+  | `link_support.tsv`          | 一条RNA–hERV关联                   | 所有样本的汇总计数、供体数量、证据等级及SQANTI3结果       |
+  | `locus_support.tsv`         | 一个hERV位点                       | 有关联、结构支持、两端支持和供体重复支持的转录本数量      |
+  | `read_supported_models.gtf` | 至少有一条结构支持read的转录本模型 | 保留该转录本的完整外显子结构                              |
+
+**对照两个平台，并解释转录本结构**：
+- 筛选用于双平台比较的转录本
+  - 分别读取ONT和PacBio的`link_support.tsv`，仅保留`n_structure_reads>0`的关联，即各自至少具有一条原始read支持其转录本结构
+  - 要求两个平台的转录本关联同一个hERV locus_id、位于同一染色体、RNA链方向相同
+- 判断两个平台的结构是否一致
+  - 多外显子转录本：要求两个平台构建的转录本具有完全相同的junction数量及每个junction的两侧坐标
+  - 单外显子转录本：计算两个平台转录本外显子的交集，要求交集分别占两个转录本长度的至少80%，即双向覆盖率均≥80%
+- 判断两个平台的端点是否一致
+  - 对于已经通过结构比较的转录本，分别计算两个平台模型的5′端和3′端坐标差异
+
+  | 条件                  | `agreement`          |
+  | --------------------- | -------------------- |
+  | 两端的差异均≤50bp     | `similar_model_ends` |
+  | 至少有一端的差异>50bp | `structure_only`     |
+  
+  - 如果一个ONT转录本与多个PacBio转录本满足上述条件，则全部保留，不强制进行一对一匹配
+  - 输出`cross_platform.tsv`，同时记录两个平台各自的结构支持read数和两端支持read数
+- 结合前面结果判断转录本可能的来源
+  - **LTR起始并接入宿主基因的转录本**
+    - tss_region为`ltr5`、`ltr3`或`ltr`
+    - 在RNA下游存在`herv_to_host_junctions`记录
+    - 查看具体junction对应的外显子，确定是否由LTR相关的外显子连接到GENCODE宿主外显子
+    - 结合原始read的剪接结构、5′端支持及同链CAGE证据，判断LTR相关转录起始的可信度
+  - **宿主基因接入hERV的转录本**
+    - 存在`host_to_herv_junctions`记录
+    - 根据RNA的转录方向，查看含hERV序列的外显子位于转录本内部还是末端
+    - 检查原始read是否支持这一宿主外显子与hERV相关外显子之间的junction
+  - **宿主基因3′端转录延伸**
+    - 存在`downstream_extension_genes`记录，即同一个RNA外显子同时含有宿主外显子和hERV序列，且hERV覆盖延伸至宿主基因3′边界之外
+    - 检查read是否连续覆盖宿主基因边界及下游hERV区域，而不是仅在模型坐标上形成这种关系
+    - 比较RNA上游剪接结构与宿主基因已有转录本的关系
+  - **局部hERV相关RNA**
+    - RNA为单外显子，或其外显子主要位于solo LTR、局部internal等区域
+    - 结合`fraction_of_model`判断RNA中有多少序列属于当前hERV位点；目前没有为“主要位于”设置固定比例阈值
+    - 结合SQANTI3的结构分类、端点证据及GENCODE宿主关系，判断是可能的独立RNA，还是未成熟RNA、内含子滞留等其他情况
+  - **覆盖hERV三个组成片段的RNA**
+    - `n_three_region_reads`>0
+    - 结合`strand_relation`，判断RNA为正义还是反义转录
+    - 根据read明细检查同一条read对三个组成区域以及模型两端的支持情况
 
 
 

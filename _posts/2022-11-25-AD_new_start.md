@@ -1402,24 +1402,96 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 
 #### 已有转录本注释
 
-能否参照[The landscape of hervRNAs transcribed from human endogenous retroviruses across human body sites](https://link.springer.com/article/10.1186/s13059-022-02804-w)这篇文章中通过RNA-seq重建hERV转录本的方法：
-- 论文的思路是：STAR比对→提取与HERV重叠、且不与GENCODE转录本重叠的reads→Trinity基因组引导组装→GMAP回贴基因组→TACO跨样本合并→定位与表达筛选
-  - 单样本组装序列要求count>5、回贴identity≥96%
-  - 合并候选要求长度≥200bp，并设置了≥50%样本检出的条件，最终保留能唯一定位的候选
-- 需要调整一下：
-  - 保留与宿主基因重叠的RNA，否则可能漏掉hERV–宿主嵌合转录本
-  - 把跨样本重复出现作为可信度证据，不直接要求一半样本检出
-
 大致思路：先加已有转录本注释（SERVE等基于转录本构建的hERV注释，也包括转录端点资源），再加长读长（先看看现有数据是否足够），用短读长bulk RNA-seq作验证，看加上我们自己的长读长数据后有什么改变
-
-##### try1
-
 - SERVE：优先接入`Brain_BA9_HERV.gtf`和`Brain_Cortex_HERV.gtf`这两个前额叶相关脑区，SERVE组装前排除了与GENCODE转录本重叠的reads，因此还需要其他资源补充hERV与宿主外显子的连接
 - TEscape：补充包含hERV片段的基因相关RNA
 - FANTOM5、PolyASite：分别给RNA的5′端和3′切割加尾位置提供证据
 - GTEx TE-TSS：补充哪些已知转录本的注释起点位于TE内、这些转录本在哪些组织表达
 
-**SERVE**
+##### SERVE
+
+使用GTEx的9,466份RNA-seq数据，涉及686位供体和42个组织部位，最终鉴定了13,889个表达的hervRNA基因
+- **提取与HERV相关的reads**
+  - 使用STAR v2.7.5c将每份样本的RNA-seq数据比对到GRCh38，参考基因注释为GENCODEv31；使用two-pass模式，先发现剪接位点，再利用这些信息完成第二轮比对
+  - 以HERVd的基因组注释为参考，使用sambamba从BAM中提取与HERV区域重叠的比对记录，并排除与GENCODE转录本重叠的reads
+- **逐样本组装转录本**
+  - 使用Trinity v2.1.1进行genome-guided de novo assembly
+    
+    基因组引导：先利用reads的基因组比对位置，把来自相近区域的reads划入同一组，再由Trinity根据reads之间的序列重叠和连接关系进行组装
+  - 对组装得到的转录本进行两方面核验：
+    - 表达支持：使用Bowtie2和RSEM，将样本reads与组装转录本进行比对及定量，要求RSEM估计的`expected_count>5`
+    - 基因组定位：使用GMAP将组装转录本回贴到GRCh38，要求序列一致性identity≥96%
+  - 通过gffread过滤含超过默认10kb内含子的模型，以及具有非典型剪接位点的多外显子模型
+  - 检查回贴的RNA外显子是否与原HERVd候选区域相交
+  - 需要注意的是：GTEx常规RNA-seq采用非链特异性的poly(A)文库，作者根据转录本命中的HERVd元件方向给模型赋予方向，如果同时命中两种方向则赋为`.`。因此，SERVE发布GTF里的`+/-`应理解为作者推定的转录本方向，与我们的位点比较方向时，需要保留这一信息
+- **在每个组织内合并不同样本的转录本**：使用TACO v0.7.3进行跨样本转录本整合：把同一基因组区域的各样本RNA模型放在一起，构建剪接图，并利用输入模型的表达量和外显子连接信息推断一组代表性转录本
+  - 使用TPM作为TACO的输入表达量
+  - 筛选：
+    - 候选在该组织至少50%的样本中被检出
+    - 转录本长度≥200bp
+    - 再次使用GMAP回贴基因组，保留可以唯一定位的候选
+- **重新定量并筛选表达的hervRNA**
+  - 将上述候选RNA注释与GENCODE合并，再使用STAR和RSEM对原始RNA-seq数据进行定量
+    - 以SERVE的**`gene_id`为单位**，同一个`gene_id`下可以有多个异构体
+    - 要求在一个组织至少50%的样本中满足count>5且TPM≥0.1
+  - 使用gffread在不同组织之间归并重复的hervRNA基因，得到13,889个统一ID，并用HERVd判断其来源类型
+
+**数据**：
+
+| 文件                                          | 内容及用途                                                         |
+| --------------------------------------------- | ------------------------------------------------------------------ |
+| `SERVE-v1.0.0.zip`中的42份`*_HERV.gtf`        | 各组织的转录本结构，为本次合并的主要输入                           |
+| `13059_2022_2804_MOESM2_ESM.xlsx`             | 论文补充表，主要关注Table S2和Table S3                             |
+| `SERVE-v1.0.0.zip`中的`HERV_noncoding.bed.gz` | 作者提取HERV相关reads时使用的HERVd基因组注释，可辅助解释未匹配候选 |
+
+- `Brain_BA9_HERV.gtf`：
+  - 第6列是TACO给出的异构体相对丰度分值：丰度最高的异构体分值为1000，其他异构体的分值按其相对于最高丰度异构体的比例计算，例如分值71表示该模型的估计丰度约为主要异构体的7.1%
+  - 第9列`gene_id "Brain_BA9_HERV_G100"`是SERVE在BA9组织中注释的一个hervRNA基因，`transcript_id "Brain_BA9_HERV_TU129"`是该组中的一个具体转录本
+- Table S2：作者跨组织归并后的13,889个herv RNA
+  - `HERV_ID`：作者统一后的RNA基因ID，包括`HERV_00000001`等编号及少量已有基因名称
+  - `Type`：作者根据HERVd判断的来源类别，包括`solo_LTR`、`truncated`、`chimeric`、`full_length`
+  - `Subtype`：进一步的结构分类，如`chimeric solo_LTR`等
+  - `HERVd_element`：对应的HERVd元件ID，可包含多个元件
+  - `HERVd_coordinate`：对应HERVd元件的基因组坐标
+  - `Family`：对应的HERVd重复模型或家族名称
+  - `Protein_coding_prediction`：作者通过CPC2、CPAT和Pfamscan获得的编码潜力预测
+  - `Expression_pattern`：单一组织部位表达、多个组织部位表达或广泛表达（≥40个组织部位）
+- Table S3：一行代表一个组织，7列依次为组织部位、组织缩写、组织大类、样本量、reads数量均值和标准差、表达的HERV基因数（组织特异数/总数）、平均hervRNA表达占比
+- `HERV_noncoding.bed.gz`：495,903条基因组注释，采用BED12格式
+
+**合并方法**
+- **整理SERVE转录本**：SERVE按组织提供各自的转录本GTF，我们把这些GTF汇总成一张跨组织的转录本结构表
+  - 染色体、链方向、每个外显子的起止坐标都一致：计为1个转录本结构，保留所有原始`transcript_id`和组织来源
+  - 任一项不同：分别保留
+  - 是否只保留TACO分值为1000的主要异构体：先保留，为了尽可能全面，可以等后续长读长和bulk数据再验证
+- **与我们构建的hERV位点相交**：读取实际`exon`片段，按`gene_id`分组
+  - 对每对RNA与位点计算：
+    - 重叠bp，使用RNA外显子并集（同一条转录本的所有`exon`行覆盖的基因组位置）和原位点实际片段并集的交集长度
+    - RNA覆盖比例，重叠bp/RNA外显子并集长度
+    - 位点覆盖比例，重叠bp/hERV位点实际片段长度
+    - 命中的片段类型，使用我们构建的GTF的`geneRegion`，区分`internal`、`ltr5`、`ltr3`和`ltr`
+  - 记录支持片段：
+    - RNA完整覆盖位点：可以提供该位点全部片段被包含在RNA中的证据
+    - RNA全部位于某个较长的hERV位点内部：	可以提供该位点局部被转录的证据，记录实际覆盖的片段
+    - RNA与位点仅部分相交：记录实际交集，按最终确定的重叠门槛判断
+    - 一条RNA命中多个hERV位点：每个位点独立判断，分别建立关联
+    - RNA只落在原hERV位点的片段间空档中：记录跨度相交，实际片段支持为0
+    - hERV位点只落在RNA被剪掉的内含子中：记录内含子关系，实际外显子支持为0
+    - RNA与位点的注释方向不同：保留关联及两个方向
+    - SERVE和原GTF的家族名称不一致：保留两个来源的名称，坐标关系照常判断
+
+几个关键问题：
+- **怎样判断部分重叠是否足够**：
+  - 不能沿用我们以前合并internal注释时双向覆盖率≥80%的规则：例如，`Brain_BA9_HERV_TU1308`是一条918bp的RNA，全部位于`HML3_1p33`的实际片段中，该hERV位点共有7,012bp，因此两个覆盖比例分别为100%和13.1%。这条RNA仍然提供了很明确的局部结构证据
+  
+  | 位点                                  | 位点长度 | 与SERVE的重叠 | 实际情况                |
+  | ------------------------------------- | -------: | ------------: | ----------------------- |
+  | `MLT1D_chr20_44095759_44096228_minus` |    470bp |           2bp | RNA刚好擦过LTR的边界    |
+  | `MLT1E2_chr22_20443755_20443765_plus` |     11bp |          11bp | RNA覆盖了整个短MaLR片段 |
+
+  - 按百分比？每条RNA与位点分别判断，有一条符合条件的RNA就可以支持该位点
+
+- **如果SERVE转录本没有命中我们的任何位点（是否补充新位点）**：暂时不补充
 
 
 

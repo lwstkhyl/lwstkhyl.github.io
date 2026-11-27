@@ -1432,7 +1432,7 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
     - 再次使用GMAP回贴基因组，保留可以唯一定位的候选
 - **重新定量并筛选表达的hervRNA**
   - 将上述候选RNA注释与GENCODE合并，再使用STAR和RSEM对原始RNA-seq数据进行定量
-    - 以SERVE的**`gene_id`为单位**，同一个`gene_id`下可以有多个异构体
+    - 以SERVE的`gene_id`为单位，同一个`gene_id`下可以有多个异构体
     - 要求在一个组织至少50%的样本中满足count>5且TPM≥0.1
   - 使用gffread在不同组织之间归并重复的hervRNA基因，得到13,889个统一ID，并用HERVd判断其来源类型
 
@@ -1463,7 +1463,6 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 - **整理SERVE转录本**：SERVE按组织提供各自的转录本GTF，我们把这些GTF汇总成一张跨组织的转录本结构表
   - 染色体、链方向、每个外显子的起止坐标都一致：计为1个转录本结构，保留所有原始`transcript_id`和组织来源
   - 任一项不同：分别保留
-  - 是否只保留TACO分值为1000的主要异构体：先保留，为了尽可能全面，可以等后续长读长和bulk数据再验证
 - **与我们构建的hERV位点相交**：读取实际`exon`片段，按`gene_id`分组
   - 对每对RNA与位点计算：
     - 重叠bp，使用RNA外显子并集（同一条转录本的所有`exon`行覆盖的基因组位置）和原位点实际片段并集的交集长度
@@ -1481,6 +1480,7 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
     - SERVE和原GTF的家族名称不一致：保留两个来源的名称，坐标关系照常判断
 
 几个关键问题：
+- **是否只保留TACO分值为1000的主要异构体**：先保留，为了尽可能全面，可以等后续长读长和bulk数据再验证
 - **怎样判断部分重叠是否足够**：
   - 不能沿用我们以前合并internal注释时双向覆盖率≥80%的规则：例如，`Brain_BA9_HERV_TU1308`是一条918bp的RNA，全部位于`HML3_1p33`的实际片段中，该hERV位点共有7,012bp，因此两个覆盖比例分别为100%和13.1%。这条RNA仍然提供了很明确的局部结构证据
   
@@ -1489,12 +1489,20 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
   | `MLT1D_chr20_44095759_44096228_minus` |    470bp |           2bp | RNA刚好擦过LTR的边界    |
   | `MLT1E2_chr22_20443755_20443765_plus` |     11bp |          11bp | RNA覆盖了整个短MaLR片段 |
 
-  - 按百分比？每条RNA与位点分别判断，有一条符合条件的RNA就可以支持该位点
+  - 短位点只要覆盖全部就算，长位点按百分比？按重叠bp数？
+    - [Rebollo等在果蝇研究中](https://peercommunityjournal.org/item/10.24072/pcjournal.457.pdf)用单条长read覆盖TE位点至少10%来辅助把read分配到具体TE拷贝；[Ramsay等研究灵长类lncRNA时](https://link.springer.com/article/10.1186/s12864-017-3568-y)要求TE覆盖至少一个RNA外显子的10%，用来标记哪些外显子包含TE序列
+    - [Kapusta等](https://journals.plos.org/plosgenetics/article?id=10.1371%2Fjournal.pgen.1003470)用外显子与TE重叠≥10bp来识别含TE的lncRNA，再另外统计TE占RNA的比例；[Marasca等在研究人T细胞时](https://www.nature.com/articles/s41588-021-00989-7)，用外显子与LINE1位点重叠≥20bp来识别含LINE1的转录本
+  
+    一个示例：用交集bp数作分子，位点覆盖率除以原GTF中该位点实际片段的总长度，RNA覆盖率除以这条转录本实际外显子的总长度
 
+    | SERVE中的实际关联                                     |      位点覆盖率 |     RNA覆盖率 | 如果只用覆盖率≥10%筛选                             |
+    | ----------------------------------------------------- | --------------: | ------------: | -------------------------------------------------- |
+    | 一条Cortex RNA的470bp全部落在`HERV3_14q24.2`的5′LTR内 | 470/7,014＝6.7% | 470/470＝100% | 用位点覆盖率会漏掉，实际上它覆盖了这段5′LTR的79.8% |
+    | 一条BA9 RNA完整覆盖了74bp的`MER54A`solo LTR           |     74/74＝100% |  74/813＝9.1% | 用RNA覆盖率会漏掉，尽管整段LTR都出现在RNA里        |
+    | 一条RNA只擦到chr11一个46bp的`MLT1E2`片段的边缘        |     5/46＝10.9% |   5/602＝0.8% | 用位点覆盖率会通过，实际交集只有5bp                |
+
+  - 同时计算两个覆盖比例，用它们说明RNA支持了位点的哪一部分；筛选先用“重叠≥20bp，或同一条RNA完整覆盖原位点的全部实际片段”
 - **如果SERVE转录本没有命中我们的任何位点（是否补充新位点）**：暂时不补充
-
-
-
 
 
 #### 长读长数据转录本发现

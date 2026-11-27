@@ -1181,8 +1181,7 @@ python3 build_herv_gtf.py /public/home/GENE_proc/wth/ADnew/reference/herv_annota
 
 在[SnapShot: Human endogenous retroviruses](https://www.cell.com/cell/fulltext/S0092-8674(21)01491-4)中，作者给了一个hERV家族与LTR模型的对应表（包括40个LTR模型），我们把这个表与telescope给的那个表整合，SnapShot中：
 - 32个在Telescope表中已有对应
-- `PTR5`属于internal区域
-- 有6个名称（如`LTR10`、`MER9`和`LTR40`）在HERVarium、rmsk和Dfam里都查不到同名模型或可确认的别名
+- 有7个名称（如`PTR5`、`MER9`和`LTR40`）在HERVarium、rmsk和Dfam里都查不到同名模型或可确认的别名
 - 最终补了`LTR16D → ERV316A3`这个对应关系，得到了新的[families.tsv](https://lwstkhyl.me/api/download/A_new_start%2Fdata%2Fherv_annotation%2Ffamilies.tsv?)，前面的结果链接为加上这个对应关系之后的新结果（不过只有位点id的变化，具体位点数量区域不变）
 
 位点的重叠情况：不考虑Telescope自己或HERVarium自己的重叠，telescope与HERVarium之间的重叠这个之前我们在去重时已经排除了，现在有一种比较诡异的情况，有11个位点的坐标和模型标注都高度一致，只有正反链的区别
@@ -1493,8 +1492,30 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
 
 - **如果SERVE转录本没有命中我们的任何位点（是否补充新位点）**：暂时不补充
 
+##### TEscape
 
+使用PacBio MAS-ISO-seq，覆盖6种细胞状态，获得超过2.35亿条长读段。神经相关样本来自iPSC分化体系，研究中还测了肝祖细胞、脂肪祖细胞和分化后的脂肪细胞
+- **清理长读段并比对**：用PacBio Pigeon流程拆分带引物的测序数据，识别对应的cDNA读段
+  - 对带细胞条码的文库，还提取UMI和细胞条码，做条码校正和去重
+  - 之后把读段用pbmm2 v1.16.0的Iso-Seq预设比对到hg38
+- **逐样本组装整个转录组**：用IsoQuant v3.6.1，以GENCODE v47为参考，从比对结果识别已有转录本及新的外显子结构
+  - 开启了报告新单外显子转录本的选项，所以没有剪接接头的RNA也能进入后续筛选
+- **筛除疑似技术产物，并要求读段支持**：用SQANTI3 v5.2.2检查结构
+  - 转录本3′端下游20bp内含≥12个A时，标记为可能的内部引物产物
+  - 多外显子模型要求剪接接头均为经典类型，并排除带逆转录模板切换接头的模型
+  - 每条入选模型至少有5条reads支持，Cell Village数据还要求在至少2名供体中观察到
+- **按TE叠筛选，再汇总发布**：将RNA与RepeatMasker等资源中的移动元件坐标比较
+  - 论文将≥60%重叠作为收录TE相关RNA的标准，通过筛选的模型被用于扩充GENCODE参考
 
+**数据**：`tescape.v1.0.annotation.gtf.gz`，有83,193条`transcript`记录和91,012条`exon`记录
+- 第2列是来源：`IsoQuant`是组装出的新转录本模型，`HAVANA`是目录中沿用GENCODE编号的已知模型（GENCODE已经注释过的转录本，并保留了它们原有的编号）
+- 第3列是位点类型：`transcript`描述整条RNA的跨度，`exon`描述其中一个外显子
+- 没有比对分数等属性值
+- `gene_id`：这条RNA属于哪个基因，可以是GENCODE的`ENSG`编号，也可以是IsoQuant分配的`novel_gene_…`
+- `transcript_id`：这条RNA是这个基因的哪一种转录本,同一个基因可以通过不同的剪接方式产生多种转录本，例如`ENST00000316124.3`后缀接`Neu`，后缀由竖线分隔，分别为`Hep`、`Adi`和`Neu`（分别对应肝祖细胞、脂肪分化和神经分化相关组）
+- `exons`：对应transcript的外显子数
+- `exon_number`：外显子编号，沿RNA的5′→3′方向排列，负链RNA的第1个外显子位于较大的基因组坐标一端
+- `elements_in_event`
 
 
 #### 长读长数据转录本发现

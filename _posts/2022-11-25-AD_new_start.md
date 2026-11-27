@@ -1179,10 +1179,15 @@ python3 build_herv_gtf.py /public/home/GENE_proc/wth/ADnew/reference/herv_annota
 
 ---
 
-在[SnapShot: Human endogenous retroviruses](https://www.cell.com/cell/fulltext/S0092-8674(21)01491-4)中，作者给了一个hERV家族与LTR模型的对应表（包括40个LTR模型），我们把这个表与telescope给的那个表整合，SnapShot中：
-- 32个在Telescope表中已有对应
-- 有7个名称（如`PTR5`、`MER9`和`LTR40`）在HERVarium、rmsk和Dfam里都查不到同名模型或可确认的别名
-- 最终补了`LTR16D → ERV316A3`这个对应关系，得到了新的[families.tsv](https://lwstkhyl.me/api/download/A_new_start%2Fdata%2Fherv_annotation%2Ffamilies.tsv?)，前面的结果链接为加上这个对应关系之后的新结果（不过只有位点id的变化，具体位点数量区域不变）
+补充`families.tsv`：
+- 在[SnapShot: Human endogenous retroviruses](https://www.cell.com/cell/fulltext/S0092-8674(21)01491-4)中，作者给了一个hERV家族与LTR模型的对应表（包括40个LTR模型），我们把这个表与telescope给的那个表整合，SnapShot中：
+  - 32个在Telescope表中已有对应
+  - 有7个名称（如`PTR5`、`MER9`和`LTR40`）在HERVarium、rmsk和Dfam里都查不到同名模型或可确认的别名
+  - 最终补了`LTR16D → ERV316A3`这个对应关系
+- 在[Classification and characterization of human endogenous retroviruses; mosaic forms are common](https://link.springer.com/article/10.1186/s12977-015-0232-y)中（正文Table 4+附录，作者根据整段DNA和内部Pol蛋白的相似性等证据也划分了一些LTR与hERV家族的对应
+  - 
+  - 该文章中把`LTR21A`划分给`HERVH48-int`，Telescope原表把`LTR21A`配给`HERVFH21`，HERVarium里也能看到这两种组合，于是我们把`LTR21A`同时写在`HERVFH21`和`HERVH48`两行
+- 得到了新的[families.tsv](https://lwstkhyl.me/api/download/A_new_start%2Fdata%2Fherv_annotation%2Ffamilies.tsv?)，前面的结果链接为加上这个对应关系之后的新结果
 
 位点的重叠情况：不考虑Telescope自己或HERVarium自己的重叠，telescope与HERVarium之间的重叠这个之前我们在去重时已经排除了，现在有一种比较诡异的情况，有11个位点的坐标和模型标注都高度一致，只有正反链的区别
 - 以chr11为例，同一段1,194bp的`HERV3-int`在`rmsk`里是负链，Telescope把它纳入正链位点，HERVarium则沿用负链命中
@@ -1470,11 +1475,11 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
     - 命中的片段类型，使用我们构建的GTF的`geneRegion`，区分`internal`、`ltr5`、`ltr3`和`ltr`
   - 记录支持片段：
     - RNA完整覆盖位点：可以提供该位点全部片段被包含在RNA中的证据
-    - RNA全部位于某个较长的hERV位点内部：	可以提供该位点局部被转录的证据，记录实际覆盖的片段
+    - RNA全部位于某个较长的hERV位点内部：可以提供该位点局部被转录的证据，记录实际覆盖的片段
     - RNA与位点仅部分相交：记录实际交集，按最终确定的重叠门槛判断
     - 一条RNA命中多个hERV位点：每个位点独立判断，分别建立关联
-    - RNA只落在原hERV位点的片段间空档中：记录跨度相交，实际片段支持为0
-    - hERV位点只落在RNA被剪掉的内含子中：记录内含子关系，实际外显子支持为0
+    - RNA只落在原hERV位点的片段间空档中：记为位点空档重叠，实际片段支持为0
+    - hERV位点只落在RNA被剪掉的内含子中：记为内含子重叠，实际外显子支持为0
     - RNA与位点的注释方向不同：保留关联及两个方向
     - SERVE和原GTF的家族名称不一致：保留两个来源的名称，坐标关系照常判断
 
@@ -1515,27 +1520,40 @@ bash submit.sh all  # /public/home/GENE_proc/wth/ADnew/longread/02_alignment/
   - 转录本3′端下游20bp内含≥12个A时，标记为可能的内部引物产物
   - 多外显子模型要求剪接接头均为经典类型，并排除带逆转录模板切换接头的模型
   - 每条入选模型至少有5条reads支持，Cell Village数据还要求在至少2名供体中观察到
-- **按TE叠筛选，再汇总发布**：将RNA与RepeatMasker等资源中的移动元件坐标比较
+- **按TE叠筛选，再汇总发布**：将RNA与RepeatMasker等资源中的TE坐标比较
   - 论文将≥60%重叠作为收录TE相关RNA的标准，通过筛选的模型被用于扩充GENCODE参考
 
 **数据**：`tescape.v1.0.annotation.gtf.gz`，有83,193条`transcript`记录和91,012条`exon`记录
-- 第2列是来源：`IsoQuant`是组装出的新转录本模型，`HAVANA`是目录中沿用GENCODE编号的已知模型（GENCODE已经注释过的转录本，并保留了它们原有的编号）
+- 第2列是来源：`IsoQuant`是组装出的新转录本模型，`HAVANA`是GENCODE已经注释过的转录本，保留它们原有的编号
 - 第3列是位点类型：`transcript`描述整条RNA的跨度，`exon`描述其中一个外显子
 - 没有比对分数等属性值
 - `gene_id`：这条RNA属于哪个基因，可以是GENCODE的`ENSG`编号，也可以是IsoQuant分配的`novel_gene_…`
-- `transcript_id`：这条RNA是这个基因的哪一种转录本,同一个基因可以通过不同的剪接方式产生多种转录本，例如`ENST00000316124.3`后缀接`Neu`，后缀由竖线分隔，分别为`Hep`、`Adi`和`Neu`（分别对应肝祖细胞、脂肪分化和神经分化相关组）
+- `transcript_id`：这条RNA是这个基因的哪一种转录本，同一个基因可以通过不同的剪接方式产生多种转录本
+  - 例如`ENST00000316124.3`后缀接`Neu`，后缀由竖线分隔，分别为`Hep`、`Adi`和`Neu`（分别对应肝祖细胞、脂肪分化和神经分化相关组）
+  
+  例如`gene_id`为`ENSG00000232774.8`的记录，有两条转录本都属于这个基因
+
+  | `transcript_id`                   | 外显子结构                                                                                 |
+  | --------------------------------- | ------------------------------------------------------------------------------------------ |
+  | `ENST00000229465.10\|Adi`         | GENCODE已注释的转录本，有5个外显子                                                         |
+  | `transcript68494.chr14.nnic\|Hep` | IsoQuant发现的转录本，有4个外显子，跳过了上一条的第4个外显子<br>是已有基因的一种新剪接形式 |
+
+  - 如果IsoQuant把转录本归到一个新预测的基因，才会为该基因分配`novel_gene_…`编号
 - `exons`：对应transcript的外显子数
 - `exon_number`：外显子编号，沿RNA的5′→3′方向排列，负链RNA的第1个外显子位于较大的基因组坐标一端
-- `elements_in_event`
-    | SERVE中的实际关联                                     |      位点覆盖率 |     RNA覆盖率 | 如果只用覆盖率≥10%筛选                             |
-    | ----------------------------------------------------- | --------------: | ------------: | -------------------------------------------------- |
-    | 一条Cortex RNA的470bp全部落在`HERV3_14q24.2`的5′LTR内 | 470/7,014＝6.7% | 470/470＝100% | 用位点覆盖率会漏掉，实际上它覆盖了这段5′LTR的79.8% |
-    | 一条BA9 RNA完整覆盖了74bp的`MER54A`solo LTR           |     74/74＝100% |  74/813＝9.1% | 用RNA覆盖率会漏掉，尽管整段LTR都出现在RNA里        |
-    | 一条RNA只擦到chr11一个46bp的`MLT1E2`片段的边缘        |     5/46＝10.9% |   5/602＝0.8% | 用位点覆盖率会通过，实际交集只有5bp                |
+- `elements_in_event`：作者把转录本与RepeatMasker标注的重复片段做坐标交集，把命中的模型名作为该转录本的重复模型名，按竖线分隔
+- `percentage_of_mes`：TEscape转录本的外显子和RepeatMasker标注的TE片段的重叠值——对每个外显子与rmsk记录重叠相加 除以这条RNA的外显子总长度
+- `gene_type`、`transcript_type`：HAVANA条目对应的GENCODE基因和转录本类型，例如`lncRNA`
+- `gene_name`、`transcript_name`：HAVANA条目对应的基因名和转录本名，例如`LINC02724`和`LINC02724-201`
+- IsoQuant的`transcript_id`中还会看到`.nic`和`.nnic`（例如`transcript68494.chr14.nnic|Hep`），前者表示新模型使用了已有注释的内含子，后者可以表示含未注释内含子的模型，也用于新发现的单外显子模型
 
-  - 同时计算两个覆盖比例，用它们说明RNA支持了位点的哪一部分；筛选先用“重叠≥20bp，或同一条RNA完整覆盖原位点的全部实际片段”
-- **如果SERVE转录本没有命中我们的任何位点（是否补充新位点）**：暂时不补充
-
+**合并方法**
+- 先整理转录本结构：
+  - 所有发布异构体都读入，包括`IsoQuant`和`HAVANA`、三个来源组以及单外显子和多外显子模型
+  - 先在TEscape内部比较，再与已整理的SERVE结构比较。只有染色体、RNA方向、每个外显子的起点和终点全部相同，才记为同一个RNA结构；剪接链相同但5′或3′端不同、单外显子坐标有差异、坐标相同但方向相反，都分别保留
+- 再逐对判断RNA与位点
+  - 对每个`TEscape给出的RNA结构×我们的hERV位点`，取RNA所有`exon`覆盖的碱基，与我们该位点所有实际`exon`片段覆盖的碱基求交，同一个碱基只计一次，记录重叠bp、重叠bp÷RNA外显子总bp、重叠bp÷位点实际片段总bp，以及命中的`geneRegion`（internal、`ltr5`、`ltr3`或`ltr`）
+  - 处理方式类似上面SERVE的，有一个转录本支持该位点即算作该位点被TEscape支持
 
 #### 长读长数据转录本发现
 
